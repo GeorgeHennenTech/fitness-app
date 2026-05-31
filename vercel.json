@@ -1,0 +1,12 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "functions": {
+    "api/parse-receipt.js": { "maxDuration": 30 },
+    "api/parse-recipe.js": { "maxDuration": 30 },
+    "api/generate-recipes.js": { "maxDuration": 30 },
+    "api/recipe-suggest.js": { "maxDuration": 30 },
+    "api/weekly-review.js": { "maxDuration": 30 }
+  }
+}
