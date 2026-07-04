@@ -69,7 +69,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
   }
 
-  const { pantry = [], expiringSoon = [], count = 3, mealType = null } = req.body || {};
+  const { pantry = [], expiringSoon = [], count = 3, mealType = null, guidance = '' } = req.body || {};
 
   if (!Array.isArray(pantry) || pantry.length === 0) {
     return res.status(400).json({ error: 'Pantry is empty — cannot generate recipes' });
@@ -91,12 +91,18 @@ export default async function handler(req, res) {
     ? `\n\nAll recipes should be ${mealType} options.`
     : '';
 
+  // Free-text user guidance (e.g. "use the cocoa powder", "at least 10 cal per
+  // 1g protein", "no dairy"). Given high priority — these are explicit requests.
+  const guidanceStr = (guidance && String(guidance).trim())
+    ? `\n\nIMPORTANT USER REQUESTS (follow these closely — they override general preferences):\n"${String(guidance).trim().slice(0, 600)}"\nIf a request specifies a macro rule (e.g. a minimum calorie-to-protein ratio), every recipe you return must satisfy it; adjust ingredients/quantities until it does. If a request names an ingredient to include, use it in at least one recipe (ideally more).`
+    : '';
+
   const userPrompt = `Pantry inventory (${pantry.length} items in stock):
 ${pantryStr}
 
 ${expiringStr}
 
-Invent ${count} ORIGINAL recipe ideas using what's in this pantry. Each recipe should be distinct in protein source, technique, and meal type. Prioritize using expiring items.${mealTypeConstraint}
+Invent ${count} ORIGINAL recipe ideas using what's in this pantry. Each recipe should be distinct in protein source, technique, and meal type. Prioritize using expiring items.${mealTypeConstraint}${guidanceStr}
 
 Return the JSON now.`;
 
