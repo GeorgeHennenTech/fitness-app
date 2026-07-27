@@ -3,10 +3,15 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "functions": {
-    "api/parse-receipt.js": { "maxDuration": 30 },
-    "api/parse-recipe.js": { "maxDuration": 30 },
+    "api/parse.js": { "maxDuration": 30 },
     "api/generate-recipes.js": { "maxDuration": 30 },
     "api/recipe-suggest.js": { "maxDuration": 30 },
-    "api/weekly-review.js": { "maxDuration": 30 }
+    "api/weekly-review.js": { "maxDuration": 30 },
+    "api/estimate-meal.js": { "maxDuration": 30 },
+    "api/transform-recipe.js": { "maxDuration": 30 },
+    "api/price-ingredients.js": { "maxDuration": 30 },
+    "api/suggest-groceries.js": { "maxDuration": 30 },
+    "api/recipe-from-video.js": { "maxDuration": 60 },
+    "api/adjust-program.js": { "maxDuration": 60 }
   }
 }
