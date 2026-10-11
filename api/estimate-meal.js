@@ -166,6 +166,21 @@ export default async function handler(req, res) {
 
     const conf = ['high', 'medium', 'low'].includes(parsed.confidence) ? parsed.confidence : 'medium';
 
+    // Range reflects how much the point estimate could plausibly be off, keyed
+    // to confidence. High = no range (the number is trustworthy, e.g. a read
+    // nutrition panel). Medium/low widen it. The app logs the midpoint (these
+    // totals) and shows the range only at review so a guess doesn't read as fact.
+    const SPREAD = { high: 0, medium: 0.12, low: 0.25 };
+    const spread = SPREAD[conf];
+    const range = spread > 0
+      ? {
+          cal:     [Math.round(totals.cal * (1 - spread)),     Math.round(totals.cal * (1 + spread))],
+          protein: [Math.round(totals.protein * (1 - spread)), Math.round(totals.protein * (1 + spread))],
+          carbs:   [Math.round(totals.carbs * (1 - spread)),   Math.round(totals.carbs * (1 + spread))],
+          fat:     [Math.round(totals.fat * (1 - spread)),     Math.round(totals.fat * (1 + spread))],
+        }
+      : null;
+
     return res.status(200).json({
       name: String(parsed.name || '').trim(),
       cal: totals.cal,
@@ -173,6 +188,7 @@ export default async function handler(req, res) {
       carbs: totals.carbs,
       fat: totals.fat,
       confidence: conf,
+      range, // null when high-confidence; otherwise [low, high] per macro
       note: String(parsed.note || '').trim(),
       items,
     });

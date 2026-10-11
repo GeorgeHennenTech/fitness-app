@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Dumbbell, TrendingUp, Camera, Apple, Activity, Calendar, Target, ChevronRight, ChevronLeft, Plus, Check, Trash2, Save, Image as ImageIcon, ArrowUp, ArrowDown, Flame, BookMarked, FileImage, X, Copy, CalendarDays, Edit3, Search, Sparkles, Settings, Loader2, AlertCircle, Info, Play, ChevronDown, Clock, Receipt, Upload, FileText, Download, RefreshCw, Star } from 'lucide-react';
+import { Dumbbell, TrendingUp, Camera, Apple, Activity, Calendar, Target, ChevronRight, ChevronLeft, Plus, Check, Trash2, Save, Image as ImageIcon, ArrowUp, ArrowDown, Flame, BookMarked, FileImage, X, Copy, CalendarDays, Edit3, Search, Sparkles, Settings, Loader2, AlertCircle, Info, Play, ChevronDown, Clock, Receipt, Upload, FileText, Download, RefreshCw, Star, Minus } from 'lucide-react';
 import mammoth from 'mammoth';
 
 // ============================================================================
@@ -4910,7 +4910,7 @@ function WeeklyReview() {
 //   receiptphoto:{id} → { dataUrl }  (stored separately to keep list queries fast)
 //   receiptCat:{name} → category     (learned manual-override mapping for re-uploads)
 //
-// AI parsing flows through /api/parse-receipt (Vercel + Anthropic vision).
+// AI parsing flows through /api/parse (kind: 'receipt') — Vercel + Anthropic vision.
 // Without the endpoint deployed the UI still works via manual entry.
 
 const RECEIPT_CATEGORIES = [
@@ -6379,10 +6379,10 @@ function ReceiptIntake({ onParsed, onManualEntry, onCancel }) {
       const isPdf = mimeType === 'application/pdf';
       setPreview(dataUrl);
 
-      const res = await fetch('/api/parse-receipt', {
+      const res = await fetch('/api/parse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ base64, mimeType, isPdf }),
+        body: JSON.stringify({ kind: 'receipt', base64, mimeType, isPdf }),
       });
       if (!res.ok) {
         const txt = await res.text().catch(() => '');
@@ -6535,7 +6535,7 @@ function ReceiptIntake({ onParsed, onManualEntry, onCancel }) {
               <div className="text-sm font-semibold text-rose-300 mb-1">Couldn't parse receipt</div>
               <div className="text-xs text-stone-400 leading-relaxed">{error}</div>
               <div className="text-[10px] mono text-stone-600 mt-2 leading-relaxed">
-                This feature needs <span className="text-stone-400">/api/parse-receipt</span> on your Vercel deploy with ANTHROPIC_API_KEY set. Won't work in the artifact preview — only on the live app.
+                This feature needs <span className="text-stone-400">/api/parse</span> on your Vercel deploy with ANTHROPIC_API_KEY set. Won't work in the artifact preview — only on the live app.
               </div>
             </div>
           </div>
@@ -7216,10 +7216,10 @@ function PantryView() {
     try {
       const dataUrl = await compressImageFile(file, { maxDim: 1600, quality: 0.85 });
       const base64 = dataUrl.split(',')[1];
-      const res = await fetch('/api/parse-pantry', {
+      const res = await fetch('/api/parse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ base64, mimeType: 'image/jpeg' }),
+        body: JSON.stringify({ kind: 'pantry', base64, mimeType: 'image/jpeg' }),
       });
       if (!res.ok) {
         const txt = await res.text().catch(() => '');
@@ -7230,7 +7230,7 @@ function PantryView() {
       if (!ct.includes('json')) {
         const peek = (await res.text().catch(() => '')).slice(0, 60).trim();
         if (peek.toLowerCase().startsWith('<!doctype') || peek.startsWith('<html')) {
-          throw new Error('API endpoint /api/parse-pantry is not deployed. Drop api-parse-pantry.js into the api/ folder of your Vercel project.');
+          throw new Error('API endpoint /api/parse is not deployed. Drop api-parse.js into the api/ folder of your Vercel project.');
         }
         throw new Error(`Expected JSON, got ${ct || 'unknown'}.`);
       }
@@ -8747,10 +8747,10 @@ function RecipeIntake({ pantryItems = [], onParsed, onSaveDirect, onManual, onCa
     setStage('parsing');
     setError(null);
     try {
-      const res = await fetch('/api/parse-recipe', {
+      const res = await fetch('/api/parse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ kind: 'recipe', ...body }),
       });
       const ct = res.headers.get('content-type') || '';
       if (!res.ok) {
@@ -8763,14 +8763,14 @@ function RecipeIntake({ pantryItems = [], onParsed, onSaveDirect, onManual, onCa
           throw new Error('ANTHROPIC_API_KEY isn\'t set on the deployment. Add it in Vercel → Settings → Environment Variables (Production).');
         }
         if (res.status === 404 || txt.trim().toLowerCase().startsWith('<!doctype') || txt.trim().startsWith('<html')) {
-          throw new Error('The /api/parse-recipe endpoint isn\'t responding. Make sure api/parse-recipe.js is deployed to Vercel.');
+          throw new Error('The /api/parse endpoint isn\'t responding. Make sure api/parse.js is deployed to Vercel.');
         }
         throw new Error(`Server returned ${res.status}${txt ? `: ${txt.slice(0, 140)}` : ''}`);
       }
       if (!ct.includes('json')) {
         const peek = (await res.text().catch(() => '')).slice(0, 60).trim();
         if (peek.toLowerCase().startsWith('<!doctype') || peek.startsWith('<html')) {
-          throw new Error('The /api/parse-recipe endpoint returned the app HTML instead of data — it may not be deployed.');
+          throw new Error('The /api/parse endpoint returned the app HTML instead of data — it may not be deployed.');
         }
         throw new Error(`Expected JSON, got ${ct || 'unknown'}.`);
       }
@@ -9918,6 +9918,7 @@ function RecipesView() {
   const [pantryItems, setPantryItems] = useState([]);
   const [favorites, setFavorites] = useState(new Set());
   const [filter, setFilter] = useState('all');
+  const [maxTime, setMaxTime] = useState(null); // minutes cap for the time filter, or null for off
   const [loaded, setLoaded] = useState(false);
   const [todayPlan, setTodayPlan] = useState(null);
   const [tomorrowPlan, setTomorrowPlan] = useState(null);
@@ -10027,6 +10028,7 @@ function RecipesView() {
     } else if (filter !== 'all') {
       list = list.filter((r) => r.mealType.includes(filter));
     }
+    if (maxTime) list = list.filter((r) => (r.totalTime || 0) <= maxTime);
     // Sort: fully-covered first, then by coverage score, then by primary missing,
     // then alphabetical. Favorites get a small boost.
     return list.slice().sort((a, b) => {
@@ -10039,7 +10041,7 @@ function RecipesView() {
       if (Math.abs(sd) > 0.01) return sd;
       return a.name.localeCompare(b.name);
     });
-  }, [enriched, filter]);
+  }, [enriched, filter, maxTime]);
 
   // Recipes shown when inside a folder or a tag filter — applies the folder/tag
   // scope first, then the meal-type chip filter, then the same sort as above.
@@ -10053,13 +10055,14 @@ function RecipesView() {
     }
     if (filter === 'favorites') list = list.filter((r) => r.isFavorite);
     else if (filter !== 'all') list = list.filter((r) => r.mealType.includes(filter));
+    if (maxTime) list = list.filter((r) => (r.totalTime || 0) <= maxTime);
     return list.slice().sort((a, b) => {
       if (a.coverage.fullyCovered !== b.coverage.fullyCovered) return b.coverage.fullyCovered ? 1 : -1;
       const sd = (b.coverage.score + (b.isFavorite ? 0.05 : 0)) - (a.coverage.score + (a.isFavorite ? 0.05 : 0));
       if (Math.abs(sd) > 0.01) return sd;
       return a.name.localeCompare(b.name);
     });
-  }, [enriched, browseMode, activeTag, activeFolderId, filter]);
+  }, [enriched, browseMode, activeTag, activeFolderId, filter, maxTime]);
 
   const fullyCovered = enriched.filter((r) => r.coverage.fullyCovered);
   const inStock = pantryItems.filter((p) => p.status === 'in-stock').length;
@@ -10518,6 +10521,28 @@ function RecipesView() {
                   </button>
                 ))}
               </div>
+              {/* max-time filter chips */}
+              <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1 -mx-1 px-1 items-center">
+                <span className="shrink-0 mono text-[9px] uppercase tracking-wider text-stone-600 pr-0.5">Ready in</span>
+                {[15, 30, 45, 60].map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setMaxTime(maxTime === t ? null : t)}
+                    className={`shrink-0 px-3 py-1 rounded-full mono text-[10px] uppercase tracking-wider border transition-colors ${
+                      maxTime === t
+                        ? 'bg-sky-400/15 border-sky-400/50 text-sky-400'
+                        : 'bg-stone-900/60 border-stone-800 text-stone-500 hover:text-stone-300'
+                    }`}
+                  >
+                    ≤{t} min
+                  </button>
+                ))}
+                {maxTime && (
+                  <button onClick={() => setMaxTime(null)} className="shrink-0 text-stone-600 hover:text-stone-300 px-1" aria-label="Clear time filter">
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
               {recipesForView.length === 0 ? (
                 <div className="bg-stone-900/40 border border-dashed border-stone-700 rounded-xl p-6 text-center">
                   <div className="text-xs text-stone-500 leading-relaxed">
@@ -10673,8 +10698,8 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
   // pantry coverage, logging, shopping, Cook & Stock — while edit/delete still
   // act on the base recipe (parent holds it; onEdit/onDelete take no args).
   const hasVariants = Array.isArray(baseRecipe.variants) && baseRecipe.variants.length > 0;
-  const [variantIdx, setVariantIdx] = useState(0);
-  const activeVariant = hasVariants ? baseRecipe.variants[Math.min(variantIdx, baseRecipe.variants.length - 1)] : null;
+  const [variantIdx, setVariantIdx] = useState(-1); // -1 = original recipe; 0+ = a saved version
+  const activeVariant = hasVariants && variantIdx >= 0 ? baseRecipe.variants[Math.min(variantIdx, baseRecipe.variants.length - 1)] : null;
   const recipe = useMemo(() => {
     if (!activeVariant) return baseRecipe;
     // A variant either REPLACES the ingredient list (substitution-style, e.g. a
@@ -10987,12 +11012,22 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
         {hasVariants && (
           <div className="mt-3">
             <div className="flex gap-1.5 flex-wrap">
+              <button
+                onClick={() => setVariantIdx(-1)}
+                className={`mono text-[10px] uppercase tracking-wider px-2.5 py-1.5 rounded-md border transition-colors ${
+                  variantIdx < 0
+                    ? 'bg-amber-400/10 border-amber-400 text-amber-400'
+                    : 'bg-stone-950/60 border-stone-800 text-stone-400 hover:border-stone-700'
+                }`}
+              >
+                Original
+              </button>
               {baseRecipe.variants.map((v, i) => (
                 <button
                   key={i}
                   onClick={() => setVariantIdx(i)}
                   className={`mono text-[10px] uppercase tracking-wider px-2.5 py-1.5 rounded-md border transition-colors ${
-                    i === Math.min(variantIdx, baseRecipe.variants.length - 1)
+                    i === variantIdx
                       ? 'bg-amber-400/10 border-amber-400 text-amber-400'
                       : 'bg-stone-950/60 border-stone-800 text-stone-400 hover:border-stone-700'
                   }`}
@@ -11807,6 +11842,11 @@ function ShoppingView({ onConvertToReceipt }) {
   const [showAddCommon, setShowAddCommon] = useState(false);
   const [commonDraft, setCommonDraft] = useState({ name: '', qty: '1', unit: 'ea' });
   const [recentlyAddedFromCommon, setRecentlyAddedFromCommon] = useState(null); // common id flashed amber
+  // "For You" — AI grocery ideas grounded in the user's logged eating (nutrient
+  // gaps + cost), separate from the recipe-restock suggestions above.
+  const [forYou, setForYou] = useState([]);
+  const [forYouState, setForYouState] = useState('idle'); // idle | working | done | error
+  const [forYouError, setForYouError] = useState(null);
 
   const load = useCallback(async () => {
     const recipesList = await loadAllRecipes();
@@ -11883,6 +11923,97 @@ function ShoppingView({ onConvertToReceipt }) {
     setSuggestions(sugs);
   };
 
+  // Build the payload from logged nutrition, then ask for grounded ideas.
+  const runForYou = async () => {
+    setForYouState('working');
+    setForYouError(null);
+    try {
+      // Last ~21 days of logged foods.
+      const start = addDays(today(), -20);
+      const nKeys = await storage.list('nutrition:');
+      const allEntries = [];
+      const foodFreq = {};
+      const daySet = new Set();
+      for (const k of nKeys) {
+        const date = k.replace('nutrition:', '');
+        if (date < start) continue;
+        const day = await storage.get(k);
+        // Nutrition days are stored as a bare array of entries.
+        const entries = Array.isArray(day) ? day : (day?.entries || []);
+        if (entries.length) daySet.add(date);
+        for (const e of entries) {
+          allEntries.push(e);
+          const nm = String(e.name || '').toLowerCase().trim();
+          if (nm) foodFreq[nm] = (foodFreq[nm] || 0) + 1;
+        }
+      }
+      const days = daySet.size || 1;
+
+      // Average daily micronutrient intake vs RDV (target nutrients only).
+      const totals = sumMicros(allEntries);
+      const nutrientAverages = {};
+      for (const m of MICRONUTRIENTS) {
+        if (m.type !== 'target' || !m.rdv) continue;
+        const avg = (totals[m.key] || 0) / days;
+        if (avg <= 0) continue; // no data on this nutrient — don't claim a gap
+        nutrientAverages[m.key] = {
+          label: m.label,
+          avg: Math.round(avg * 10) / 10,
+          rdv: m.rdv,
+          pctRdv: Math.round((avg / m.rdv) * 100),
+        };
+      }
+
+      const loggedFoods = Object.entries(foodFreq)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 40)
+        .map(([name, timesLogged]) => ({ name, timesLogged }));
+
+      // Rough protein-cost signal from priced logged entries.
+      const costed = allEntries.filter((e) => typeof e.cost === 'number' && e.cost > 0 && (e.protein || 0) > 0);
+      let proteinPerServingAvg = null;
+      if (costed.length >= 3) {
+        const perGram = costed.map((e) => e.cost / e.protein);
+        proteinPerServingAvg = Math.round((perGram.reduce((a, b) => a + b, 0) / perGram.length) * 30 * 100) / 100; // $ per ~30g
+      }
+
+      const goals = await storage.get('goals:active');
+
+      const res = await fetch('/api/suggest-groceries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nutrientAverages,
+          loggedFoods,
+          proteinPerServingAvg,
+          goals: goals ? JSON.stringify(goals) : null,
+          daysOfData: days,
+        }),
+      });
+      const ct = res.headers.get('content-type') || '';
+      if (!ct.includes('json')) throw new Error('API endpoint /api/suggest-groceries is not deployed.');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Server returned ${res.status}`);
+      setForYou(data.suggestions || []);
+      setForYouState('done');
+    } catch (e) {
+      setForYouError(e.message || String(e));
+      setForYouState('error');
+    }
+  };
+
+  const addForYou = async (sug) => {
+    const id = `s_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const entry = {
+      id, name: sug.name, qty: 1, unit: 'ea', category: sug.category,
+      sources: [{ id: 'foryou', label: sug.axis === 'cost' ? 'Cheaper option' : 'Nutrient gap', priority: 1 }],
+      needed: true, addedAt: Date.now(), gotAt: null,
+    };
+    await storage.set(`shop:${id}`, entry);
+    setItems((prev) => [entry, ...prev]);
+    setForYou((prev) => prev.filter((s) => s.name !== sug.name));
+  };
+
   const addSuggestion = async (sug) => {
     const id = `s_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const entry = {
@@ -11938,6 +12069,18 @@ function ShoppingView({ onConvertToReceipt }) {
   const removeItem = async (id) => {
     await storage.delete(`shop:${id}`);
     setItems((prev) => prev.filter((x) => x.id !== id));
+  };
+
+  // Adjust a cart item's quantity via the +/- stepper. Persists the new qty so
+  // it survives reloads and flows into the receipt when the list is converted.
+  const updateItemQty = async (id, qty) => {
+    const next = Math.max(0, Math.round((parseFloat(qty) || 0) * 100) / 100);
+    if (next <= 0) return;
+    const existing = items.find((x) => x.id === id);
+    if (!existing) return;
+    const updated = { ...existing, qty: next };
+    await storage.set(`shop:${id}`, updated);
+    setItems((prev) => prev.map((x) => (x.id === id ? updated : x)));
   };
 
   // Commons handlers ─────────────────────────────────────────────────────────
@@ -12168,49 +12311,81 @@ function ShoppingView({ onConvertToReceipt }) {
               </div>
             )}
 
-            {commons.length > 0 && (
-              <div className="space-y-1 pt-2">
-                {commons.map((c) => {
-                  const isFlashing = recentlyAddedFromCommon === c.id;
-                  return (
-                    <div
-                      key={c.id}
-                      className={`flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${
-                        isFlashing ? 'bg-amber-400/20 border border-amber-400/40' : 'bg-stone-950/50 border border-stone-800'
-                      }`}
-                    >
-                      <button
-                        onClick={() => addCommonToList(c)}
-                        className="flex-1 flex items-center gap-2 text-left min-w-0 hover:opacity-80 active:scale-[0.99]"
-                      >
-                        <Plus size={12} className={`shrink-0 ${isFlashing ? 'text-amber-300' : 'text-amber-400/60'}`} />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-xs text-stone-200 truncate">{c.name}</div>
-                          <div className="mono text-[10px] text-stone-500 tabular">
-                            {c.defaultQty} {c.defaultUnit}
-                            {c.useCount > 0 && (
-                              <span className="text-stone-600 ml-1.5">· used {c.useCount}×</span>
-                            )}
+            {commons.length > 0 && (() => {
+              // Group by grocery category. Items already store a category (from
+              // inferCategory when starred); fall back for any legacy item that
+              // doesn't. Render groups in the standard category order, so dairy,
+              // meat, produce etc. each get their own labeled section.
+              const byCat = {};
+              for (const c of commons) {
+                const cat = c.category || inferCategory(c.name);
+                (byCat[cat] = byCat[cat] || []).push(c);
+              }
+              const orderedCats = RECEIPT_CATEGORIES
+                .map((rc) => rc.id)
+                .filter((id) => byCat[id] && byCat[id].length);
+              const showHeaders = orderedCats.length > 1; // don't bother if everything's one category
+
+              return (
+                <div className="pt-2 space-y-3">
+                  {orderedCats.map((catId) => {
+                    const meta = RECEIPT_CATEGORIES.find((rc) => rc.id === catId) || RECEIPT_CATEGORIES.find((rc) => rc.id === 'other');
+                    return (
+                      <div key={catId}>
+                        {showHeaders && (
+                          <div className="flex items-center gap-1.5 mb-1.5 px-0.5">
+                            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: meta.hex }} />
+                            <span className="mono text-[9px] uppercase tracking-[0.15em] text-stone-500">{meta.label}</span>
+                            <span className="mono text-[9px] text-stone-600">{byCat[catId].length}</span>
                           </div>
-                        </div>
-                        {isFlashing && (
-                          <span className="text-[9px] mono uppercase tracking-wider text-amber-300 shrink-0">
-                            Added
-                          </span>
                         )}
-                      </button>
-                      <button
-                        onClick={() => removeCommon(c.id)}
-                        className="text-stone-600 hover:text-rose-400 p-1 shrink-0"
-                        aria-label="Remove common item"
-                      >
-                        <X size={11} />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                        <div className="space-y-1">
+                          {byCat[catId].map((c) => {
+                            const isFlashing = recentlyAddedFromCommon === c.id;
+                            return (
+                              <div
+                                key={c.id}
+                                className={`flex items-center gap-2 px-2 py-1.5 rounded transition-colors ${
+                                  isFlashing ? 'bg-amber-400/20 border border-amber-400/40' : 'bg-stone-950/50 border border-stone-800'
+                                }`}
+                              >
+                                <button
+                                  onClick={() => addCommonToList(c)}
+                                  className="flex-1 flex items-center gap-2 text-left min-w-0 hover:opacity-80 active:scale-[0.99]"
+                                >
+                                  <Plus size={12} className={`shrink-0 ${isFlashing ? 'text-amber-300' : 'text-amber-400/60'}`} />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="text-xs text-stone-200 truncate">{c.name}</div>
+                                    <div className="mono text-[10px] text-stone-500 tabular">
+                                      {c.defaultQty} {c.defaultUnit}
+                                      {c.useCount > 0 && (
+                                        <span className="text-stone-600 ml-1.5">· used {c.useCount}×</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  {isFlashing && (
+                                    <span className="text-[9px] mono uppercase tracking-wider text-amber-300 shrink-0">
+                                      Added
+                                    </span>
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => removeCommon(c.id)}
+                                  className="text-stone-600 hover:text-rose-400 p-1 shrink-0"
+                                  aria-label="Remove common item"
+                                >
+                                  <X size={11} />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
 
             {showAddCommon ? (
               <div className="mt-2 bg-stone-950/60 border border-stone-800 rounded p-2">
@@ -12295,6 +12470,7 @@ function ShoppingView({ onConvertToReceipt }) {
                       item={it}
                       onToggle={() => toggleGot(it.id)}
                       onRemove={() => removeItem(it.id)}
+                      onQty={(q) => updateItemQty(it.id, q)}
                       isCommon={commonNameSet.has((it.name || '').toLowerCase().trim())}
                       onToggleCommon={() => {
                         const lcname = (it.name || '').toLowerCase().trim();
@@ -12329,6 +12505,67 @@ function ShoppingView({ onConvertToReceipt }) {
           </div>
         </div>
       )}
+
+      {/* For You — grounded in logged eating (nutrient gaps + cost) */}
+      <div className="bg-stone-900/60 border border-stone-800 rounded-xl p-3 mt-4">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-1.5">
+            <Sparkles size={11} className="text-sky-400" />
+            <div className="mono text-[10px] uppercase tracking-[0.2em] text-stone-400">For You</div>
+          </div>
+          {forYouState !== 'working' && (
+            <button onClick={runForYou} className="text-[10px] mono uppercase tracking-wider text-sky-400 hover:text-sky-300">
+              {forYouState === 'done' || forYou.length > 0 ? 'Refresh' : 'Suggest'}
+            </button>
+          )}
+        </div>
+        <div className="mono text-[10px] text-stone-600 leading-snug mb-2">
+          Grocery ideas based on what you actually log — nutrient gaps you're low on and cheaper protein sources.
+        </div>
+
+        {forYouState === 'working' && (
+          <div className="flex items-center gap-2 py-2 text-stone-400">
+            <Loader2 size={13} className="animate-spin text-sky-400" />
+            <span className="mono text-[11px]">Reading your last few weeks of logs…</span>
+          </div>
+        )}
+        {forYouState === 'error' && (
+          <div className="mono text-[10px] text-rose-300 leading-snug py-1">{forYouError}</div>
+        )}
+        {forYouState === 'done' && forYou.length === 0 && (
+          <div className="mono text-[11px] text-stone-500 py-1 leading-snug">
+            Not enough logged data to say anything grounded yet. Log meals via Search or a barcode scan (which carry nutrient data) and try again.
+          </div>
+        )}
+        {forYou.length > 0 && (
+          <div className="space-y-1">
+            {forYou.map((s) => (
+              <div key={s.name} className="flex items-start gap-2 bg-stone-950/50 border border-stone-800 rounded-lg px-2.5 py-2">
+                <button
+                  onClick={() => addForYou(s)}
+                  className="shrink-0 mt-0.5 w-6 h-6 rounded-full border border-sky-400/40 text-sky-400 flex items-center justify-center hover:bg-sky-400/10"
+                  aria-label={`Add ${s.name}`}
+                >
+                  <Plus size={13} />
+                </button>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-stone-200 capitalize truncate">{s.name}</span>
+                    <span className={`shrink-0 mono text-[8px] uppercase tracking-wider px-1 py-0.5 rounded border ${
+                      s.axis === 'cost'
+                        ? 'border-emerald-400/40 text-emerald-400/80 bg-emerald-400/10'
+                        : 'border-sky-400/40 text-sky-400/80 bg-sky-400/10'
+                    }`}>
+                      {s.axis === 'cost' ? 'cheaper' : 'gap'}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-stone-500 leading-snug mt-0.5">{s.reason}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Suggestions */}
       {suggestions.length > 0 && (
@@ -12982,13 +13219,15 @@ async function cookRecipe(recipe, servingsToCook, receipts) {
 // ─────────────────────────────────────────────────────────────────────────────
 // ShoppingItemRow — one item with check-off + remove
 // ─────────────────────────────────────────────────────────────────────────────
-function ShoppingItemRow({ item, onToggle, onRemove, isCommon = false, onToggleCommon }) {
+function ShoppingItemRow({ item, onToggle, onRemove, onQty, isCommon = false, onToggleCommon }) {
   const isGot = !item.needed;
   const sourceText = (item.sources || [])
     .map((s) => s.label)
     .filter(Boolean)
     .join(' · ');
   const hasToday = (item.sources || []).some((s) => s.priority === 3);
+  const qty = parseFloat(item.qty) || 1;
+  const step = qty < 2 ? 0.5 : 1; // fine steps for fractional amounts, whole otherwise
 
   return (
     <div className={`bg-stone-900 border border-stone-800 rounded-lg flex items-center gap-2 px-3 py-2.5 transition-opacity ${isGot ? 'opacity-50' : ''}`}>
@@ -13020,6 +13259,26 @@ function ShoppingItemRow({ item, onToggle, onRemove, isCommon = false, onToggleC
           )}
         </div>
       </div>
+      {onQty && !isGot && (
+        <div className="shrink-0 flex items-center gap-1">
+          <button
+            onClick={() => onQty(Math.max(step, Math.round((qty - step) * 100) / 100))}
+            disabled={qty <= step}
+            className="w-7 h-7 rounded-md border border-stone-700 text-stone-300 flex items-center justify-center active:scale-95 hover:border-stone-600 disabled:opacity-30"
+            aria-label="Decrease quantity"
+          >
+            <Minus size={13} />
+          </button>
+          <span className="mono text-xs tabular text-stone-200 w-6 text-center">{qty}</span>
+          <button
+            onClick={() => onQty(Math.round((qty + step) * 100) / 100)}
+            className="w-7 h-7 rounded-md border border-stone-700 text-stone-300 flex items-center justify-center active:scale-95 hover:border-stone-600"
+            aria-label="Increase quantity"
+          >
+            <Plus size={13} />
+          </button>
+        </div>
+      )}
       {onToggleCommon && (
         <button
           onClick={onToggleCommon}
@@ -13508,6 +13767,7 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
   const [history, setHistory] = useState({});
   const [completed, setCompleted] = useState({}); // { exerciseName: true } — what's been ticked off
   const [storedDay, setStoredDay] = useState(null); // scheduleDay saved with this date's entry (pins display)
+  const [phase, setPhase] = useState('recomp'); // training phase drives progression aggressiveness
   const [loaded, setLoaded] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -13553,6 +13813,8 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
       }
       for (const ex in hist) hist[ex].sort((a, b) => b.date.localeCompare(a.date));
       setHistory(hist);
+      const storedPhase = await storage.get('training:phase');
+      if (storedPhase) setPhase(storedPhase);
       setLoaded(true);
     })();
   }, [logKey, activeDate, cycleVersion]);
@@ -13810,6 +14072,96 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
         </div>
       )}
 
+      {/* Training phase — drives how the progression nudges behave. On a cut,
+          holding weight is framed as success; on a bulk, load progression is
+          pushed. Also controls when a big load jump triggers a rep-reset. */}
+      {session.blocks.some((b) => b.exercises.some((e) => e.track)) && (
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="mono text-[9px] uppercase tracking-[0.2em] text-stone-500">Training Phase</span>
+            <span className="mono text-[9px] text-stone-600">shapes progression</span>
+          </div>
+          <div className="grid grid-cols-4 gap-1">
+            {[
+              { id: 'cut', label: 'Cut' },
+              { id: 'recomp', label: 'Recomp' },
+              { id: 'maintain', label: 'Maintain' },
+              { id: 'bulk', label: 'Bulk' },
+            ].map((p) => (
+              <button
+                key={p.id}
+                onClick={async () => { setPhase(p.id); await storage.set('training:phase', p.id); }}
+                className={`mono text-[10px] uppercase tracking-wider py-1.5 rounded-md border transition-colors ${
+                  phase === p.id
+                    ? p.id === 'cut' ? 'bg-emerald-400/15 border-emerald-400/60 text-emerald-400'
+                      : p.id === 'bulk' ? 'bg-sky-400/15 border-sky-400/60 text-sky-400'
+                      : 'bg-amber-400/15 border-amber-400/60 text-amber-400'
+                    : 'bg-stone-900/60 border-stone-800 text-stone-500 hover:text-stone-300'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <div className="mono text-[9px] text-stone-600 leading-snug mt-1.5">
+            {phase === 'cut' && 'In a deficit, holding your numbers is a win — strength is largely preserved while fat drops. Chase reps before load.'}
+            {phase === 'recomp' && 'Slow, steady progression. Expect small gains in both strength and size.'}
+            {phase === 'maintain' && 'Modest, consistent progression at maintenance calories.'}
+            {phase === 'bulk' && 'Surplus phase — push load progression; this is when adding weight is both expected and productive.'}
+          </div>
+        </div>
+      )}
+
+      {/* Muscles worked today — planned sets per muscle, filling in as you tick
+          exercises off. Uses the same MUSCLE_MAP as the Body Map. An exercise
+          counts toward every muscle it trains, so these totals intentionally
+          sum to more than the session's raw set count. */}
+      {(() => {
+        const { rows, untracked } = sessionMuscleBreakdown(session, completed);
+        if (rows.length === 0) return null;
+        const maxSets = rows[0].planned || 1;
+        return (
+          <div className="mb-5 bg-stone-900/40 border border-stone-900 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="mono text-[9px] uppercase tracking-[0.2em] text-stone-500">Muscles Worked</span>
+              <span className="mono text-[9px] text-stone-600">sets · done / planned</span>
+            </div>
+            <div className="space-y-1.5">
+              {rows.map((r) => {
+                const pct = Math.round((r.done / r.planned) * 100);
+                return (
+                  <div key={r.muscle} className="flex items-center gap-2">
+                    <span className="text-[11px] text-stone-300 capitalize w-24 shrink-0 truncate">
+                      {MUSCLE_LABELS[r.muscle] || r.muscle}
+                    </span>
+                    <div className="flex-1 h-1.5 bg-stone-950 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${r.done >= r.planned ? 'bg-emerald-400' : 'bg-amber-400/70'}`}
+                        style={{ width: `${Math.max(pct, 0)}%` }}
+                      />
+                    </div>
+                    <span className="mono text-[10px] tabular text-stone-500 w-11 text-right shrink-0">
+                      {r.done}/{r.planned}
+                    </span>
+                    {/* relative volume within this session */}
+                    <span
+                      className="w-1 rounded-full bg-stone-700 shrink-0"
+                      style={{ height: `${Math.max(4, Math.round((r.planned / maxSets) * 14))}px` }}
+                      title={`${r.planned} sets`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            {untracked.length > 0 && (
+              <div className="mono text-[9px] text-stone-600 leading-snug mt-2">
+                Not counted: {untracked.join(', ')} — no muscle mapping yet.
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {/* Blocks */}
       {session.blocks.map((block) => (
         <div key={block.name} className="mb-6">
@@ -13828,6 +14180,7 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
               onFillWeight={(weight) => fillWeight(ex.name, weight, ex.sets)}
               completed={!!completed[ex.name]}
               onToggleComplete={() => toggleComplete(ex.name)}
+              phase={phase}
             />
           ))}
         </div>
@@ -17670,6 +18023,42 @@ async function computeWeeklyVolume() {
   return { counts, untracked: Array.from(untracked) };
 }
 
+// Muscles worked in a single session, with planned and completed set counts.
+// Uses the same MUSCLE_MAP as the Body Map so the two can never disagree — an
+// exercise mapped to several muscles contributes its sets to each of them, so
+// these totals are "sets stimulating this muscle," not a partition of the
+// workout (they sum to more than the session's set count, by design).
+function sessionMuscleBreakdown(session, completed = {}) {
+  if (!session?.blocks) return { rows: [], untracked: [] };
+  const planned = {};
+  const done = {};
+  const untracked = new Set();
+
+  for (const block of session.blocks) {
+    for (const ex of block.exercises || []) {
+      const sets = parseInt(ex.sets) || 0;
+      if (sets <= 0) continue;
+      const muscles = MUSCLE_MAP[ex.name];
+      if (!muscles || muscles.length === 0) {
+        // Only flag untracked work that's actually loaded — warm-ups and
+        // mobility drills aren't meant to show up as volume.
+        if (ex.track) untracked.add(ex.name);
+        continue;
+      }
+      for (const m of muscles) {
+        planned[m] = (planned[m] || 0) + sets;
+        if (completed[ex.name]) done[m] = (done[m] || 0) + sets;
+      }
+    }
+  }
+
+  const rows = Object.keys(planned)
+    .map((m) => ({ muscle: m, planned: planned[m], done: done[m] || 0 }))
+    .sort((a, b) => b.planned - a.planned || a.muscle.localeCompare(b.muscle));
+
+  return { rows, untracked: Array.from(untracked) };
+}
+
 // ============================================================================
 // LIFTING — 1RM estimation & weight prescription helpers
 // ============================================================================
@@ -17717,7 +18106,112 @@ function roundToPlate(weight, step = 2.5) {
   return Math.round(weight / step) * step;
 }
 
-function ExerciseCard({ exercise, log, history, onUpdate, onFillWeight, completed, onToggleComplete }) {
+// ─────────────────────────────────────────────────────────────────────────────
+// PROGRESSION ENGINE — phase-aware, and aware of how big an exercise's smallest
+// weight jump actually is.
+//
+// Two ideas, both grounded in the resistance-training literature:
+//
+// 1. A load increment means different things at different weights. Adding 15 lb
+//    to a 60 lb machine set is a +25% jump — nobody holds their reps through
+//    that. So we look at the jump as a PERCENT of current load. When it's large
+//    (machines with big plate steps, light isolation work), we don't tell the
+//    user to add load AND keep reps. We tell them to take the jump and drop to
+//    the bottom of the rep range, then rebuild reps before jumping again.
+//    Since load-progression and rep-progression produce similar strength/size
+//    gains (Plotkin 2022; Chaves 2024), "bank reps, then jump" is legitimate
+//    progression, not a workaround.
+//
+// 2. The bar for progressing depends on training phase. In an energy deficit,
+//    strength is largely preserved but lean-mass gain is blunted (Murphy &
+//    Koehler 2021), so holding numbers on a cut IS success and the app should
+//    say so rather than nagging for PRs. On a bulk, load progression is both
+//    expected and the point.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// How aggressively each phase pushes load. `readyToProgress` = how many recent
+// sessions at the top of the rep range before we suggest adding weight.
+const PHASE_PROFILES = {
+  bulk:     { readyToProgress: 1, bigJumpPct: 0.10, label: 'Bulk',    holdIsWin: false },
+  recomp:   { readyToProgress: 2, bigJumpPct: 0.08, label: 'Recomp',  holdIsWin: false },
+  maintain: { readyToProgress: 2, bigJumpPct: 0.08, label: 'Maintain',holdIsWin: true  },
+  cut:      { readyToProgress: 2, bigJumpPct: 0.06, label: 'Cut',     holdIsWin: true  },
+};
+
+function getPhaseProfile(phase) {
+  return PHASE_PROFILES[phase] || PHASE_PROFILES.recomp;
+}
+
+// Decide what to recommend for the next session of one tracked exercise.
+// Returns null if there isn't enough history to say anything.
+function computeProgression(exercise, history, phase) {
+  if (!exercise.track || !history || history.length === 0) return null;
+  const last = history[0]?.sets || [];
+  if (last.length === 0) return null;
+  const lastWeight = parseFloat(last[0]?.weight) || 0;
+  if (lastWeight <= 0) return null;
+
+  const profile = getPhaseProfile(phase);
+  const inc = exercise.progression || 5;
+  const repMax = exercise.repMax || 0;
+  const repMin = exercise.repMin || Math.max(1, repMax - 3);
+
+  // A session "maxed out" if every working set hit the top of the rep range.
+  const maxedOut = (sets) =>
+    Array.isArray(sets) &&
+    sets.length >= exercise.sets &&
+    sets.every((s) => parseInt(s.reps) >= repMax);
+
+  // Count consecutive recent maxed-out sessions.
+  let streak = 0;
+  for (const h of history) {
+    if (maxedOut(h.sets)) streak++;
+    else break;
+  }
+
+  const ready = streak >= profile.readyToProgress;
+  const jumpPct = lastWeight > 0 ? inc / lastWeight : 0;
+  const isBigJump = jumpPct >= profile.bigJumpPct;
+
+  if (!ready) {
+    // Not yet earned a load increase. On a cut/maintain, frame holding as success.
+    return {
+      type: 'maintain',
+      weight: lastWeight,
+      phase: profile.label,
+      holdIsWin: profile.holdIsWin,
+      // If they're mid-range, the next milestone is filling out reps, not load.
+      note: profile.holdIsWin
+        ? `Hold ${lastWeight}. Matching this in a ${profile.label.toLowerCase()} is a win — chase reps, not load.`
+        : `Stay at ${lastWeight} until you hit ${repMax} across all sets.`,
+    };
+  }
+
+  // Earned a progression. Decide load-only vs. load+rep-reset based on jump size.
+  if (isBigJump) {
+    return {
+      type: 'increase-reset',
+      from: lastWeight,
+      to: lastWeight + inc,
+      jumpPct: Math.round(jumpPct * 100),
+      repMin,
+      repMax,
+      phase: profile.label,
+      note: `+${inc} lb is a ${Math.round(jumpPct * 100)}% jump on this lift — expect reps to drop. Take it to ${lastWeight + inc} and aim for ${repMin}, then build back to ${repMax} before jumping again.`,
+    };
+  }
+
+  return {
+    type: 'increase',
+    from: lastWeight,
+    to: lastWeight + inc,
+    jumpPct: Math.round(jumpPct * 100),
+    phase: profile.label,
+    note: `You hit ${repMax} for ${profile.readyToProgress}+ sessions — add ${inc} lb.`,
+  };
+}
+
+function ExerciseCard({ exercise, log, history, onUpdate, onFillWeight, completed, onToggleComplete, phase = 'recomp' }) {
   const [expanded, setExpanded] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
 
@@ -17729,19 +18223,15 @@ function ExerciseCard({ exercise, log, history, onUpdate, onFillWeight, complete
     const lastWeight = parseFloat(lastTop.weight) || 0;
     if (lastWeight <= 0) return null;
 
-    const allTopRange = (sets) =>
-      Array.isArray(sets) &&
-      sets.length >= exercise.sets &&
-      sets.every((s) => parseInt(s.reps) >= (exercise.repMax || 0));
-
-    const lastHit = allTopRange(history[0].sets);
-    const prevHit = history[1] && allTopRange(history[1].sets);
-    const shouldIncrease = lastHit && prevHit;
-    const targetWeight = shouldIncrease
-      ? lastWeight + (exercise.progression || 5)
-      : lastWeight;
-
     const est1RM = bestEstimated1RM(history);
+
+    // Target comes from the phase-aware engine so the number here, the badge in
+    // the header, and the note all agree.
+    const prog = computeProgression(exercise, history, phase);
+    const targetWeight = prog && (prog.type === 'increase' || prog.type === 'increase-reset')
+      ? prog.to
+      : lastWeight;
+    const shouldIncrease = !!prog && prog.type !== 'maintain';
     const pct = est1RM > 0 ? Math.round((targetWeight / est1RM) * 100) : null;
 
     return {
@@ -17751,30 +18241,18 @@ function ExerciseCard({ exercise, log, history, onUpdate, onFillWeight, complete
       shouldIncrease,
       est1RM: est1RM > 0 ? Math.round(est1RM) : null,
       targetPercent: pct,
+      note: prog?.note || null,
+      progType: prog?.type || null,
+      repTarget: prog?.type === 'increase-reset' ? prog.repMin : null,
     };
-  }, [history, exercise]);
+  }, [history, exercise, phase]);
 
   // Auto-progression: if last 2 sessions hit top of rep range across all sets, suggest +increment
 
-  const suggestion = useMemo(() => {
-    if (!exercise.track || history.length === 0) return null;
-    const last = history[0]?.sets || [];
-    if (last.length === 0) return null;
-    const lastWeight = parseFloat(last[0]?.weight) || 0;
-    if (lastWeight === 0) return null;
-
-    const allTopRange = (sets) =>
-      sets.length >= exercise.sets &&
-      sets.every((s) => parseInt(s.reps) >= (exercise.repMax || 0));
-
-    const lastHit = allTopRange(last);
-    const prevHit = history[1] && allTopRange(history[1].sets);
-
-    if (lastHit && prevHit) {
-      return { type: 'increase', from: lastWeight, to: lastWeight + (exercise.progression || 5) };
-    }
-    return { type: 'maintain', weight: lastWeight };
-  }, [history, exercise]);
+  const suggestion = useMemo(
+    () => computeProgression(exercise, history, phase),
+    [history, exercise, phase]
+  );
 
   // Reusable completion checkbox — empty circle when undone, filled green when done
   const CheckButton = () => (
@@ -17843,8 +18321,11 @@ function ExerciseCard({ exercise, log, history, onUpdate, onFillWeight, complete
               {suggestion && suggestion.type === 'increase' && (
                 <><span>·</span><span className="text-amber-400 flex items-center gap-0.5"><ArrowUp size={9} />{suggestion.to} lb</span></>
               )}
+              {suggestion && suggestion.type === 'increase-reset' && (
+                <><span>·</span><span className="text-sky-400 flex items-center gap-0.5"><ArrowUp size={9} />{suggestion.to} lb · reset reps</span></>
+              )}
               {suggestion && suggestion.type === 'maintain' && (
-                <><span>·</span><span className="text-stone-400">last: {suggestion.weight} lb</span></>
+                <><span>·</span><span className="text-stone-400">hold {suggestion.weight} lb</span></>
               )}
             </div>
           </div>
@@ -17885,7 +18366,15 @@ function ExerciseCard({ exercise, log, history, onUpdate, onFillWeight, complete
               {rec.targetPercent != null && rec.est1RM != null && (
                 <div className="mono text-[10px] text-stone-500 mt-1.5 pl-[70px]">
                   ~{rec.targetPercent}% of est 1RM ({rec.est1RM} lb)
-                  {rec.shouldIncrease && <span className="text-amber-400/80 ml-2">· hit top of range twice → bump</span>}
+                </div>
+              )}
+              {rec.note && (
+                <div className={`text-[11px] leading-snug mt-1.5 pl-[70px] ${
+                  rec.progType === 'increase-reset' ? 'text-sky-300/90'
+                  : rec.progType === 'maintain' ? 'text-stone-400'
+                  : 'text-amber-400/90'
+                }`}>
+                  {rec.note}
                 </div>
               )}
             </div>
@@ -20352,6 +20841,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
   // auditable rather than a black box, and stored on the logged entry.
   const [estimateItems, setEstimateItems] = useState([]);
   const [estimateConfidence, setEstimateConfidence] = useState(null);
+  const [estimateRange, setEstimateRange] = useState(null); // per-macro [lo,hi] on lower-confidence estimates
   // Which logged entry has its stored breakdown open in Today's Log.
   const [expandedEntry, setExpandedEntry] = useState(null);
   const mealPhotoRef = useRef(null);
@@ -20396,6 +20886,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
     setEstimateError(null);
     setEstimateNote('');
     setEstimateItems([]);
+    setEstimateRange(null);
     setEstimateConfidence(null);
     try {
       const res = await fetch('/api/estimate-meal', {
@@ -20431,6 +20922,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
       setEstimateNote(data.note || '');
       setEstimateItems(Array.isArray(data.items) ? data.items : []);
       setEstimateConfidence(data.confidence || null);
+      setEstimateRange(data.range || null);
       setEstimateMode(null);
       setEstimateText('');
     } catch (e) {
@@ -20538,6 +21030,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
       if (sum === entry.cal) {
         entry.breakdown = estimateItems;
         if (estimateConfidence) entry.confidence = estimateConfidence;
+        if (estimateRange) entry.range = estimateRange;
         if (estimateNote) entry.estimateNote = estimateNote;
       }
     }
@@ -20546,6 +21039,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
     setMeal({ name: '', cal: '', protein: '', carbs: '', fat: '' });
     setEstimateNote('');
     setEstimateItems([]);
+    setEstimateRange(null);
     setEstimateConfidence(null);
   };
 
@@ -20678,6 +21172,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
     setEstimateMode(null);
     setEstimateText('');
     setEstimateItems([]);
+    setEstimateRange(null);
     setEstimateConfidence(null);
   };
 
@@ -21141,6 +21636,25 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                         {estimateItems.reduce((a, i) => a + (i.fat || 0), 0)}f
                       </span>
                     </div>
+                    {/* Likely range — shown only when the estimate is medium/low
+                        confidence. Communicates uncertainty honestly; the value
+                        that gets logged is still the midpoint (the total above). */}
+                    {estimateRange && (
+                      <div className="px-2.5 py-2 border-t border-stone-800/70 bg-stone-950/40">
+                        <div className="mono text-[9px] uppercase tracking-wider text-stone-500 mb-1">
+                          Likely range
+                        </div>
+                        <div className="mono text-[10px] tabular text-stone-400 leading-relaxed">
+                          {estimateRange.cal[0]}–{estimateRange.cal[1]} cal ·{' '}
+                          <span className="text-amber-400/70">{estimateRange.protein[0]}–{estimateRange.protein[1]}p</span> ·{' '}
+                          {estimateRange.carbs[0]}–{estimateRange.carbs[1]}c ·{' '}
+                          {estimateRange.fat[0]}–{estimateRange.fat[1]}f
+                        </div>
+                        <div className="mono text-[9px] text-stone-600 leading-snug mt-1">
+                          Logs the midpoint. Adjust the numbers below if you know better.
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
                 <input
@@ -21251,8 +21765,15 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                   ))}
                 </div>
                 {m.confidence && (
-                  <div className="px-3 py-1.5 text-[9px] mono uppercase tracking-wider text-stone-600 border-t border-stone-800/60">
-                    AI estimate · {m.confidence} confidence
+                  <div className="px-3 py-1.5 border-t border-stone-800/60">
+                    <div className="text-[9px] mono uppercase tracking-wider text-stone-600">
+                      AI estimate · {m.confidence} confidence
+                    </div>
+                    {m.range && (
+                      <div className="mono text-[9px] tabular text-stone-600 mt-0.5">
+                        range: {m.range.cal[0]}–{m.range.cal[1]} cal · logged midpoint {m.cal}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

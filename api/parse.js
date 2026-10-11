@@ -111,7 +111,8 @@ Return ONLY valid JSON in this exact shape, no markdown fences, no commentary:
   "instructions": [
     "Step 1 instruction as a single string",
     "Step 2 instruction"
-  ]
+  ],
+  "notes": "string — any notes, tips, variations, storage or substitution advice from the source, or empty string"
 }
 
 Rules:
@@ -123,7 +124,9 @@ Rules:
 - 2-5 ingredients should be marked primary. The protein source and main starch are usually primary. Seasonings, garnishes, and oils are not primary.
 - Instructions should be concise, action-oriented sentences. Don't number them in the strings — the array order is the sequence.
 - If totalTime isn't given, estimate it from the steps.
-- For difficulty: easy = <30min, no advanced technique. medium = 30-60min or some technique. hard = >60min or advanced.`;
+- For difficulty: easy = <30min, no advanced technique. medium = 30-60min or some technique. hard = >60min or advanced.
+- NOTES: capture any commentary that isn't an ingredient or a numbered step — tips, variations, substitutions, storage/reheating advice, "make it spicier" suggestions, serving ideas, or the author's remarks. These usually sit at the BOTTOM of a recipe under a heading like Notes, Tips, Variations, or Storage, but can also appear as asides before the ingredients.
+- Preserve the substance of those notes in the source's own terms. Keep them concise; if there are several, separate them with line breaks. Do NOT restate the instructions, and do NOT invent notes that weren't in the source — return an empty string if there are none.`;
 
 const KINDS = {
   pantry:  { prompt: PANTRY_PROMPT,  maxTokens: 2000, ask: 'Identify the pantry/grocery items in this photo.' },
