@@ -115,7 +115,7 @@ Return the JSON now.`;
     }
 
     const aiData = await aiRes.json();
-    const text = aiData.content?.[0]?.text;
+    const text = replyText(aiData);
     if (!text) {
       return res.status(500).json({ error: 'Empty response from model' });
     }
@@ -128,7 +128,7 @@ Return the JSON now.`;
 
     let parsed;
     try {
-      parsed = JSON.parse(cleaned);
+      parsed = parseLoose(cleaned);
     } catch (e) {
       return res.status(500).json({ error: `Could not parse model response as JSON. First 200 chars: ${cleaned.slice(0, 200)}` });
     }
@@ -152,5 +152,27 @@ Return the JSON now.`;
     });
   } catch (e) {
     return res.status(500).json({ error: e.message || 'Unknown error' });
+  }
+}
+
+// The reply's text, skipping any non-text blocks (models that think first put
+// a thinking block ahead of the answer, so content[0] is not always the text).
+function replyText(aiData) {
+  return (aiData?.content || [])
+    .filter((b) => b && b.type === 'text' && typeof b.text === 'string')
+    .map((b) => b.text)
+    .join('')
+    .trim();
+}
+
+// JSON.parse that tolerates a sentence or code fence around the JSON.
+function parseLoose(text) {
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    const s = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (s === -1 || end <= s) throw e;
+    return JSON.parse(text.slice(s, end + 1));
   }
 }

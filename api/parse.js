@@ -305,7 +305,7 @@ export default async function handler(req, res) {
     }
 
     const aiData = await aiRes.json();
-    const responseText = aiData.content?.[0]?.text;
+    const responseText = replyText(aiData);
     if (!responseText) return res.status(500).json({ error: 'Empty response from model' });
 
     const cleaned = responseText
@@ -316,7 +316,7 @@ export default async function handler(req, res) {
 
     let parsed;
     try {
-      parsed = JSON.parse(cleaned);
+      parsed = parseLoose(cleaned);
     } catch (e) {
       return res.status(500).json({ error: `Could not parse model response as JSON. First 200 chars: ${cleaned.slice(0, 200)}` });
     }
@@ -361,5 +361,27 @@ export default async function handler(req, res) {
     return res.status(200).json({ parsed });
   } catch (e) {
     return res.status(502).json({ error: e?.message || 'Parse failed' });
+  }
+}
+
+// The reply's text, skipping any non-text blocks (models that think first put
+// a thinking block ahead of the answer, so content[0] is not always the text).
+function replyText(aiData) {
+  return (aiData?.content || [])
+    .filter((b) => b && b.type === 'text' && typeof b.text === 'string')
+    .map((b) => b.text)
+    .join('')
+    .trim();
+}
+
+// JSON.parse that tolerates a sentence or code fence around the JSON.
+function parseLoose(text) {
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    const s = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (s === -1 || end <= s) throw e;
+    return JSON.parse(text.slice(s, end + 1));
   }
 }

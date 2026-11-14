@@ -12,14 +12,23 @@ Personal fitness tracker built as a PWA. Vite + React + Tailwind frontend, five 
 │   └── index.css         ← Tailwind + base styles
 ├── public/
 │   ├── manifest.json     ← PWA manifest (Add to Home Screen)
+│   ├── exercises/        ← Form-guide GIFs and photos (served as static files)
 │   ├── icon-*.png        ← App icons
 │   └── apple-touch-icon.png
-├── api/
-│   ├── parse-receipt.js  ← Claude vision: OCR a grocery receipt
-│   ├── parse-recipe.js   ← Claude vision/URL: extract a recipe
-│   ├── generate-recipes.js ← Claude: invent recipes from pantry
-│   ├── recipe-suggest.js ← Claude: 3-meal day plan with macro targets
-│   └── weekly-review.js  ← Claude: weekly progress narrative
+├── api/                  ← Exactly 12 functions: the Vercel Hobby cap. Do not add a 13th.
+│   ├── parse.js              ← kind: pantry | receipt | recipe | prompt (generic passthrough
+│   │                           used by schedule import, goals import and InBody scan photos)
+│   ├── estimate-meal.js      ← Meal macros + micronutrients from text or photo
+│   ├── suggest-groceries.js  ← "For You" grocery suggestions
+│   ├── transform-recipe.js   ← Leanify / Bulkify a recipe
+│   ├── price-ingredients.js  ← AI price estimate per ingredient
+│   ├── adjust-program.js     ← Program Coach
+│   ├── food-search.js        ← Open Food Facts search / barcode proxy
+│   ├── usda-search.js        ← USDA search (needs USDA_API_KEY)
+│   ├── generate-recipes.js   ← Invent recipes from the pantry
+│   ├── recipe-suggest.js     ← 3-meal day plan against macro targets
+│   ├── recipe-from-video.js  ← Recipe from a video link
+│   └── weekly-review.js      ← Weekly progress narrative
 ├── index.html
 ├── vite.config.js
 ├── tailwind.config.js
@@ -99,7 +108,7 @@ npm install
 npm run dev
 ```
 
-Opens at http://localhost:5173. The five `/api/*` endpoints won't work locally unless you use `vercel dev` instead of `npm run dev`. For most iteration, the app itself works fine without them — only AI features need the endpoints.
+Opens at http://localhost:5173. The `/api/*` endpoints won't work locally unless you use `vercel dev` instead of `npm run dev`. For most iteration, the app itself works fine without them — only AI features need the endpoints.
 
 To test API endpoints locally:
 ```bash
@@ -125,7 +134,7 @@ git push
 
 ## Important: back up your data regularly
 
-All data lives in your browser's localStorage. **Clearing browser data or uninstalling the PWA wipes everything.** Go to Settings (gear icon) → Backup & Restore → Export backup periodically. Save the JSON file somewhere safe (iCloud Drive, Google Drive, email it to yourself).
+All data lives in your browser: photos in IndexedDB, everything else in localStorage. The backup file includes both, except recipe cook photos, which stay on the device. **Clearing browser data or uninstalling the PWA wipes everything.** Go to Settings (gear icon) → Backup & Restore → Export backup periodically. Save the JSON file somewhere safe (iCloud Drive, Google Drive, email it to yourself).
 
 If you need to migrate to a new device or recover from a wipe, use Restore on the same screen.
 
@@ -153,3 +162,12 @@ The default icons are a black "S" on amber — fine for shipping but not unique.
 2. Use a generator like [realfavicongenerator.net](https://realfavicongenerator.net/) to produce all needed sizes
 3. Replace files in `public/`: `icon-192.png`, `icon-512.png`, `icon-512-maskable.png`, `apple-touch-icon.png`, `favicon.png`
 4. Commit, push, re-add to home screen
+
+---
+
+## Rules that keep deploys green
+
+- `api/` is at the 12-function cap. To add a feature, add a `kind` or `mode` to an existing function.
+- Every key under `functions` in `vercel.json` must match a file in `api/`, or the build fails. Update both in the same commit.
+- Ship frontend and backend changes together, so the app never calls a route that isn't deployed.
+- Client calls to `/api/*` should go through `apiJson()` in `src/App.jsx`, which turns timeouts and HTML error pages into readable messages.

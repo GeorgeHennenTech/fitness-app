@@ -93,7 +93,11 @@ Analyze this and propose the next block. Return the JSON now.`;
       },
       body: JSON.stringify({
         model: 'claude-fable-5',
-        max_tokens: 8000,
+        // This model always thinks before answering, and thinking counts
+        // against max_tokens. Low effort keeps the whole reply inside the
+        // function's 60 s limit; the larger cap leaves room for the schedule.
+        max_tokens: 16000,
+        output_config: { effort: 'low' },
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
       }),
@@ -105,7 +109,13 @@ Analyze this and propose the next block. Return the JSON now.`;
     }
 
     const aiData = await aiRes.json();
-    const responseText = aiData.content?.[0]?.text;
+    if (aiData.stop_reason === 'refusal') {
+      return res.status(502).json({ error: 'The AI declined to review this program. Try again.' });
+    }
+    if (aiData.stop_reason === 'max_tokens') {
+      return res.status(502).json({ error: 'The AI reply was cut off before it finished. Try again.' });
+    }
+    const responseText = replyText(aiData);
     if (!responseText) {
       return res.status(500).json({ error: 'Empty response from model' });
     }
@@ -118,7 +128,7 @@ Analyze this and propose the next block. Return the JSON now.`;
 
     let parsed;
     try {
-      parsed = JSON.parse(cleaned);
+      parsed = parseLoose(cleaned);
     } catch (e) {
       return res.status(500).json({
         error: `Could not parse model response as JSON. First 200 chars: ${cleaned.slice(0, 200)}`,
@@ -146,5 +156,27 @@ Analyze this and propose the next block. Return the JSON now.`;
     });
   } catch (e) {
     return res.status(500).json({ error: e.message || 'Unknown error' });
+  }
+}
+
+// The reply's text, skipping any non-text blocks (models that think first put
+// a thinking block ahead of the answer, so content[0] is not always the text).
+function replyText(aiData) {
+  return (aiData?.content || [])
+    .filter((b) => b && b.type === 'text' && typeof b.text === 'string')
+    .map((b) => b.text)
+    .join('')
+    .trim();
+}
+
+// JSON.parse that tolerates a sentence or code fence around the JSON.
+function parseLoose(text) {
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    const s = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (s === -1 || end <= s) throw e;
+    return JSON.parse(text.slice(s, end + 1));
   }
 }
