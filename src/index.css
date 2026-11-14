@@ -4,12 +4,15 @@
 
 html,
 body {
-  background-color: #0c0a09;
+  background-color: #000;
   margin: 0;
   padding: 0;
   overscroll-behavior-y: none;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* Prevent zoom on input focus in iOS Safari */
@@ -25,4 +28,154 @@ select {
 }
 * {
   scrollbar-width: none;
+}
+
+@layer base {
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  /* Press feedback: every button dips slightly and springs back. */
+  button,
+  [role='button'] {
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.18s ease, background-color 0.18s ease,
+      border-color 0.18s ease, color 0.18s ease;
+  }
+  button:active:not(:disabled),
+  [role='button']:active {
+    transform: scale(0.97);
+    opacity: 0.8;
+    transition-duration: 0.06s;
+  }
+  button:disabled {
+    cursor: default;
+  }
+
+  /* Fields: no browser outline; a soft ring on focus instead. */
+  input,
+  textarea,
+  select {
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  }
+  input:focus,
+  textarea:focus,
+  select:focus {
+    box-shadow: 0 0 0 3px rgb(142 142 147 / 0.28);
+  }
+  input[type='checkbox']:focus,
+  input[type='radio']:focus,
+  input[type='range']:focus,
+  input[type='file']:focus {
+    box-shadow: none;
+  }
+}
+
+@layer components {
+  /* These two classes used to load JetBrains Mono and Fraunces. They now use
+     the system font: .mono keeps figures aligned, .display is the rounded
+     heavy face iOS uses for big numbers and titles. */
+  .mono {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+  .display {
+    font-family: ui-rounded, 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Small capitalised section labels, as in Fitness and Health. */
+  .uppercase {
+    font-weight: 600;
+  }
+
+  /* Translucent bar material for the header and tab bar. */
+  .ios-bar {
+    -webkit-backdrop-filter: saturate(180%) blur(22px);
+    backdrop-filter: saturate(180%) blur(22px);
+  }
+  .ios-hairline-b {
+    box-shadow: inset 0 -0.5px 0 rgb(84 84 88 / 0.6);
+  }
+  .ios-hairline-t {
+    box-shadow: inset 0 0.5px 0 rgb(84 84 88 / 0.6);
+  }
+
+  /* Segmented control. */
+  .ios-seg {
+    display: flex;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 10px;
+    background-color: rgb(118 118 128 / 0.24);
+  }
+  .ios-seg-item {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 6px 4px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .ios-seg-on {
+    background-color: #636366;
+  }
+  [data-light='1'] .ios-seg-on {
+    background-color: #fff;
+  }
+  .ios-seg-item.shadow {
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.35), 0 0 0 0.5px rgb(0 0 0 / 0.2);
+  }
+
+  /* Bottom sheet: rounded top, grabber, slides up. */
+  .ios-sheet {
+    animation: sheet-up 0.34s cubic-bezier(0.2, 0.9, 0.25, 1) both;
+  }
+  .ios-grabber {
+    width: 36px;
+    height: 5px;
+    border-radius: 3px;
+    background: rgb(142 142 147 / 0.5);
+    margin: 8px auto 4px;
+    flex-shrink: 0;
+  }
+  .ios-backdrop > * {
+    animation: sheet-up 0.34s cubic-bezier(0.2, 0.9, 0.25, 1) both;
+  }
+  /* Each tab's content settles in when you switch. */
+  .ios-view {
+    animation: view-in 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+}
+
+/* Motion is transform-only on purpose: if an animation is ever paused or
+   skipped, the content is still fully visible. */
+@keyframes sheet-up {
+  from { transform: translateY(32px); }
+  to { transform: translateY(0); }
+}
+@keyframes view-in {
+  from { transform: translateY(8px); }
+  to { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ios-sheet,
+  .ios-backdrop > *,
+  .ios-view {
+    animation: none;
+  }
+  button:active:not(:disabled) {
+    transform: none;
+  }
 }

@@ -1466,8 +1466,8 @@ class ErrorBoundary extends React.Component {
             </div>
             {this.state.error && (
               <div className="bg-stone-950 border border-stone-800 rounded-md p-2 mb-3">
-                <div className="mono text-[10px] uppercase tracking-wider text-stone-500 mb-1">Error</div>
-                <div className="mono text-[10px] text-rose-400/90 break-all leading-relaxed">
+                <div className="mono text-[11px] uppercase tracking-wider text-stone-500 mb-1">Error</div>
+                <div className="mono text-[11px] text-rose-400/90 break-all leading-relaxed">
                   {String(this.state.error?.message || this.state.error || 'Unknown error').slice(0, 240)}
                 </div>
               </div>
@@ -1475,25 +1475,25 @@ class ErrorBoundary extends React.Component {
             <div className="space-y-2">
               <button
                 onClick={this.recover}
-                className="w-full bg-amber-400 hover:bg-amber-300 text-stone-950 rounded-md py-2.5 mono text-xs uppercase tracking-wider font-semibold flex items-center justify-center gap-2"
+                className="w-full bg-amber-400 hover:bg-amber-300 text-stone-950 rounded-md py-2.5 mono text-xs font-semibold flex items-center justify-center gap-2"
               >
                 <RefreshCw size={13} /> Try to recover
               </button>
               <button
                 onClick={this.exportBackup}
-                className="w-full bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-md py-2.5 mono text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+                className="w-full bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-md py-2.5 mono text-xs flex items-center justify-center gap-2"
               >
                 <Download size={13} /> Download backup
               </button>
               <button
                 onClick={this.reload}
-                className="w-full bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-300 rounded-md py-2.5 mono text-xs uppercase tracking-wider"
+                className="w-full bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-300 rounded-md py-2.5 mono text-xs"
               >
                 Reload app
               </button>
             </div>
           </div>
-          <div className="mono text-[10px] text-stone-600 text-center leading-relaxed">
+          <div className="mono text-[11px] text-stone-600 text-center leading-relaxed">
             If the same crash keeps happening, the offending data is likely a single corrupted entry. Open the Settings panel and try restoring a previous backup, or contact yourself with the error message above.
           </div>
         </div>
@@ -2974,12 +2974,12 @@ function GoalsEditor() {
     setTimeout(() => setSaveStatus(''), 5000);
   };
 
-  const labelClass = 'text-[10px] uppercase tracking-[0.15em] text-stone-500 mono mb-1 block';
+  const labelClass = 'text-[11px] uppercase tracking-wider text-stone-500 mono mb-1 block';
   const inputClass = 'w-full bg-stone-950 border border-stone-800 rounded px-2.5 py-1.5 text-sm focus:border-amber-400 focus:outline-none mono';
 
   return (
     <div className="mt-8 border-t border-stone-900 pt-5">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">Body Goals & Macros</div>
+      <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">Body Goals & Macros</div>
       <p className="text-sm text-stone-400 mt-2 mb-4">
         Drives the progress bar on the Body tab and the macro targets on Fuel. Update these when your phase changes.
       </p>
@@ -2994,9 +2994,9 @@ function GoalsEditor() {
           Paste text to auto-fill
         </button>
       ) : (
-        <div className="border border-stone-800 rounded-lg p-3 mb-4 bg-stone-900/50">
+        <div className="border border-stone-800 rounded-lg p-3 mb-4 bg-stone-900">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono flex items-center gap-1.5">
+            <div className="text-[11px] uppercase tracking-wider text-stone-500 mono flex items-center gap-1.5">
               <Sparkles size={11} className="text-amber-400" />
               Auto-fill from text
             </div>
@@ -3008,19 +3008,19 @@ function GoalsEditor() {
               <X size={14} />
             </button>
           </div>
-          <p className="text-[11px] text-stone-400 mb-2 leading-relaxed">
+          <p className="text-[12px] text-stone-400 mb-2 leading-relaxed">
             Paste a Phase Targets section from your docx, or describe goals plainly. Parsed locally first; AI fills the rest.
           </p>
           <textarea
             value={pasteText}
             onChange={(e) => setPasteText(e.target.value)}
             placeholder={`Goal: drop from 228 lbs to ~200 lbs\nWeekly loss: 1.5–1.8 lb/week\nCalories — lift days: 2,100 cal / 220g protein\nCalories — rest/cardio: 1,950 cal / 220g protein\nTarget: 10–11% body fat`}
-            className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-[11px] mono text-stone-200 focus:border-amber-400 focus:outline-none resize-none"
+            className="w-full bg-stone-950 border border-stone-800 rounded p-2 text-[12px] mono text-stone-200 focus:border-amber-400 focus:outline-none resize-none"
             rows={6}
             spellCheck={false}
           />
           {pasteError && (
-            <div className="mt-2 bg-rose-950/40 border border-rose-900/60 rounded p-2 text-[10px] mono text-rose-300 break-words whitespace-pre-wrap">
+            <div className="mt-2 bg-rose-950/40 border border-rose-900/60 rounded p-2 text-[11px] mono text-rose-300 break-words whitespace-pre-wrap">
               {pasteError}
             </div>
           )}
@@ -3029,7 +3029,7 @@ function GoalsEditor() {
             disabled={pasting}
             className="w-full mt-2 bg-amber-400 text-stone-950 mono text-xs font-semibold py-2 rounded-md hover:bg-amber-300 disabled:opacity-50 disabled:cursor-wait"
           >
-            {pasting ? 'PARSING…' : 'AUTO-FILL FORM'}
+            {pasting ? 'Parsing…' : 'Auto-fill form'}
           </button>
         </div>
       )}
@@ -3038,7 +3038,7 @@ function GoalsEditor() {
       {lastDetected && (
         <div className="border border-emerald-700/50 bg-emerald-950/30 rounded-lg p-3 mb-4">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-emerald-400 mono flex items-center gap-1.5">
+            <div className="text-[11px] uppercase tracking-wider text-emerald-400 mono flex items-center gap-1.5">
               <Check size={12} />
               Auto-filled {lastDetected.count} field{lastDetected.count === 1 ? '' : 's'}
             </div>
@@ -3050,12 +3050,12 @@ function GoalsEditor() {
               <X size={14} />
             </button>
           </div>
-          <ul className="text-[11px] text-emerald-100/90 mono space-y-1 leading-relaxed">
+          <ul className="text-[12px] text-emerald-100/90 mono space-y-1 leading-relaxed">
             {lastDetected.fields.map((f, i) => (
               <li key={i}>• {f}</li>
             ))}
           </ul>
-          <div className="text-[10px] text-emerald-300/70 mono mt-2">Review the form below and tap SAVE GOALS to commit.</div>
+          <div className="text-[11px] text-emerald-300/70 mono mt-2">Review the form below and tap SAVE GOALS to commit.</div>
         </div>
       )}
 
@@ -3086,12 +3086,12 @@ function GoalsEditor() {
       </div>
 
       {/* Macros per day type */}
-      <div className="text-[10px] uppercase tracking-[0.15em] text-stone-500 mono mb-2">Macros per Day Type</div>
-      <p className="text-[10px] text-stone-500 mb-3 leading-relaxed">Set calories + protein + carbs + fat for each day type. Carbs and fat auto-derive from cal/protein only if you leave them blank (35% of non-protein cal as fat, rest as carbs).</p>
+      <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-2">Macros per Day Type</div>
+      <p className="text-[11px] text-stone-500 mb-3 leading-relaxed">Set calories + protein + carbs + fat for each day type. Carbs and fat auto-derive from cal/protein only if you leave them blank (35% of non-protein cal as fat, rest as carbs).</p>
 
       {['lift', 'cardio', 'rest'].map((t) => (
         <div key={t} className="border border-stone-800 rounded-lg p-3 mb-2 bg-stone-900/30">
-          <div className="text-[11px] mono uppercase tracking-wider text-stone-300 mb-2">{t} days</div>
+          <div className="text-[12px] mono uppercase tracking-wider text-stone-300 mb-2">{t} days</div>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className={labelClass}>Calories</label>
@@ -3118,7 +3118,7 @@ function GoalsEditor() {
           onClick={save}
           className="flex-1 bg-amber-400 text-stone-950 mono text-xs font-semibold py-2.5 rounded-md hover:bg-amber-300"
         >
-          SAVE GOALS
+          Save goals
         </button>
         <button
           onClick={clearAll}
@@ -3213,7 +3213,7 @@ function getSavedAccentTheme() {
 // ─────────────────────────────────────────────────────────────────────────────
 const BACKGROUND_THEMES = [
   // Dark themes (light text)
-  { id: 'stone',    label: 'Stone',    light: false, rgb: { page: '12 10 9',    card: '28 25 23',   border: '41 37 36'   } },
+  { id: 'stone',    label: 'Graphite', light: false, rgb: { page: '0 0 0',      card: '28 28 30',   border: '44 44 46'   } },
   { id: 'black',    label: 'Black',    light: false, rgb: { page: '0 0 0',      card: '20 20 20',   border: '38 38 38'   } },
   { id: 'slate',    label: 'Slate',    light: false, rgb: { page: '15 23 42',   card: '30 41 59',   border: '51 65 85'   } },
   { id: 'navy',     label: 'Navy',     light: false, rgb: { page: '10 22 66',   card: '18 36 98',   border: '30 54 132'  } },
@@ -3292,6 +3292,9 @@ function applyBackgroundTheme(themeId) {
     document.head.appendChild(el);
   }
   el.textContent = theme.id === 'stone' ? '' : _bgCss(theme);
+  // Lets the stylesheet adapt the few hand-coloured controls to light themes.
+  if (theme.light) document.documentElement.dataset.light = '1';
+  else delete document.documentElement.dataset.light;
 }
 
 function getSavedBgTheme() {
@@ -3431,7 +3434,7 @@ function SettingsView({ onClose, onCycleChange, accentTheme = 'amber', onAccentC
 
       <div className="max-w-3xl mx-auto px-4 py-5">
         {/* Appearance — accent color for the whole UI */}
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">Appearance</div>
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">Appearance</div>
         <p className="text-sm text-stone-400 mt-2 mb-3">
           Pick an accent color. It recolors buttons, highlights, and active states across the app.
         </p>
@@ -3454,7 +3457,7 @@ function SettingsView({ onClose, onCycleChange, accentTheme = 'amber', onAccentC
             );
           })}
         </div>
-        <div className="mono text-[10px] text-stone-600 mb-6">
+        <div className="mono text-[11px] text-stone-600 mb-6">
           Current: <span className="text-stone-400">{(ACCENT_THEMES.find((t) => t.id === accentTheme) || ACCENT_THEMES[0]).label}</span>
         </div>
 
@@ -3480,12 +3483,12 @@ function SettingsView({ onClose, onCycleChange, accentTheme = 'amber', onAccentC
             );
           })}
         </div>
-        <div className="mono text-[10px] text-stone-600 mb-6">
+        <div className="mono text-[11px] text-stone-600 mb-6">
           Current: <span className="text-stone-400">{(BACKGROUND_THEMES.find((t) => t.id === bgTheme) || BACKGROUND_THEMES[0]).label}</span>
           {(BACKGROUND_THEMES.find((t) => t.id === bgTheme) || {}).light && <span className="text-stone-700"> · light mode (dark text)</span>}
         </div>
 
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">Weekly Schedules</div>
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">Weekly Schedules</div>
         <p className="text-sm text-stone-400 mt-2">
           Active schedule controls Today's workouts, Fuel macro targets, and Calendar markers.
           Drop in a .docx and the app reparses it into a 7-day plan you can rotate to.
@@ -3502,7 +3505,7 @@ function SettingsView({ onClose, onCycleChange, accentTheme = 'amber', onAccentC
                   <div
                     key={s.id}
                     className={`border rounded-lg p-3 ${
-                      isActive ? 'border-amber-400/60 bg-amber-400/5' : 'border-stone-800 bg-stone-900/50'
+                      isActive ? 'border-amber-400/60 bg-amber-400/5' : 'border-stone-800 bg-stone-900'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -3512,30 +3515,30 @@ function SettingsView({ onClose, onCycleChange, accentTheme = 'amber', onAccentC
                           <div className="text-sm font-medium text-stone-100 truncate">{s.name}</div>
                         </div>
                         {s.createdAt > 0 && (
-                          <div className="text-[10px] mono text-stone-500 mt-0.5">
+                          <div className="text-[11px] mono text-stone-500 mt-0.5">
                             Imported {fmtDate(formatDateLocal(new Date(s.createdAt)))}
                           </div>
                         )}
                         {s.isDefault && (
-                          <div className="text-[10px] mono text-stone-500 mt-0.5">Built-in</div>
+                          <div className="text-[11px] mono text-stone-500 mt-0.5">Built-in</div>
                         )}
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         {!isActive && (
                           <button
                             onClick={() => handleActivate(s.id)}
-                            className="bg-amber-400 text-stone-950 mono text-[10px] font-semibold px-2.5 py-1.5 rounded-md hover:bg-amber-300"
+                            className="bg-amber-400 text-stone-950 mono text-[11px] font-semibold px-2.5 py-1.5 rounded-md hover:bg-amber-300"
                           >
-                            ACTIVATE
+                            Activate
                           </button>
                         )}
                         {!s.isDefault && (
                           deleteConfirmId === s.id ? (
                             <button
                               onClick={() => { handleDelete(s.id); setDeleteConfirmId(null); }}
-                              className="bg-rose-500 text-stone-950 mono text-[10px] font-semibold px-2.5 py-1.5 rounded-md hover:bg-rose-400"
+                              className="bg-rose-500 text-stone-950 mono text-[11px] font-semibold px-2.5 py-1.5 rounded-md hover:bg-rose-400"
                             >
-                              CONFIRM
+                              Confirm
                             </button>
                           ) : (
                             <button
@@ -3580,7 +3583,7 @@ function SettingsView({ onClose, onCycleChange, accentTheme = 'amber', onAccentC
                   <>
                     <FileImage size={20} className="text-stone-400" />
                     <div className="text-sm text-stone-200 font-medium">Drop in a .docx schedule</div>
-                    <div className="text-[11px] text-stone-500 text-center max-w-xs">
+                    <div className="text-[12px] text-stone-500 text-center max-w-xs">
                       Days, exercises, sets, reps, RPE auto-extracted. Falls back to AI for unfamiliar formats.
                     </div>
                   </>
@@ -3598,8 +3601,8 @@ function SettingsView({ onClose, onCycleChange, accentTheme = 'amber', onAccentC
                   <AlertCircle size={14} className="text-rose-400 flex-shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-rose-200 mb-1">Import failed</div>
-                    <pre className="mono text-[10px] whitespace-pre-wrap break-words leading-relaxed text-rose-300/90">{error}</pre>
-                    <div className="text-[10px] text-rose-400/70 mt-2">Full details logged to browser console.</div>
+                    <pre className="mono text-[11px] whitespace-pre-wrap break-words leading-relaxed text-rose-300/90">{error}</pre>
+                    <div className="text-[11px] text-rose-400/70 mt-2">Full details logged to browser console.</div>
                   </div>
                   <button onClick={() => setError(null)} className="text-rose-400 hover:text-rose-200 flex-shrink-0">
                     <X size={14} />
@@ -3609,7 +3612,7 @@ function SettingsView({ onClose, onCycleChange, accentTheme = 'amber', onAccentC
             )}
 
             <div className="mt-8 border-t border-stone-900 pt-5">
-              <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-2">Tips for clean parsing</div>
+              <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-2">Tips for clean parsing</div>
               <ul className="text-xs text-stone-400 space-y-1.5">
                 <li>• Use day-of-week headers (Monday, Tuesday, etc.) so days map correctly</li>
                 <li>• Include sets and reps explicitly (e.g. "Bench Press: 4×8 @ RPE 8")</li>
@@ -3706,7 +3709,7 @@ function CycleSetup({ onCycleChange }) {
 
   return (
     <div className="mt-8 border-t border-stone-900 pt-5">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-2">Cycle Setup</div>
+      <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-2">Cycle Setup</div>
       <p className="text-sm text-stone-400 mt-2 leading-relaxed">
         Your whole D1–D7 cycle is derived from one anchor: a single date and the day it was. Every other date counts forward and backward from it. To fix the cycle, just set what today is below — that re-anchors everything.
       </p>
@@ -3714,7 +3717,7 @@ function CycleSetup({ onCycleChange }) {
       {/* Current state summary */}
       <div className="bg-stone-900 border border-stone-800 rounded-lg p-3 mt-4 space-y-2">
         <div className="flex items-center justify-between text-xs">
-          <span className="mono text-[10px] uppercase tracking-wider text-stone-500">Anchor</span>
+          <span className="mono text-[11px] uppercase tracking-wider text-stone-500">Anchor</span>
           <span className="mono tabular text-stone-300">
             {anchor?.date
               ? `${fmtDate(anchor.date)} = D${anchor.scheduleDay}`
@@ -3723,7 +3726,7 @@ function CycleSetup({ onCycleChange }) {
         </div>
         {overrideCount > 0 && (
           <div className="flex items-center justify-between text-xs">
-            <span className="mono text-[10px] uppercase tracking-wider text-stone-500">Legacy overrides</span>
+            <span className="mono text-[11px] uppercase tracking-wider text-stone-500">Legacy overrides</span>
             <span className="mono tabular text-stone-500">
               {overrideCount} (ignored — cleared on reset)
             </span>
@@ -3733,7 +3736,7 @@ function CycleSetup({ onCycleChange }) {
 
       {/* 8-day preview */}
       <div className="mt-3 bg-stone-900 border border-stone-800 rounded-lg p-3">
-        <div className="mono text-[10px] uppercase tracking-wider text-stone-500 mb-2">Next 8 days</div>
+        <div className="mono text-[11px] uppercase tracking-wider text-stone-500 mb-2">Next 8 days</div>
         <div className="space-y-1">
           {preview.map((p) => (
             <div key={p.date} className="flex items-center justify-between text-xs">
@@ -3745,7 +3748,7 @@ function CycleSetup({ onCycleChange }) {
                   D{p.day}
                 </span>
                 {p.hasOverride && (
-                  <span className="text-[9px] mono uppercase tracking-wider px-1 py-0.5 rounded border border-stone-700 text-stone-600">
+                  <span className="text-[11px] mono uppercase tracking-wider px-1 py-0.5 rounded border border-stone-700 text-stone-600">
                     legacy
                   </span>
                 )}
@@ -3757,12 +3760,12 @@ function CycleSetup({ onCycleChange }) {
 
       {/* Reset action */}
       <div className="mt-3 bg-stone-900 border border-stone-800 rounded-lg p-3">
-        <div className="mono text-[10px] uppercase tracking-wider text-stone-500 mb-2">Set today's day</div>
+        <div className="mono text-[11px] uppercase tracking-wider text-stone-500 mb-2">Set today's day</div>
         <p className="text-xs text-stone-400 leading-relaxed mb-3">
           Pick what schedule day today is. This sets the anchor, and every other date follows from it. Also clears any leftover legacy overrides from older versions.
         </p>
         <div className="flex items-center gap-2 mb-3 flex-wrap">
-          <span className="text-[10px] mono uppercase tracking-wider text-stone-500 shrink-0">Today is:</span>
+          <span className="text-[11px] mono uppercase tracking-wider text-stone-500 shrink-0">Today is:</span>
           {[1, 2, 3, 4, 5, 6, 7].map((d) => (
             <button
               key={d}
@@ -3786,7 +3789,7 @@ function CycleSetup({ onCycleChange }) {
             <button
               onClick={doReset}
               disabled={resetting}
-              className={`flex-1 mono text-xs uppercase tracking-wider font-semibold py-2 rounded transition-colors ${
+              className={`flex-1 mono text-xs font-semibold py-2 rounded transition-colors ${
                 confirmReset
                   ? 'bg-rose-500 hover:bg-rose-400 text-white'
                   : 'bg-amber-400 hover:bg-amber-300 text-stone-950 disabled:opacity-40'
@@ -3797,7 +3800,7 @@ function CycleSetup({ onCycleChange }) {
             {confirmReset && (
               <button
                 onClick={() => setConfirmReset(false)}
-                className="px-3 bg-stone-800 hover:bg-stone-700 text-stone-300 mono text-xs py-2 rounded uppercase tracking-wider"
+                className="px-3 bg-stone-800 hover:bg-stone-700 text-stone-300 mono text-xs py-2 rounded"
               >
                 Cancel
               </button>
@@ -3805,7 +3808,7 @@ function CycleSetup({ onCycleChange }) {
           </div>
         )}
         {overrideCount > 0 && !confirmReset && !justReset && (
-          <div className="text-[10px] mono text-stone-600 mt-2 leading-snug">
+          <div className="text-[11px] mono text-stone-600 mt-2 leading-snug">
             This also clears {overrideCount} inert legacy override{overrideCount === 1 ? '' : 's'} from older versions. They no longer affect anything, but cleaning them up keeps the preview honest.
           </div>
         )}
@@ -3899,7 +3902,7 @@ function PriceBookManager() {
   return (
     <div className="mt-8">
       <button onClick={() => setOpen((v) => !v)} className="w-full flex items-center justify-between text-left">
-        <span className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">Ingredient Prices</span>
+        <span className="text-[11px] uppercase tracking-wider text-stone-500 mono">Ingredient Prices</span>
         <ChevronDown size={15} className={`text-stone-500 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       <p className="text-sm text-stone-400 mt-2">
@@ -3908,18 +3911,18 @@ function PriceBookManager() {
 
       {open && (
         <div className="mt-4">
-          {msg && <div className="mono text-[11px] text-emerald-400 mb-3">{msg}</div>}
+          {msg && <div className="mono text-[12px] text-emerald-400 mb-3">{msg}</div>}
 
           <div className="bg-stone-900 border border-stone-800 rounded-xl p-4">
             <div className="flex items-center justify-between mb-2">
-              <div className="mono text-[10px] uppercase tracking-wider text-stone-400">
+              <div className="mono text-[11px] uppercase tracking-wider text-stone-400">
                 {rows.length} ingredient{rows.length !== 1 ? 's' : ''}
               </div>
-              {estCount > 0 && <span className="mono text-[10px] text-sky-400/70">{estCount} estimated</span>}
+              {estCount > 0 && <span className="mono text-[11px] text-sky-400/70">{estCount} estimated</span>}
             </div>
 
             {rows.length === 0 ? (
-              <div className="mono text-[11px] text-stone-600 leading-relaxed">
+              <div className="mono text-[12px] text-stone-600 leading-relaxed">
                 Empty. Open a recipe with unpriced ingredients and tap "Estimate the missing prices" to fill it.
               </div>
             ) : (
@@ -3938,7 +3941,7 @@ function PriceBookManager() {
                       <div key={r.name} className="bg-stone-950/60 border border-stone-800 rounded-lg p-2.5">
                         <div className="flex items-center gap-2">
                           <span className="text-[12px] text-stone-200 flex-1 truncate capitalize">{r.name}</span>
-                          <span className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border shrink-0 ${
+                          <span className={`mono text-[11px] uppercase tracking-wider px-1.5 py-0.5 rounded border shrink-0 ${
                             r.source === 'manual'
                               ? 'border-amber-400/40 text-amber-400 bg-amber-400/10'
                               : 'border-sky-400/40 text-sky-400 bg-sky-400/10'
@@ -3950,7 +3953,7 @@ function PriceBookManager() {
                           </button>
                         </div>
                         {r.refPrice > 0 && (
-                          <div className="mono text-[9px] text-stone-600 mt-0.5">
+                          <div className="mono text-[11px] text-stone-600 mt-0.5">
                             based on {fmtMoney(r.refPrice)} / {r.refQty} {r.refUnit}
                           </div>
                         )}
@@ -3976,7 +3979,7 @@ function PriceBookManager() {
                           <button
                             onClick={() => save(r)}
                             disabled={!dirty}
-                            className="self-end bg-amber-400 disabled:bg-stone-800 disabled:text-stone-600 text-stone-950 font-semibold rounded px-3 py-1 mono text-[10px] uppercase tracking-wider"
+                            className="self-end bg-amber-400 disabled:bg-stone-800 disabled:text-stone-600 text-stone-950 font-semibold rounded px-3 py-1 mono text-[11px]"
                           >
                             Save
                           </button>
@@ -3988,19 +3991,19 @@ function PriceBookManager() {
 
                 {confirmClear ? (
                   <div className="flex gap-2 mt-3">
-                    <button onClick={() => setConfirmClear(null)} className="flex-1 bg-stone-800 text-stone-300 rounded py-1.5 mono text-[10px] uppercase tracking-wider">Cancel</button>
-                    <button onClick={() => clearBulk(confirmClear)} className="flex-1 bg-rose-500/80 text-white rounded py-1.5 mono text-[10px] uppercase tracking-wider">
+                    <button onClick={() => setConfirmClear(null)} className="flex-1 bg-stone-800 text-stone-300 rounded py-1.5 mono text-[11px]">Cancel</button>
+                    <button onClick={() => clearBulk(confirmClear)} className="flex-1 bg-rose-500/80 text-white rounded py-1.5 mono text-[11px]">
                       {confirmClear === 'all' ? `Clear all ${rows.length}` : `Clear ${estCount} estimates`}
                     </button>
                   </div>
                 ) : (
                   <div className="flex gap-3 mt-3">
                     {estCount > 0 && (
-                      <button onClick={() => setConfirmClear('est')} className="text-[10px] mono uppercase tracking-wider text-stone-500 hover:text-rose-400">
+                      <button onClick={() => setConfirmClear('est')} className="text-[11px] mono text-stone-500 hover:text-rose-400">
                         Clear estimates only
                       </button>
                     )}
-                    <button onClick={() => setConfirmClear('all')} className="text-[10px] mono uppercase tracking-wider text-stone-500 hover:text-rose-400">
+                    <button onClick={() => setConfirmClear('all')} className="text-[11px] mono text-stone-500 hover:text-rose-400">
                       Clear all
                     </button>
                   </div>
@@ -4097,7 +4100,7 @@ function LearnedDataManager() {
   return (
     <div className="mt-8">
       <button onClick={() => setOpen((v) => !v)} className="w-full flex items-center justify-between text-left">
-        <span className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">Learned Data</span>
+        <span className="text-[11px] uppercase tracking-wider text-stone-500 mono">Learned Data</span>
         <ChevronDown size={15} className={`text-stone-500 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       <p className="text-sm text-stone-400 mt-2">
@@ -4106,19 +4109,19 @@ function LearnedDataManager() {
 
       {open && (
         <div className="mt-4 space-y-4">
-          {msg && <div className="mono text-[11px] text-emerald-400">{msg}</div>}
+          {msg && <div className="mono text-[12px] text-emerald-400">{msg}</div>}
 
           {/* Mis-scaled receipt prices */}
           <div className="bg-stone-900 border border-stone-800 rounded-xl p-4">
             <div className="flex items-center justify-between mb-1">
-              <div className="mono text-[10px] uppercase tracking-wider text-stone-400">Package sizes that look wrong</div>
-              <span className="mono text-[10px] text-stone-600">{suspect.length}</span>
+              <div className="mono text-[11px] uppercase tracking-wider text-stone-400">Package sizes that look wrong</div>
+              <span className="mono text-[11px] text-stone-600">{suspect.length}</span>
             </div>
-            <p className="text-[11px] text-stone-500 leading-snug mb-3">
+            <p className="text-[12px] text-stone-500 leading-snug mb-3">
               These lines were recorded as a very small package for the price, which makes their per-ounce cost enormous and inflates any recipe using them. Fix the real package size here.
             </p>
             {suspect.length === 0 ? (
-              <div className="mono text-[11px] text-stone-600">Nothing suspicious found.</div>
+              <div className="mono text-[12px] text-stone-600">Nothing suspicious found.</div>
             ) : (
               <div className="space-y-2">
                 {suspect.map((row) => {
@@ -4128,7 +4131,7 @@ function LearnedDataManager() {
                   return (
                     <div key={kk} className="bg-stone-950/60 border border-amber-400/20 rounded-lg p-2.5">
                       <div className="text-[12px] text-stone-200 truncate">{row.name}</div>
-                      <div className="mono text-[10px] text-stone-500 mt-0.5">
+                      <div className="mono text-[11px] text-stone-500 mt-0.5">
                         recorded as {fmtMoney(row.totalPrice)} for {row.qty} {row.unit}
                         {perOz != null && <span className="text-rose-300"> · {fmtMoney(perOz)}/oz</span>}
                       </div>
@@ -4149,7 +4152,7 @@ function LearnedDataManager() {
                         />
                         <button
                           onClick={() => saveFix(row)}
-                          className="flex-1 bg-amber-400 text-stone-950 font-semibold rounded py-1 mono text-[10px] uppercase tracking-wider hover:bg-amber-300"
+                          className="flex-1 bg-amber-400 text-stone-950 font-semibold rounded py-1 mono text-[11px] hover:bg-amber-300"
                         >
                           Save
                         </button>
@@ -4164,21 +4167,21 @@ function LearnedDataManager() {
           {/* Remembered serving sizes */}
           <div className="bg-stone-900 border border-stone-800 rounded-xl p-4">
             <div className="flex items-center justify-between mb-1">
-              <div className="mono text-[10px] uppercase tracking-wider text-stone-400">Serving sizes remembered</div>
-              <span className="mono text-[10px] text-stone-600">{servings.length}</span>
+              <div className="mono text-[11px] uppercase tracking-wider text-stone-400">Serving sizes remembered</div>
+              <span className="mono text-[11px] text-stone-600">{servings.length}</span>
             </div>
-            <p className="text-[11px] text-stone-500 leading-snug mb-3">
+            <p className="text-[12px] text-stone-500 leading-snug mb-3">
               Entered on the servings screen after a receipt import, and reused to prefill next time.
             </p>
             {servings.length === 0 ? (
-              <div className="mono text-[11px] text-stone-600">Nothing remembered yet.</div>
+              <div className="mono text-[12px] text-stone-600">Nothing remembered yet.</div>
             ) : (
               <>
                 <div className="space-y-1 max-h-64 overflow-y-auto">
                   {servings.map((s) => (
                     <div key={s.key} className="flex items-center gap-2 bg-stone-950/60 border border-stone-800 rounded px-2.5 py-1.5">
                       <span className="text-[12px] text-stone-300 flex-1 truncate">{s.name}</span>
-                      <span className="mono text-[10px] text-stone-500 shrink-0">
+                      <span className="mono text-[11px] text-stone-500 shrink-0">
                         {s.na ? 'N/A' : `${s.servingsPerPackage} servings`}
                       </span>
                       <button onClick={() => clearOne(s.key)} className="text-stone-600 hover:text-rose-400 shrink-0" aria-label="Clear">
@@ -4189,11 +4192,11 @@ function LearnedDataManager() {
                 </div>
                 {confirmClear === 'serv' ? (
                   <div className="flex gap-2 mt-3">
-                    <button onClick={() => setConfirmClear(null)} className="flex-1 bg-stone-800 text-stone-300 rounded py-1.5 mono text-[10px] uppercase tracking-wider">Cancel</button>
-                    <button onClick={() => clearAll('receiptServ:')} className="flex-1 bg-rose-500/80 text-white rounded py-1.5 mono text-[10px] uppercase tracking-wider">Clear all {servings.length}</button>
+                    <button onClick={() => setConfirmClear(null)} className="flex-1 bg-stone-800 text-stone-300 rounded py-1.5 mono text-[11px]">Cancel</button>
+                    <button onClick={() => clearAll('receiptServ:')} className="flex-1 bg-rose-500/80 text-white rounded py-1.5 mono text-[11px]">Clear all {servings.length}</button>
                   </div>
                 ) : (
-                  <button onClick={() => setConfirmClear('serv')} className="mt-3 text-[10px] mono uppercase tracking-wider text-stone-500 hover:text-rose-400">
+                  <button onClick={() => setConfirmClear('serv')} className="mt-3 text-[11px] mono text-stone-500 hover:text-rose-400">
                     Clear all
                   </button>
                 )}
@@ -4204,18 +4207,18 @@ function LearnedDataManager() {
           {/* Remembered categories */}
           <div className="bg-stone-900 border border-stone-800 rounded-xl p-4">
             <div className="flex items-center justify-between mb-1">
-              <div className="mono text-[10px] uppercase tracking-wider text-stone-400">Category corrections</div>
-              <span className="mono text-[10px] text-stone-600">{cats.length}</span>
+              <div className="mono text-[11px] uppercase tracking-wider text-stone-400">Category corrections</div>
+              <span className="mono text-[11px] text-stone-600">{cats.length}</span>
             </div>
             {cats.length === 0 ? (
-              <div className="mono text-[11px] text-stone-600">Nothing remembered yet.</div>
+              <div className="mono text-[12px] text-stone-600">Nothing remembered yet.</div>
             ) : (
               <>
                 <div className="space-y-1 max-h-48 overflow-y-auto">
                   {cats.map((c) => (
                     <div key={c.key} className="flex items-center gap-2 bg-stone-950/60 border border-stone-800 rounded px-2.5 py-1.5">
                       <span className="text-[12px] text-stone-300 flex-1 truncate">{c.name}</span>
-                      <span className="mono text-[10px] text-stone-500 shrink-0 capitalize">{c.category}</span>
+                      <span className="mono text-[11px] text-stone-500 shrink-0 capitalize">{c.category}</span>
                       <button onClick={() => clearOne(c.key)} className="text-stone-600 hover:text-rose-400 shrink-0" aria-label="Clear">
                         <X size={13} />
                       </button>
@@ -4224,11 +4227,11 @@ function LearnedDataManager() {
                 </div>
                 {confirmClear === 'cat' ? (
                   <div className="flex gap-2 mt-3">
-                    <button onClick={() => setConfirmClear(null)} className="flex-1 bg-stone-800 text-stone-300 rounded py-1.5 mono text-[10px] uppercase tracking-wider">Cancel</button>
-                    <button onClick={() => clearAll('receiptCat:')} className="flex-1 bg-rose-500/80 text-white rounded py-1.5 mono text-[10px] uppercase tracking-wider">Clear all {cats.length}</button>
+                    <button onClick={() => setConfirmClear(null)} className="flex-1 bg-stone-800 text-stone-300 rounded py-1.5 mono text-[11px]">Cancel</button>
+                    <button onClick={() => clearAll('receiptCat:')} className="flex-1 bg-rose-500/80 text-white rounded py-1.5 mono text-[11px]">Clear all {cats.length}</button>
                   </div>
                 ) : (
-                  <button onClick={() => setConfirmClear('cat')} className="mt-3 text-[10px] mono uppercase tracking-wider text-stone-500 hover:text-rose-400">
+                  <button onClick={() => setConfirmClear('cat')} className="mt-3 text-[11px] mono text-stone-500 hover:text-rose-400">
                     Clear all
                   </button>
                 )}
@@ -4318,24 +4321,24 @@ function DataManager() {
 
   return (
     <div className="mt-8 border-t border-stone-900 pt-5">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-3">Backup & Restore</div>
+      <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-3">Backup & Restore</div>
 
       {/* Current state */}
       {stats && (
         <div className="bg-stone-900 border border-stone-800 rounded-md p-3 mb-3">
           <div className="flex items-center justify-between">
             <div>
-              <div className="mono text-[10px] uppercase tracking-wider text-stone-500">Stored locally</div>
+              <div className="mono text-[11px] uppercase tracking-wider text-stone-500">Stored locally</div>
               <div className="mono tabular text-sm text-stone-300 mt-0.5">
                 {stats.keys} keys · {(stats.bytes / 1024).toFixed(0)} KB
               </div>
             </div>
-            <div className="mono text-[9px] text-stone-600 text-right">
+            <div className="mono text-[11px] text-stone-600 text-right">
               browser quota varies<br />typically 5-10 MB
             </div>
           </div>
           {stats.bytes > 3 * 1024 * 1024 && (
-            <div className="mono text-[10px] text-amber-400 mt-2 leading-relaxed">
+            <div className="mono text-[11px] text-amber-400 mt-2 leading-relaxed">
               ⚠ Getting close to typical iOS limit. Export a backup soon.
             </div>
           )}
@@ -4381,7 +4384,7 @@ function DataManager() {
             <button
               onClick={() => doImport('merge')}
               disabled={busy}
-              className="w-full bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 rounded-md py-2 mono text-xs uppercase tracking-wider font-semibold flex items-center justify-center gap-2"
+              className="w-full bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 rounded-md py-2 mono text-xs font-semibold flex items-center justify-center gap-2"
             >
               {busy ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
               Merge — fill in missing data only
@@ -4389,14 +4392,14 @@ function DataManager() {
             <button
               onClick={() => doImport('replace')}
               disabled={busy}
-              className="w-full bg-rose-500/80 hover:bg-rose-500 disabled:opacity-40 text-stone-950 rounded-md py-2 mono text-xs uppercase tracking-wider font-semibold flex items-center justify-center gap-2"
+              className="w-full bg-rose-500/80 hover:bg-rose-500 disabled:opacity-40 text-stone-950 rounded-md py-2 mono text-xs font-semibold flex items-center justify-center gap-2"
             >
               <RefreshCw size={12} />
               Replace — wipe current data, restore backup fully
             </button>
             <button
               onClick={() => setPendingImport(null)}
-              className="w-full bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-2 mono text-xs uppercase tracking-wider"
+              className="w-full bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-2 mono text-xs"
             >
               Cancel
             </button>
@@ -4415,7 +4418,7 @@ function DataManager() {
             <Download size={16} className="text-amber-400 shrink-0" />
             <div className="text-left flex-1">
               <div className="text-sm font-medium">Export backup</div>
-              <div className="text-[10px] mono uppercase tracking-wider text-stone-500 mt-0.5">
+              <div className="text-[11px] mono uppercase tracking-wider text-stone-500 mt-0.5">
                 Downloads a JSON file with every key
               </div>
             </div>
@@ -4436,7 +4439,7 @@ function DataManager() {
             <Upload size={16} className="text-sky-400 shrink-0" />
             <div className="text-left flex-1">
               <div className="text-sm font-medium">Restore from backup</div>
-              <div className="text-[10px] mono uppercase tracking-wider text-stone-500 mt-0.5">
+              <div className="text-[11px] mono uppercase tracking-wider text-stone-500 mt-0.5">
                 Choose a previously exported JSON
               </div>
             </div>
@@ -4444,7 +4447,7 @@ function DataManager() {
         </div>
       )}
 
-      <div className="mono text-[10px] text-stone-600 mt-3 leading-relaxed">
+      <div className="mono text-[11px] text-stone-600 mt-3 leading-relaxed">
         Export regularly. Without a backup, clearing browser data or reinstalling the app means everything — workouts, receipts, photos, scans — is gone. Backups include everything; restore offers merge (fill gaps) or replace (full revert).
       </div>
     </div>
@@ -4544,11 +4547,11 @@ function RestTimerBar() {
             <>
               <button
                 onClick={() => adjustRest(-15)}
-                className="text-[10px] mono uppercase tracking-wider text-stone-300 hover:text-stone-100 border border-stone-700 hover:border-stone-500 rounded px-1.5 py-1 active:scale-95 transition-all"
+                className="text-[11px] mono text-stone-300 hover:text-stone-100 border border-stone-700 hover:border-stone-500 rounded px-1.5 py-1 active:scale-95 transition-all"
               >−15</button>
               <button
                 onClick={() => adjustRest(15)}
-                className="text-[10px] mono uppercase tracking-wider text-stone-300 hover:text-stone-100 border border-stone-700 hover:border-stone-500 rounded px-1.5 py-1 active:scale-95 transition-all"
+                className="text-[11px] mono text-stone-300 hover:text-stone-100 border border-stone-700 hover:border-stone-500 rounded px-1.5 py-1 active:scale-95 transition-all"
               >+15</button>
             </>
           )}
@@ -4580,11 +4583,11 @@ function TDEEPanel() {
 
   if (!data.ready) {
     return (
-      <div className="bg-stone-900/40 border border-stone-800 rounded-lg p-3 mb-5">
+      <div className="bg-stone-900 border border-stone-800 rounded-lg p-3 mb-5">
         <div className="flex items-center gap-2 mb-1">
           <Flame size={12} className="text-stone-600" />
-          <div className="mono text-[10px] uppercase tracking-[0.2em] text-stone-500">Estimated TDEE</div>
-          <div className="mono text-[9px] text-stone-600 ml-auto">Not enough data</div>
+          <div className="mono text-[11px] uppercase tracking-wider text-stone-500">Estimated TDEE</div>
+          <div className="mono text-[11px] text-stone-600 ml-auto">Not enough data</div>
         </div>
         <div className="text-xs text-stone-500 leading-relaxed">{data.reason}</div>
       </div>
@@ -4621,9 +4624,9 @@ function TDEEPanel() {
       <div className="flex items-baseline justify-between mb-2">
         <div className="flex items-center gap-2">
           <Flame size={12} className="text-amber-400" />
-          <div className="mono text-[10px] uppercase tracking-[0.2em] text-amber-400">Estimated TDEE</div>
+          <div className="mono text-[11px] uppercase tracking-wider text-amber-400">Estimated TDEE</div>
         </div>
-        <div className="mono text-[9px] text-stone-600">{data.weightEntries} weigh-ins · {data.nutDays} meal days</div>
+        <div className="mono text-[11px] text-stone-600">{data.weightEntries} weigh-ins · {data.nutDays} meal days</div>
       </div>
       <div className="flex items-baseline gap-2">
         <div className="display text-4xl font-semibold tabular text-amber-400">{data.tdee}</div>
@@ -4631,22 +4634,22 @@ function TDEEPanel() {
       </div>
       <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-stone-800">
         <div>
-          <div className="mono text-[9px] uppercase tracking-wider text-stone-500">Avg intake</div>
-          <div className="mono tabular text-sm text-stone-200 mt-0.5">{data.avgIntake} <span className="text-stone-500 text-[10px]">cal</span></div>
+          <div className="mono text-[11px] uppercase tracking-wider text-stone-500">Avg intake</div>
+          <div className="mono tabular text-sm text-stone-200 mt-0.5">{data.avgIntake} <span className="text-stone-500 text-[11px]">cal</span></div>
         </div>
         <div>
-          <div className="mono text-[9px] uppercase tracking-wider text-stone-500">Weight Δ</div>
+          <div className="mono text-[11px] uppercase tracking-wider text-stone-500">Weight Δ</div>
           <div className={`mono tabular text-sm mt-0.5 ${data.weeklyChange > 0 ? 'text-emerald-400' : data.weeklyChange < 0 ? 'text-rose-400' : 'text-stone-300'}`}>
-            {lossDisplay} <span className="text-stone-500 text-[10px]">lb/wk</span>
+            {lossDisplay} <span className="text-stone-500 text-[11px]">lb/wk</span>
           </div>
         </div>
       </div>
       {coaching && (
-        <div className={`mono text-[11px] mt-3 leading-relaxed ${coaching.tone === 'ok' ? 'text-emerald-400' : 'text-amber-400'}`}>
+        <div className={`mono text-[12px] mt-3 leading-relaxed ${coaching.tone === 'ok' ? 'text-emerald-400' : 'text-amber-400'}`}>
           {coaching.tone === 'ok' ? '✓ ' : '→ '}{coaching.text}
         </div>
       )}
-      <div className="mono text-[10px] text-stone-600 mt-2 leading-snug">
+      <div className="mono text-[11px] text-stone-600 mt-2 leading-snug">
         Avg over {data.spanDays} days ({data.firstWeight} → {data.lastWeight} lb). Updates as you log more.
       </div>
     </div>
@@ -4773,8 +4776,8 @@ function CompositionProjection() {
 
   if (!data.ready) {
     return (
-      <div className="bg-stone-900/40 border border-stone-800 rounded-lg p-3 mb-5">
-        <div className="mono text-[10px] uppercase tracking-[0.2em] text-stone-500 mb-1">Body Composition Projection</div>
+      <div className="bg-stone-900 border border-stone-800 rounded-lg p-3 mb-5">
+        <div className="mono text-[11px] uppercase tracking-wider text-stone-500 mb-1">Body Composition Projection</div>
         <div className="text-xs text-stone-500 leading-relaxed">{data.reason}</div>
       </div>
     );
@@ -4783,19 +4786,19 @@ function CompositionProjection() {
   return (
     <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-5 overflow-hidden">
       <div className="flex items-center justify-between mb-3">
-        <div className="mono text-[10px] uppercase tracking-[0.2em] text-amber-400">If your current rate holds…</div>
-        <div className="mono text-[9px] text-stone-600">−{data.weeklyLoss} lb/wk</div>
+        <div className="mono text-[11px] uppercase tracking-wider text-amber-400">If your current rate holds…</div>
+        <div className="mono text-[11px] text-stone-600">−{data.weeklyLoss} lb/wk</div>
       </div>
       <div className="space-y-1">
         {data.milestones.map((m) => (
-          <div key={m.weeks} className="flex items-center justify-between py-2 border-b border-stone-800/60 last:border-0">
+          <div key={m.weeks} className="flex items-center justify-between py-2 border-b border-stone-800 last:border-0">
             <div>
-              <div className="mono text-[10px] uppercase tracking-wider text-stone-400">{m.weeks} weeks</div>
-              <div className="mono text-[10px] text-stone-600 mt-0.5">{fmtDateLong(m.date)}</div>
+              <div className="mono text-[11px] uppercase tracking-wider text-stone-400">{m.weeks} weeks</div>
+              <div className="mono text-[11px] text-stone-600 mt-0.5">{fmtDateLong(m.date)}</div>
             </div>
             <div className="text-right">
               <div className="mono tabular text-base text-amber-400 font-semibold">{m.weight} lb</div>
-              {m.bf != null && <div className="mono tabular text-[10px] text-stone-400">~{m.bf}% BF</div>}
+              {m.bf != null && <div className="mono tabular text-[11px] text-stone-400">~{m.bf}% BF</div>}
             </div>
           </div>
         ))}
@@ -4804,19 +4807,19 @@ function CompositionProjection() {
         <div className="mt-3 pt-3 border-t border-stone-800 space-y-1.5">
           {data.etaDate && (
             <div className="flex items-baseline justify-between text-xs">
-              <span className="mono text-[10px] uppercase tracking-wider text-stone-500">{data.targetWeight} lb ETA</span>
+              <span className="mono text-[11px] uppercase tracking-wider text-stone-500">{data.targetWeight} lb ETA</span>
               <span className="mono tabular text-amber-400 font-semibold">{fmtDateLong(data.etaDate)}</span>
             </div>
           )}
           {data.bfEtaDate && (
             <div className="flex items-baseline justify-between text-xs">
-              <span className="mono text-[10px] uppercase tracking-wider text-stone-500">{data.targetBF}% BF ETA</span>
+              <span className="mono text-[11px] uppercase tracking-wider text-stone-500">{data.targetBF}% BF ETA</span>
               <span className="mono tabular text-amber-400 font-semibold">{fmtDateLong(data.bfEtaDate)}</span>
             </div>
           )}
         </div>
       )}
-      <div className="text-[9px] mono text-stone-600 mt-2 leading-snug">
+      <div className="text-[11px] mono text-stone-600 mt-2 leading-snug">
         Projection assumes lean mass is preserved (high protein + lifting). Real cuts plateau, so adjust expectations as you go.
       </div>
     </div>
@@ -4867,10 +4870,10 @@ function VolumePanel() {
 
   if (!hasAny) {
     return (
-      <div className="bg-stone-900/40 border border-stone-800 rounded-lg p-3 mb-5">
+      <div className="bg-stone-900 border border-stone-800 rounded-lg p-3 mb-5">
         <div className="flex items-center gap-2 mb-1">
           <Dumbbell size={12} className="text-stone-600" />
-          <div className="mono text-[10px] uppercase tracking-[0.2em] text-stone-500">Weekly Volume</div>
+          <div className="mono text-[11px] uppercase tracking-wider text-stone-500">Weekly Volume</div>
         </div>
         <div className="text-xs text-stone-500 leading-relaxed">Log some lifts this week to see your sets-per-muscle breakdown vs hypertrophy targets.</div>
       </div>
@@ -4882,9 +4885,9 @@ function VolumePanel() {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Dumbbell size={12} className="text-amber-400" />
-          <div className="mono text-[10px] uppercase tracking-[0.2em] text-amber-400">Weekly Volume</div>
+          <div className="mono text-[11px] uppercase tracking-wider text-amber-400">Weekly Volume</div>
         </div>
-        <div className="mono text-[9px] text-stone-600">Last 7 days · working sets</div>
+        <div className="mono text-[11px] text-stone-600">Last 7 days · working sets</div>
       </div>
       <div className="space-y-2">
         {MUSCLE_ORDER.map((m) => {
@@ -4904,10 +4907,10 @@ function VolumePanel() {
             'text-rose-400';
           return (
             <div key={m}>
-              <div className="flex items-center justify-between text-[11px] mb-1">
+              <div className="flex items-center justify-between text-[12px] mb-1">
                 <span className="mono text-stone-300 capitalize">{MUSCLE_LABELS[m] || m}</span>
                 <span className={`mono tabular ${labelColor}`}>
-                  {sets} <span className="text-stone-600 text-[10px]">/ {target.min}–{target.max}</span>
+                  {sets} <span className="text-stone-600 text-[11px]">/ {target.min}–{target.max}</span>
                 </span>
               </div>
               <div className="h-1.5 bg-stone-800 rounded-full overflow-hidden relative">
@@ -4927,11 +4930,11 @@ function VolumePanel() {
         })}
       </div>
       {data.untracked.length > 0 && (
-        <div className="mono text-[9px] text-stone-600 mt-3 leading-snug">
+        <div className="mono text-[11px] text-stone-600 mt-3 leading-snug">
           Not counted (no muscle mapping): {data.untracked.slice(0, 4).join(', ')}{data.untracked.length > 4 ? ` +${data.untracked.length - 4} more` : ''}
         </div>
       )}
-      <div className="mono text-[9px] text-stone-600 mt-2 leading-snug">
+      <div className="mono text-[11px] text-stone-600 mt-2 leading-snug">
         Green band = hypertrophy sweet spot per RP/Israetel. Under-min → likely under-stimulating; over-max → risking recovery. Adjust by ~2 sets/week.
       </div>
     </div>
@@ -5014,13 +5017,13 @@ function WeeklyReview() {
     <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-5">
       <div className="flex items-start justify-between mb-3 gap-3">
         <div className="min-w-0">
-          <div className="mono text-[10px] uppercase tracking-[0.2em] text-amber-400">Weekly Review</div>
-          <div className="mono text-[10px] text-stone-600 mt-0.5">Week of {fmtDateLong(weekStart)}</div>
+          <div className="mono text-[11px] uppercase tracking-wider text-amber-400">Weekly Review</div>
+          <div className="mono text-[11px] text-stone-600 mt-0.5">Week of {fmtDateLong(weekStart)}</div>
         </div>
         <button
           onClick={generate}
           disabled={loading}
-          className="shrink-0 mono text-[10px] uppercase tracking-wider px-2.5 py-1.5 border border-stone-700 hover:border-amber-400/50 rounded text-stone-300 hover:text-amber-400 disabled:opacity-40 flex items-center gap-1.5"
+          className="shrink-0 mono text-[11px] px-2.5 py-1.5 border border-stone-700 hover:border-amber-400/50 rounded text-stone-300 hover:text-amber-400 disabled:opacity-40 flex items-center gap-1.5"
         >
           {loading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
           {review ? 'Regenerate' : 'Generate'}
@@ -5063,9 +5066,9 @@ const RECEIPT_CATEGORIES = [
   { id: 'snacks',      label: 'Snacks',      color: 'bg-orange-400/15 text-orange-300 border-orange-400/30',      hex: '#fb923c' },
   { id: 'supplements', label: 'Supplements', color: 'bg-violet-400/15 text-violet-300 border-violet-400/30',      hex: '#a78bfa' },
   { id: 'beverages',   label: 'Beverages',   color: 'bg-cyan-400/15 text-cyan-300 border-cyan-400/30',            hex: '#22d3ee' },
-  { id: 'household',   label: 'Household',   color: 'bg-stone-400/15 text-stone-300 border-stone-400/30',         hex: '#a8a29e' },
+  { id: 'household',   label: 'Household',   color: 'bg-stone-400/15 text-stone-300 border-stone-400/30',         hex: '#AEAEB2' },
   { id: 'alcohol',     label: 'Alcohol',     color: 'bg-fuchsia-400/15 text-fuchsia-300 border-fuchsia-400/30',   hex: '#e879f9' },
-  { id: 'other',       label: 'Other',       color: 'bg-stone-400/15 text-stone-400 border-stone-700',            hex: '#78716c' },
+  { id: 'other',       label: 'Other',       color: 'bg-stone-400/15 text-stone-400 border-stone-700',            hex: '#8E8E93' },
 ];
 
 // Units available when adding/editing a pantry item. Package-type units come
@@ -5500,7 +5503,7 @@ function useReceiptStats(receipts) {
     const categories = Object.entries(categoryTotals)
       .map(([id, total]) => {
         const cat = RECEIPT_CATEGORIES.find((c) => c.id === id);
-        return { id, total, label: cat?.label || id, hex: cat?.hex || '#78716c' };
+        return { id, total, label: cat?.label || id, hex: cat?.hex || '#8E8E93' };
       })
       .filter((c) => c.total > 0)
       .sort((a, b) => b.total - a.total);
@@ -5551,13 +5554,13 @@ function TrendBars({ weeks }) {
     <div>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" preserveAspectRatio="none" style={{ height: 100 }}>
         {/* Y-axis labels */}
-        <text x={padL - 3} y={padT + 3} textAnchor="end" fontSize="7" fill="#78716c" fontFamily="ui-monospace, monospace">${niceMax}</text>
-        <text x={padL - 3} y={padT + plotH / 2 + 2.5} textAnchor="end" fontSize="7" fill="#78716c" fontFamily="ui-monospace, monospace">${midVal}</text>
-        <text x={padL - 3} y={padT + plotH + 2.5} textAnchor="end" fontSize="7" fill="#78716c" fontFamily="ui-monospace, monospace">$0</text>
+        <text x={padL - 3} y={padT + 3} textAnchor="end" fontSize="7" fill="#8E8E93" fontFamily="-apple-system, system-ui, sans-serif">${niceMax}</text>
+        <text x={padL - 3} y={padT + plotH / 2 + 2.5} textAnchor="end" fontSize="7" fill="#8E8E93" fontFamily="-apple-system, system-ui, sans-serif">${midVal}</text>
+        <text x={padL - 3} y={padT + plotH + 2.5} textAnchor="end" fontSize="7" fill="#8E8E93" fontFamily="-apple-system, system-ui, sans-serif">$0</text>
 
         {/* Dashed midline + solid baseline */}
-        <line x1={padL} y1={padT + plotH / 2} x2={padL + plotW} y2={padT + plotH / 2} stroke="#292524" strokeDasharray="2 2" />
-        <line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke="#292524" />
+        <line x1={padL} y1={padT + plotH / 2} x2={padL + plotW} y2={padT + plotH / 2} stroke="#2C2C2E" strokeDasharray="2 2" />
+        <line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke="#2C2C2E" />
 
         {/* Bars */}
         {weeks.map((w, i) => {
@@ -5571,7 +5574,7 @@ function TrendBars({ weeks }) {
 
           let fill;
           if (isSelected) fill = '#fcd34d';        // bright amber when tapped
-          else if (!hasSpend) fill = '#44403c';    // dim grey for empty weeks
+          else if (!hasSpend) fill = '#3A3A3C';    // dim grey for empty weeks
           else if (isCurrent) fill = '#fbbf24';    // current week full amber
           else fill = '#fbbf24cc';                 // past weeks slightly muted
 
@@ -5600,7 +5603,7 @@ function TrendBars({ weeks }) {
           // Nudge first/last labels outward so they align flush with bar edges
           const ox = i === 0 ? -barW / 2 : i === weeks.length - 1 ? barW / 2 : 0;
           return (
-            <text key={i} x={cx + ox} y={H - 5} textAnchor={anchor} fontSize="8" fill="#78716c" fontFamily="ui-monospace, monospace">
+            <text key={i} x={cx + ox} y={H - 5} textAnchor={anchor} fontSize="8" fill="#8E8E93" fontFamily="-apple-system, system-ui, sans-serif">
               {label}
             </text>
           );
@@ -5610,12 +5613,12 @@ function TrendBars({ weeks }) {
       {/* Tap callout — shows the selected week's exact spend */}
       <div className="mt-1.5 mono">
         {selected ? (
-          <div className="flex items-center justify-between bg-amber-400/10 border border-amber-400/30 rounded px-2.5 py-1.5 text-[11px]">
+          <div className="flex items-center justify-between bg-amber-400/10 border border-amber-400/30 rounded px-2.5 py-1.5 text-[12px]">
             <span className="text-stone-300">Week of {fmtDate(selected.start)}</span>
             <span className="text-amber-400 font-semibold tabular">{fmtMoney(selected.total)}</span>
           </div>
         ) : (
-          <div className="text-stone-600 text-[10px] text-center py-1">Tap a bar for week details</div>
+          <div className="text-stone-600 text-[11px] text-center py-1">Tap a bar for week details</div>
         )}
       </div>
     </div>
@@ -5639,7 +5642,7 @@ function CategoryDonut({ categories, size = 132 }) {
     return (
       <svg width={size} height={size}>
         <circle cx={cx} cy={cy} r={outerR} fill={categories[0].hex} />
-        <circle cx={cx} cy={cy} r={innerR} fill="#1c1917" />
+        <circle cx={cx} cy={cy} r={innerR} fill="#1C1C1E" />
       </svg>
     );
   }
@@ -5773,25 +5776,25 @@ function DailyFoodCostChart({ days }) {
       <div className="flex items-baseline justify-between mb-2.5">
         <div>
           <div className="display text-xl font-semibold text-amber-400 tabular">{fmtMoney(mtdTotal)}</div>
-          <div className="mono text-[10px] text-stone-600 mt-0.5">
+          <div className="mono text-[11px] text-stone-600 mt-0.5">
             {trackedDays.length} {trackedDays.length === 1 ? 'day' : 'days'} tracked · avg {fmtMoney(avgPerDay)}/day
           </div>
         </div>
         <div className="text-right">
-          <div className="mono text-[10px] uppercase tracking-wider text-stone-500">MTD</div>
-          <div className="mono text-[10px] text-stone-600">{monthName}</div>
+          <div className="mono text-[11px] uppercase tracking-wider text-stone-500">MTD</div>
+          <div className="mono text-[11px] text-stone-600">{monthName}</div>
         </div>
       </div>
 
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" style={{ height: 100 }}>
         {/* Y-axis labels */}
-        <text x={padL - 3} y={padT + 3} textAnchor="end" fontSize="7" fill="#78716c" fontFamily="ui-monospace, monospace">${niceMax}</text>
-        <text x={padL - 3} y={padT + plotH / 2 + 2.5} textAnchor="end" fontSize="7" fill="#78716c" fontFamily="ui-monospace, monospace">${midVal}</text>
-        <text x={padL - 3} y={padT + plotH + 2.5} textAnchor="end" fontSize="7" fill="#78716c" fontFamily="ui-monospace, monospace">$0</text>
+        <text x={padL - 3} y={padT + 3} textAnchor="end" fontSize="7" fill="#8E8E93" fontFamily="-apple-system, system-ui, sans-serif">${niceMax}</text>
+        <text x={padL - 3} y={padT + plotH / 2 + 2.5} textAnchor="end" fontSize="7" fill="#8E8E93" fontFamily="-apple-system, system-ui, sans-serif">${midVal}</text>
+        <text x={padL - 3} y={padT + plotH + 2.5} textAnchor="end" fontSize="7" fill="#8E8E93" fontFamily="-apple-system, system-ui, sans-serif">$0</text>
 
         {/* Dashed midline + solid baseline */}
-        <line x1={padL} y1={padT + plotH / 2} x2={padL + plotW} y2={padT + plotH / 2} stroke="#292524" strokeDasharray="2 2" />
-        <line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke="#292524" />
+        <line x1={padL} y1={padT + plotH / 2} x2={padL + plotW} y2={padT + plotH / 2} stroke="#2C2C2E" strokeDasharray="2 2" />
+        <line x1={padL} y1={padT + plotH} x2={padL + plotW} y2={padT + plotH} stroke="#2C2C2E" />
 
         {/* Bars */}
         {days.map((d, i) => {
@@ -5802,9 +5805,9 @@ function DailyFoodCostChart({ days }) {
           const isSelected = selectedIdx === i;
 
           let fill;
-          if (d.isFuture) fill = '#292524';
+          if (d.isFuture) fill = '#2C2C2E';
           else if (isSelected) fill = '#fcd34d';
-          else if (d.total === 0) fill = '#44403c';
+          else if (d.total === 0) fill = '#3A3A3C';
           else if (d.isToday) fill = '#fbbf24';
           else fill = '#fbbf24cc';
 
@@ -5831,7 +5834,7 @@ function DailyFoodCostChart({ days }) {
           const anchor = i === 0 ? 'start' : i === days.length - 1 ? 'end' : 'middle';
           const ox = i === 0 ? -barW / 2 : i === days.length - 1 ? barW / 2 : 0;
           return (
-            <text key={i} x={cx + ox} y={H - 5} textAnchor={anchor} fontSize="8" fill="#78716c" fontFamily="ui-monospace, monospace">
+            <text key={i} x={cx + ox} y={H - 5} textAnchor={anchor} fontSize="8" fill="#8E8E93" fontFamily="-apple-system, system-ui, sans-serif">
               {label}
             </text>
           );
@@ -5841,7 +5844,7 @@ function DailyFoodCostChart({ days }) {
       {/* Tap callout */}
       <div className="mt-1.5 mono">
         {selected ? (
-          <div className="flex items-center justify-between bg-amber-400/10 border border-amber-400/30 rounded px-2.5 py-1.5 text-[11px]">
+          <div className="flex items-center justify-between bg-amber-400/10 border border-amber-400/30 rounded px-2.5 py-1.5 text-[12px]">
             <span className="text-stone-300">
               {fmtDate(selected.date)}
               {selected.isToday && <span className="text-stone-500 ml-1.5">· today</span>}
@@ -5849,13 +5852,13 @@ function DailyFoodCostChart({ days }) {
             <span className="text-amber-400 font-semibold tabular">{fmtMoney(selected.total)}</span>
           </div>
         ) : (
-          <div className="text-stone-600 text-[10px] text-center py-1">Tap a bar for day details</div>
+          <div className="text-stone-600 text-[11px] text-center py-1">Tap a bar for day details</div>
         )}
       </div>
 
       {/* Coverage explainer — helps user understand why some days are $0 */}
       {elapsedDays.length > 0 && trackedDays.length < elapsedDays.length && (
-        <div className="mt-2 text-[10px] text-stone-600 leading-snug">
+        <div className="mt-2 text-[11px] text-stone-600 leading-snug">
           Days with $0 either had no meals logged or had only untracked entries (restaurants, ad-hoc foods, non-prepped saved meals). Cook & Stock recipes or log meals directly from a recipe to get cost-tracked.
         </div>
       )}
@@ -5880,7 +5883,7 @@ function ReceiptsInsights({ receipts }) {
     <div className="space-y-3 mb-5">
       {/* Monthly hero w/ delta vs last month */}
       <div className="bg-gradient-to-br from-stone-900 to-stone-900/40 border border-stone-800 rounded-xl p-5">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">This Month</div>
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">This Month</div>
         <div className="flex items-baseline gap-2 mt-1">
           <div className="display text-3xl font-semibold text-amber-400 tabular">{fmtMoney(stats.thisMonth)}</div>
           {showDelta && (
@@ -5891,7 +5894,7 @@ function ReceiptsInsights({ receipts }) {
             </div>
           )}
         </div>
-        <div className="mono text-[10px] text-stone-600 mt-2">
+        <div className="mono text-[11px] text-stone-600 mt-2">
           {stats.lastMonth > 0
             ? `Last month: ${fmtMoney(stats.lastMonth)}`
             : 'First month tracking — no comparison yet'}
@@ -5901,8 +5904,8 @@ function ReceiptsInsights({ receipts }) {
       {/* 12-week trend */}
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-4">
         <div className="flex items-center justify-between mb-3">
-          <div className="mono text-[10px] uppercase tracking-[0.2em] text-stone-500">12-Week Trend</div>
-          <div className="mono text-[10px] text-stone-600">weekly spend</div>
+          <div className="mono text-[11px] uppercase tracking-wider text-stone-500">12-Week Trend</div>
+          <div className="mono text-[11px] text-stone-600">weekly spend</div>
         </div>
         <TrendBars weeks={stats.weeks} />
       </div>
@@ -5911,13 +5914,13 @@ function ReceiptsInsights({ receipts }) {
       {foodDaysLoaded && (
         <div className="bg-stone-900 border border-stone-800 rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
-            <div className="mono text-[10px] uppercase tracking-[0.2em] text-stone-500">Food Eaten This Month</div>
-            <div className="mono text-[10px] text-stone-600">daily $</div>
+            <div className="mono text-[11px] uppercase tracking-wider text-stone-500">Food Eaten This Month</div>
+            <div className="mono text-[11px] text-stone-600">daily $</div>
           </div>
           {hasAnyFoodCost ? (
             <DailyFoodCostChart days={foodDays} />
           ) : (
-            <div className="text-[11px] text-stone-500 leading-relaxed">
+            <div className="text-[12px] text-stone-500 leading-relaxed">
               No cost-tracked meals logged yet this month. To see daily food spend:
               <div className="mt-1.5 text-stone-600">
                 <div>· Open a recipe → tap <span className="text-stone-400">Cook &amp; Stock</span> to meal prep (creates a Saved Meal with $/serving)</div>
@@ -5932,8 +5935,8 @@ function ReceiptsInsights({ receipts }) {
       {stats.categories.length > 0 && (
         <div className="bg-stone-900 border border-stone-800 rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
-            <div className="mono text-[10px] uppercase tracking-[0.2em] text-stone-500">By Category</div>
-            <div className="mono text-[10px] text-stone-600">this month</div>
+            <div className="mono text-[11px] uppercase tracking-wider text-stone-500">By Category</div>
+            <div className="mono text-[11px] text-stone-600">this month</div>
           </div>
           <div className="flex items-center gap-4">
             <CategoryDonut categories={stats.categories} size={120} />
@@ -5941,7 +5944,7 @@ function ReceiptsInsights({ receipts }) {
               {stats.categories.map((c) => {
                 const pct = totalCategorized > 0 ? (c.total / totalCategorized) * 100 : 0;
                 return (
-                  <div key={c.id} className="flex items-center gap-2 text-[11px]">
+                  <div key={c.id} className="flex items-center gap-2 text-[12px]">
                     <span className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: c.hex }} />
                     <span className="text-stone-300 flex-1 truncate">{c.label}</span>
                     <span className="mono tabular text-stone-400 shrink-0">{fmtMoney(c.total)}</span>
@@ -5958,8 +5961,8 @@ function ReceiptsInsights({ receipts }) {
       {stats.stores.length > 0 && (
         <div className="bg-stone-900 border border-stone-800 rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
-            <div className="mono text-[10px] uppercase tracking-[0.2em] text-stone-500">Top Stores</div>
-            <div className="mono text-[10px] text-stone-600">this month</div>
+            <div className="mono text-[11px] uppercase tracking-wider text-stone-500">Top Stores</div>
+            <div className="mono text-[11px] text-stone-600">this month</div>
           </div>
           <div className="space-y-2.5">
             {stats.stores.map((s) => {
@@ -5987,8 +5990,8 @@ function ReceiptsInsights({ receipts }) {
       {stats.proteinRanking.length > 0 && (
         <div className="bg-stone-900 border border-stone-800 rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
-            <div className="mono text-[10px] uppercase tracking-[0.2em] text-stone-500">Best $/g Protein</div>
-            <div className="mono text-[10px] text-stone-600">all-time</div>
+            <div className="mono text-[11px] uppercase tracking-wider text-stone-500">Best $/g Protein</div>
+            <div className="mono text-[11px] text-stone-600">all-time</div>
           </div>
           <div className="space-y-2">
             {stats.proteinRanking.map((d, i) => (
@@ -5996,18 +5999,18 @@ function ReceiptsInsights({ receipts }) {
                 <span className="mono tabular text-rose-300 shrink-0 w-5">#{i + 1}</span>
                 <div className="min-w-0 flex-1">
                   <div className="text-stone-200 truncate">{d.name}</div>
-                  <div className="mono text-[10px] text-stone-600 truncate">
+                  <div className="mono text-[11px] text-stone-600 truncate">
                     {d.store ? `${d.store} · ` : ''}{fmtDate(d.date)} · {fmtMoney(d.totalPrice)} → {Math.round(d.proteinGrams)}g
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
                   <div className="mono tabular text-rose-300">${d.costPerG.toFixed(3)}</div>
-                  <div className="mono text-[9px] text-stone-600">per g</div>
+                  <div className="mono text-[11px] text-stone-600">per g</div>
                 </div>
               </div>
             ))}
           </div>
-          <div className="mono text-[10px] text-stone-600 mt-3 pt-3 border-t border-stone-800 leading-relaxed">
+          <div className="mono text-[11px] text-stone-600 mt-3 pt-3 border-t border-stone-800 leading-relaxed">
             Auto-matched to your food library. Lower $/g = better protein value per dollar.
           </div>
         </div>
@@ -6213,7 +6216,7 @@ function ReceiptServingsReview({ draft, onComplete, onBack }) {
   return (
     <div className="pb-28">
       <div className="flex items-center gap-2 mb-1">
-        <button onClick={onBack} className="text-stone-400 hover:text-stone-100 flex items-center gap-1 mono text-[10px] uppercase tracking-wider">
+        <button onClick={onBack} className="text-stone-400 hover:text-stone-100 flex items-center gap-1 mono text-[11px]">
           <ChevronLeft size={14} /> Back
         </button>
       </div>
@@ -6230,16 +6233,16 @@ function ReceiptServingsReview({ draft, onComplete, onBack }) {
           const perServing = spp > 0 ? total / qty / spp : null;
           const addressed = isAddressed(i);
           return (
-            <div key={i} className={`border rounded-lg p-3 transition-colors ${addressed ? 'bg-stone-900/40 border-stone-800' : 'bg-stone-900 border-amber-400/30'}`}>
+            <div key={i} className={`border rounded-lg p-3 transition-colors ${addressed ? 'bg-stone-900 border-stone-800' : 'bg-stone-900 border-amber-400/30'}`}>
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="min-w-0">
                   <div className="text-sm text-stone-100 truncate">{it.name}</div>
-                  <div className="mono text-[10px] text-stone-500">{fmtPantryQty(it.qty)} {it.unit} · {fmtMoney(it.totalPrice)}</div>
+                  <div className="mono text-[11px] text-stone-500">{fmtPantryQty(it.qty)} {it.unit} · {fmtMoney(it.totalPrice)}</div>
                 </div>
                 {addressed && <Check size={15} className="text-emerald-400 shrink-0 mt-0.5" />}
               </div>
               {recalled[i] && (
-                <div className="mono text-[9px] uppercase tracking-wider text-sky-400/80 mb-1.5">Remembered from a past receipt</div>
+                <div className="mono text-[11px] uppercase tracking-wider text-sky-400/80 mb-1.5">Remembered from a past receipt</div>
               )}
               <div className="flex items-center gap-2">
                 <div className="flex-1">
@@ -6257,7 +6260,7 @@ function ReceiptServingsReview({ draft, onComplete, onBack }) {
                 </div>
                 <button
                   onClick={() => toggleNa(i)}
-                  className={`shrink-0 mono text-[10px] uppercase tracking-wider px-3 py-2 rounded border transition-colors ${
+                  className={`shrink-0 mono text-[11px] px-3 py-2 rounded border transition-colors ${
                     na[i] ? 'bg-stone-700 border-stone-600 text-stone-200' : 'bg-stone-950 border-stone-800 text-stone-500 hover:text-stone-300'
                   }`}
                 >
@@ -6265,7 +6268,7 @@ function ReceiptServingsReview({ draft, onComplete, onBack }) {
                 </button>
               </div>
               {perServing != null && (
-                <div className="mono text-[10px] text-emerald-400/80 mt-1.5">= {fmtMoney(perServing)}/serving</div>
+                <div className="mono text-[11px] text-emerald-400/80 mt-1.5">= {fmtMoney(perServing)}/serving</div>
               )}
             </div>
           );
@@ -6276,15 +6279,15 @@ function ReceiptServingsReview({ draft, onComplete, onBack }) {
       <div className="fixed bottom-0 left-0 right-0 bg-stone-950/95 backdrop-blur border-t border-stone-800 px-4 py-3" style={{ paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))' }}>
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-between mb-2">
-            <div className="mono text-[10px] uppercase tracking-wider text-stone-500">{doneCount}/{items.length} set</div>
-            <button onClick={() => finish(true)} className="mono text-[10px] uppercase tracking-wider text-stone-600 hover:text-stone-400 underline decoration-dotted">
+            <div className="mono text-[11px] uppercase tracking-wider text-stone-500">{doneCount}/{items.length} set</div>
+            <button onClick={() => finish(true)} className="mono text-[11px] text-stone-600 hover:text-stone-400 underline decoration-dotted">
               Skip for now
             </button>
           </div>
           <button
             onClick={() => finish(false)}
             disabled={!allDone}
-            className="w-full bg-amber-400 hover:bg-amber-300 disabled:opacity-40 disabled:cursor-not-allowed text-stone-950 font-semibold mono text-xs uppercase tracking-wider py-2.5 rounded-lg"
+            className="w-full bg-amber-400 hover:bg-amber-300 disabled:opacity-40 disabled:cursor-not-allowed text-stone-950 font-semibold mono text-xs py-2.5 rounded-lg"
           >
             {allDone ? 'Save receipt' : `Set ${items.length - doneCount} more to continue`}
           </button>
@@ -6323,7 +6326,7 @@ function ReceiptsView() {
 
   const showSwitcher = view === 'list'; // hide subtabs when drilling into intake/edit
   const subtabSwitcher = showSwitcher ? (
-    <div className="flex gap-1 mb-4 bg-stone-900/60 border border-stone-800 rounded-lg p-1">
+    <div className="flex gap-1 mb-4 bg-stone-900 border border-stone-800 rounded-lg p-1">
       {[
         { id: 'receipts', label: 'Receipts' },
         { id: 'pantry', label: 'Pantry' },
@@ -6333,7 +6336,7 @@ function ReceiptsView() {
         <button
           key={t.id}
           onClick={() => setMainTab(t.id)}
-          className={`flex-1 py-1.5 rounded-md text-[11px] mono uppercase tracking-wider transition-colors ${
+          className={`flex-1 py-1.5 rounded-md text-[12px] mono transition-colors ${
             mainTab === t.id
               ? 'bg-stone-800 text-amber-400'
               : 'text-stone-500 hover:text-stone-300'
@@ -6535,19 +6538,19 @@ function ReceiptList({ receipts, loaded, onAddNew, onPick }) {
         <ReceiptsInsights receipts={receipts} />
       ) : receipts.length === 1 ? (
         <div className="bg-gradient-to-br from-stone-900 to-stone-900/40 border border-stone-800 rounded-xl p-5 mb-5">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">This Month</div>
+          <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">This Month</div>
           <div className="flex items-baseline gap-2 mt-1">
             <div className="display text-3xl font-semibold text-amber-400 tabular">{fmtMoney(monthTotal)}</div>
             <div className="text-stone-500 mono text-xs">{thisMonth.length} trip</div>
           </div>
-          <div className="mono text-[10px] text-stone-600 mt-2">
+          <div className="mono text-[11px] text-stone-600 mt-2">
             Add another receipt to unlock trends, category breakdown, and store comparison.
           </div>
         </div>
       ) : null}
 
       {receipts.length === 0 ? (
-        <div className="bg-stone-900/40 border border-dashed border-stone-700 rounded-xl p-8 text-center">
+        <div className="bg-stone-900 border border-dashed border-stone-700 rounded-xl p-8 text-center">
           <Receipt size={32} className="mx-auto text-stone-600 mb-3" />
           <div className="text-sm text-stone-300 mb-1">No receipts yet</div>
           <div className="text-xs text-stone-500 mb-4 leading-relaxed">
@@ -6555,14 +6558,14 @@ function ReceiptList({ receipts, loaded, onAddNew, onPick }) {
           </div>
           <button
             onClick={onAddNew}
-            className="bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded-md px-4 py-2 mono text-sm uppercase tracking-wider active:scale-95 transition-all"
+            className="bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded-md px-4 py-2 mono text-sm active:scale-95 transition-all"
           >
             Add your first receipt
           </button>
         </div>
       ) : (
         <>
-          <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-2 px-1">All Receipts</div>
+          <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-2 px-1">All Receipts</div>
           {receipts.map((r) => (
             <button
               key={r.id}
@@ -6572,7 +6575,7 @@ function ReceiptList({ receipts, loaded, onAddNew, onPick }) {
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium text-stone-100 truncate">{r.store || 'Unknown store'}</div>
-                  <div className="mono text-[11px] text-stone-500 mt-0.5">
+                  <div className="mono text-[12px] text-stone-500 mt-0.5">
                     {fmtDate(r.date)} · {r.items?.length || 0} items
                   </div>
                 </div>
@@ -6672,7 +6675,7 @@ function ReceiptIntake({ onParsed, onManualEntry, onCancel }) {
         <button onClick={onCancel} className="text-stone-400 hover:text-stone-100 p-1.5 -ml-1.5">
           <ChevronLeft size={18} />
         </button>
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">New Receipt</div>
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">New Receipt</div>
       </div>
 
       {stage === 'pick' && (
@@ -6699,7 +6702,7 @@ function ReceiptIntake({ onParsed, onManualEntry, onCancel }) {
                 <Camera size={18} />
                 <div className="text-left">
                   <div className="text-sm font-semibold">Take photo</div>
-                  <div className="text-[10px] mono uppercase tracking-wider opacity-70">Use camera</div>
+                  <div className="text-[11px] mono uppercase tracking-wider opacity-70">Use camera</div>
                 </div>
               </button>
 
@@ -6717,7 +6720,7 @@ function ReceiptIntake({ onParsed, onManualEntry, onCancel }) {
                 <ImageIcon size={18} className="text-sky-400" />
                 <div className="text-left">
                   <div className="text-sm font-medium">Photo library</div>
-                  <div className="text-[10px] mono uppercase tracking-wider text-stone-500">Pick existing photo</div>
+                  <div className="text-[11px] mono uppercase tracking-wider text-stone-500">Pick existing photo</div>
                 </div>
               </button>
 
@@ -6735,7 +6738,7 @@ function ReceiptIntake({ onParsed, onManualEntry, onCancel }) {
                 <FileText size={18} className="text-emerald-400" />
                 <div className="text-left">
                   <div className="text-sm font-medium">Upload PDF</div>
-                  <div className="text-[10px] mono uppercase tracking-wider text-stone-500">Emailed receipts, statements</div>
+                  <div className="text-[11px] mono uppercase tracking-wider text-stone-500">Emailed receipts, statements</div>
                 </div>
               </button>
             </div>
@@ -6743,7 +6746,7 @@ function ReceiptIntake({ onParsed, onManualEntry, onCancel }) {
 
           <button
             onClick={onManualEntry}
-            className="w-full text-center text-xs mono uppercase tracking-wider text-stone-500 hover:text-stone-300 py-2"
+            className="w-full text-center text-xs mono text-stone-500 hover:text-stone-300 py-2"
           >
             or enter manually →
           </button>
@@ -6757,7 +6760,7 @@ function ReceiptIntake({ onParsed, onManualEntry, onCancel }) {
               {preview.startsWith('data:application/pdf') ? (
                 <div className="py-12 flex flex-col items-center gap-2">
                   <FileText size={32} className="text-emerald-400" />
-                  <div className="mono text-[10px] uppercase tracking-wider text-stone-500">PDF uploaded</div>
+                  <div className="mono text-[11px] uppercase tracking-wider text-stone-500">PDF uploaded</div>
                 </div>
               ) : (
                 <img src={preview} alt="Receipt preview" className="max-w-full max-h-64 object-contain" />
@@ -6768,7 +6771,7 @@ function ReceiptIntake({ onParsed, onManualEntry, onCancel }) {
             <Loader2 size={16} className="text-amber-400 animate-spin" />
             <div className="text-sm text-stone-300">Reading receipt…</div>
           </div>
-          <div className="text-[10px] mono uppercase tracking-wider text-stone-600 text-center mt-1">
+          <div className="text-[11px] mono uppercase tracking-wider text-stone-600 text-center mt-1">
             Claude is extracting items, prices, and store info
           </div>
         </div>
@@ -6781,7 +6784,7 @@ function ReceiptIntake({ onParsed, onManualEntry, onCancel }) {
             <div className="flex-1">
               <div className="text-sm font-semibold text-rose-300 mb-1">Couldn't parse receipt</div>
               <div className="text-xs text-stone-400 leading-relaxed">{error}</div>
-              <div className="text-[10px] mono text-stone-600 mt-2 leading-relaxed">
+              <div className="text-[11px] mono text-stone-600 mt-2 leading-relaxed">
                 This feature needs <span className="text-stone-400">/api/parse</span> on your Vercel deploy with ANTHROPIC_API_KEY set. Won't work in the artifact preview — only on the live app.
               </div>
             </div>
@@ -6789,13 +6792,13 @@ function ReceiptIntake({ onParsed, onManualEntry, onCancel }) {
           <div className="flex gap-2">
             <button
               onClick={() => { setStage('pick'); setError(null); }}
-              className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-md py-2 mono text-xs uppercase tracking-wider"
+              className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-md py-2 mono text-xs"
             >
               Try again
             </button>
             <button
               onClick={onManualEntry}
-              className="flex-1 bg-amber-400 hover:bg-amber-300 text-stone-950 rounded-md py-2 mono text-xs uppercase tracking-wider font-semibold"
+              className="flex-1 bg-amber-400 hover:bg-amber-300 text-stone-950 rounded-md py-2 mono text-xs font-semibold"
             >
               Enter manually
             </button>
@@ -6860,10 +6863,10 @@ function ReceiptConfirm({ draft, photo, onSave, onCancel }) {
           <button onClick={onCancel} className="text-stone-400 hover:text-stone-100 p-1.5 -ml-1.5">
             <ChevronLeft size={18} />
           </button>
-          <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">Confirm Receipt</div>
+          <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">Confirm Receipt</div>
         </div>
         {draft.parsedBy === 'ai' && (
-          <div className="flex items-center gap-1 mono text-[10px] uppercase tracking-wider text-amber-400">
+          <div className="flex items-center gap-1 mono text-[11px] uppercase tracking-wider text-amber-400">
             <Sparkles size={11} /> AI-parsed
           </div>
         )}
@@ -6879,7 +6882,7 @@ function ReceiptConfirm({ draft, photo, onSave, onCancel }) {
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1">Store</div>
+            <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1">Store</div>
             <input
               type="text"
               value={store}
@@ -6889,7 +6892,7 @@ function ReceiptConfirm({ draft, photo, onSave, onCancel }) {
             />
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1">Date</div>
+            <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1">Date</div>
             <input
               type="date"
               value={date}
@@ -6904,10 +6907,10 @@ function ReceiptConfirm({ draft, photo, onSave, onCancel }) {
       {/* Items */}
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
         <div className="flex items-center justify-between mb-3">
-          <div className="text-[10px] uppercase tracking-wider mono text-stone-500">Items ({items.length})</div>
+          <div className="text-[11px] uppercase tracking-wider mono text-stone-500">Items ({items.length})</div>
           <button
             onClick={addItem}
-            className="text-[10px] mono uppercase tracking-wider text-amber-400 hover:text-amber-300 flex items-center gap-1"
+            className="text-[11px] mono text-amber-400 hover:text-amber-300 flex items-center gap-1"
           >
             <Plus size={12} /> Add
           </button>
@@ -6932,8 +6935,8 @@ function ReceiptConfirm({ draft, photo, onSave, onCancel }) {
       {/* Total + notes */}
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
         <div className="flex items-center justify-between mb-2">
-          <div className="text-[10px] uppercase tracking-wider mono text-stone-500">Total</div>
-          <div className="text-[10px] mono text-stone-600">computed: {fmtMoney(computedTotal)}</div>
+          <div className="text-[11px] uppercase tracking-wider mono text-stone-500">Total</div>
+          <div className="text-[11px] mono text-stone-600">computed: {fmtMoney(computedTotal)}</div>
         </div>
         <div className="flex items-center gap-2">
           <span className="mono text-amber-400">$</span>
@@ -6946,12 +6949,12 @@ function ReceiptConfirm({ draft, photo, onSave, onCancel }) {
           />
         </div>
         {totalMismatch && (
-          <div className="text-[10px] mono text-rose-400 mt-2">
+          <div className="text-[11px] mono text-rose-400 mt-2">
             Total doesn't match line items ({fmtMoney(computedTotal)}). Tax / fees? Adjust as needed.
           </div>
         )}
 
-        <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mt-4 mb-1">Notes (optional)</div>
+        <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mt-4 mb-1">Notes (optional)</div>
         <input
           type="text"
           value={notes}
@@ -6964,14 +6967,14 @@ function ReceiptConfirm({ draft, photo, onSave, onCancel }) {
       <div className="flex gap-2 mt-4">
         <button
           onClick={onCancel}
-          className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-3 mono text-xs uppercase tracking-wider"
+          className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-3 mono text-xs"
         >
           Cancel
         </button>
         <button
           onClick={handleSave}
           disabled={items.length === 0 && !store.trim()}
-          className="flex-[2] bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 rounded-md py-3 mono text-xs uppercase tracking-wider font-semibold flex items-center justify-center gap-2"
+          className="flex-[2] bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 rounded-md py-3 mono text-xs font-semibold flex items-center justify-center gap-2"
         >
           <Save size={13} /> Save receipt
         </button>
@@ -6990,9 +6993,9 @@ function ItemEditor({ item, onChange, onRemove }) {
     <div className="bg-stone-950 border border-stone-800 rounded-md overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full px-3 py-2 flex items-center gap-2 hover:bg-stone-900/50"
+        className="w-full px-3 py-2 flex items-center gap-2 hover:bg-stone-900"
       >
-        <span className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${cat.color} shrink-0`}>
+        <span className={`mono text-[11px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${cat.color} shrink-0`}>
           {cat.label}
         </span>
         <span className="text-sm text-stone-200 flex-1 text-left truncate">{item.name || '(unnamed)'}</span>
@@ -7001,9 +7004,9 @@ function ItemEditor({ item, onChange, onRemove }) {
       </button>
 
       {open && (
-        <div className="px-3 pb-3 pt-1 space-y-2 border-t border-stone-800/60">
+        <div className="px-3 pb-3 pt-1 space-y-2 border-t border-stone-800">
           <div>
-            <div className="text-[9px] uppercase tracking-wider mono text-stone-500 mb-0.5">Name</div>
+            <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-0.5">Name</div>
             <input
               type="text"
               value={item.name}
@@ -7013,7 +7016,7 @@ function ItemEditor({ item, onChange, onRemove }) {
           </div>
           <div className="grid grid-cols-4 gap-2">
             <div>
-              <div className="text-[9px] uppercase tracking-wider mono text-stone-500 mb-0.5">Qty</div>
+              <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-0.5">Qty</div>
               <input
                 type="number"
                 step="0.01"
@@ -7023,7 +7026,7 @@ function ItemEditor({ item, onChange, onRemove }) {
               />
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider mono text-stone-500 mb-0.5">Unit</div>
+              <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-0.5">Unit</div>
               <input
                 type="text"
                 value={item.unit}
@@ -7032,7 +7035,7 @@ function ItemEditor({ item, onChange, onRemove }) {
               />
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider mono text-stone-500 mb-0.5">$/unit</div>
+              <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-0.5">$/unit</div>
               <input
                 type="number"
                 step="0.01"
@@ -7042,7 +7045,7 @@ function ItemEditor({ item, onChange, onRemove }) {
               />
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider mono text-stone-500 mb-0.5">Total</div>
+              <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-0.5">Total</div>
               <input
                 type="number"
                 step="0.01"
@@ -7053,7 +7056,7 @@ function ItemEditor({ item, onChange, onRemove }) {
             </div>
           </div>
           <div>
-            <div className="text-[9px] uppercase tracking-wider mono text-stone-500 mb-0.5">Category</div>
+            <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-0.5">Category</div>
             <div className="flex flex-wrap gap-1">
               {RECEIPT_CATEGORIES.map((c) => {
                 const active = c.id === item.category;
@@ -7061,7 +7064,7 @@ function ItemEditor({ item, onChange, onRemove }) {
                   <button
                     key={c.id}
                     onClick={() => onChange('category', c.id)}
-                    className={`text-[10px] mono uppercase tracking-wider px-1.5 py-0.5 rounded border transition-colors ${
+                    className={`text-[11px] mono px-1.5 py-0.5 rounded border transition-colors ${
                       active ? c.color : 'border-stone-800 text-stone-600 hover:text-stone-300 hover:border-stone-700'
                     }`}
                   >
@@ -7073,7 +7076,7 @@ function ItemEditor({ item, onChange, onRemove }) {
           </div>
           <button
             onClick={onRemove}
-            className="mt-1 text-[10px] mono uppercase tracking-wider text-rose-400 hover:text-rose-300 flex items-center gap-1"
+            className="mt-1 text-[11px] mono text-rose-400 hover:text-rose-300 flex items-center gap-1"
           >
             <Trash2 size={11} /> Remove item
           </button>
@@ -7147,11 +7150,11 @@ function ReceiptDetail({ receipt, onBack, onDelete, onUpdate }) {
       <div className="flex items-center justify-between mb-4">
         <button onClick={onBack} className="flex items-center gap-1.5 text-stone-400 hover:text-stone-100 p-1.5 -ml-1.5">
           <ChevronLeft size={18} />
-          <span className="text-[10px] uppercase tracking-[0.2em] mono">Receipts</span>
+          <span className="text-[11px] uppercase tracking-wider mono">Receipts</span>
         </button>
         <button
           onClick={() => setEditing(true)}
-          className="text-[10px] mono uppercase tracking-wider text-amber-400 hover:text-amber-300 flex items-center gap-1.5 border border-amber-400/40 hover:border-amber-300 rounded px-2.5 py-1.5"
+          className="text-[11px] mono text-amber-400 hover:text-amber-300 flex items-center gap-1.5 border border-amber-400/40 hover:border-amber-300 rounded px-2.5 py-1.5"
         >
           <Edit3 size={11} /> Edit
         </button>
@@ -7165,7 +7168,7 @@ function ReceiptDetail({ receipt, onBack, onDelete, onUpdate }) {
           {photo.startsWith('data:application/pdf') ? (
             <div className="py-8 flex flex-col items-center gap-2">
               <FileText size={28} className="text-emerald-400" />
-              <div className="mono text-[10px] uppercase tracking-wider text-stone-500">PDF receipt</div>
+              <div className="mono text-[11px] uppercase tracking-wider text-stone-500">PDF receipt</div>
             </div>
           ) : (
             <img src={photo} alt="" className="w-full max-h-56 object-contain" />
@@ -7175,7 +7178,7 @@ function ReceiptDetail({ receipt, onBack, onDelete, onUpdate }) {
 
       {/* Summary */}
       <div className="bg-gradient-to-br from-stone-900 to-stone-900/40 border border-stone-800 rounded-xl p-5 mb-3">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">{fmtDateLong(receipt.date)}</div>
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">{fmtDateLong(receipt.date)}</div>
         <div className="display text-xl font-semibold mt-0.5 text-stone-100">{receipt.store || 'Unknown store'}</div>
         <div className="flex items-baseline gap-2 mt-3">
           <div className="display text-3xl font-semibold text-amber-400 tabular">{fmtMoney(receipt.total)}</div>
@@ -7189,15 +7192,15 @@ function ReceiptDetail({ receipt, onBack, onDelete, onUpdate }) {
       </div>
 
       {/* Items grouped by category */}
-      <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-2 px-1">Line Items</div>
+      <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-2 px-1">Line Items</div>
       {RECEIPT_CATEGORIES.map((c) => {
         const list = grouped[c.id];
         if (!list || list.length === 0) return null;
         const catTotal = list.reduce((s, i) => s + (parseFloat(i.totalPrice) || 0), 0);
         return (
           <div key={c.id} className="bg-stone-900 border border-stone-800 rounded-lg mb-2 overflow-hidden">
-            <div className="px-3 py-2 flex items-center justify-between bg-stone-900/60 border-b border-stone-800">
-              <span className={`mono text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${c.color}`}>
+            <div className="px-3 py-2 flex items-center justify-between bg-stone-900 border-b border-stone-800">
+              <span className={`mono text-[11px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${c.color}`}>
                 {c.label}
               </span>
               <span className="mono tabular text-xs text-stone-400">{fmtMoney(catTotal)} · {list.length}</span>
@@ -7224,10 +7227,10 @@ function ReceiptDetail({ receipt, onBack, onDelete, onUpdate }) {
                       <div className="flex-1 min-w-0">
                         <div className="text-sm text-stone-200 truncate">{it.name}</div>
                         {(it.qty > 1 || (it.unit && it.unit !== 'ea')) && (
-                          <div className="mono text-[10px] text-stone-500">{it.qty} {it.unit} @ {fmtMoney(it.unitPrice)}</div>
+                          <div className="mono text-[11px] text-stone-500">{it.qty} {it.unit} @ {fmtMoney(it.unitPrice)}</div>
                         )}
                         {match && (
-                          <div className="mono text-[10px] text-amber-400/80 truncate mt-0.5 flex items-center gap-1">
+                          <div className="mono text-[11px] text-amber-400/80 truncate mt-0.5 flex items-center gap-1">
                             <Sparkles size={9} className="shrink-0" />
                             <span className="truncate">{match.food.name}</span>
                             {proteinCost && (
@@ -7236,7 +7239,7 @@ function ReceiptDetail({ receipt, onBack, onDelete, onUpdate }) {
                           </div>
                         )}
                         {it.servingsPerPackage > 0 && (
-                          <div className="mono text-[10px] text-emerald-400/80 mt-0.5">
+                          <div className="mono text-[11px] text-emerald-400/80 mt-0.5">
                             {it.servingsPerPackage} servings/pkg · {fmtMoney((parseFloat(it.totalPrice) || 0) / (parseFloat(it.qty) || 1) / it.servingsPerPackage)}/serving
                           </div>
                         )}
@@ -7244,8 +7247,8 @@ function ReceiptDetail({ receipt, onBack, onDelete, onUpdate }) {
                       <div className="mono tabular text-sm text-stone-300 shrink-0">{fmtMoney(it.totalPrice)}</div>
                     </button>
                     {servingsItemId === it.id && (
-                      <div className="mt-2 pt-2 border-t border-stone-800/60">
-                        <div className="mono text-[9px] uppercase tracking-wider text-stone-500 mb-1">
+                      <div className="mt-2 pt-2 border-t border-stone-800">
+                        <div className="mono text-[11px] uppercase tracking-wider text-stone-500 mb-1">
                           Servings in this package <span className="text-stone-600 normal-case tracking-normal">(for cost-per-serving)</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -7261,12 +7264,12 @@ function ReceiptDetail({ receipt, onBack, onDelete, onUpdate }) {
                           />
                           <button
                             onClick={() => saveServings(it.id)}
-                            className="bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold mono text-[10px] uppercase tracking-wider px-3 py-1.5 rounded"
+                            className="bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold mono text-[11px] px-3 py-1.5 rounded"
                           >
                             Save
                           </button>
                         </div>
-                        <div className="mono text-[9px] text-stone-600 mt-1.5 leading-snug">
+                        <div className="mono text-[11px] text-stone-600 mt-1.5 leading-snug">
                           {servingsDraft && parseFloat(servingsDraft) > 0
                             ? <>= {fmtMoney((parseFloat(it.totalPrice) || 0) / (parseFloat(it.qty) || 1) / parseFloat(servingsDraft))}/serving. Any food matching "{it.name}" will use this when it has no servings set.</>
                             : <>Leave blank to clear. This feeds cost-per-serving for foods matched to this item.</>}
@@ -7286,7 +7289,7 @@ function ReceiptDetail({ receipt, onBack, onDelete, onUpdate }) {
         {!confirmDelete ? (
           <button
             onClick={() => setConfirmDelete(true)}
-            className="w-full text-[10px] mono uppercase tracking-wider text-stone-500 hover:text-rose-400 py-3 flex items-center justify-center gap-1.5"
+            className="w-full text-[11px] mono text-stone-500 hover:text-rose-400 py-3 flex items-center justify-center gap-1.5"
           >
             <Trash2 size={11} /> Delete receipt
           </button>
@@ -7296,13 +7299,13 @@ function ReceiptDetail({ receipt, onBack, onDelete, onUpdate }) {
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmDelete(false)}
-                className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded py-1.5 mono text-[10px] uppercase tracking-wider"
+                className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded py-1.5 mono text-[11px]"
               >
                 Keep
               </button>
               <button
                 onClick={onDelete}
-                className="flex-1 bg-rose-500 hover:bg-rose-400 text-stone-950 rounded py-1.5 mono text-[10px] uppercase tracking-wider font-semibold"
+                className="flex-1 bg-rose-500 hover:bg-rose-400 text-stone-950 rounded py-1.5 mono text-[11px] font-semibold"
               >
                 Delete
               </button>
@@ -7315,7 +7318,7 @@ function ReceiptDetail({ receipt, onBack, onDelete, onUpdate }) {
       {showZoom && photo && !photo.startsWith('data:application/pdf') && (
         <div
           onClick={() => setShowZoom(false)}
-          className="fixed inset-0 bg-stone-950/95 z-50 flex items-center justify-center p-4"
+          className="ios-backdrop fixed inset-0 bg-stone-950/95 z-50 flex items-center justify-center p-4"
         >
           <img src={photo} alt="" className="max-w-full max-h-full object-contain" />
           <button className="absolute top-4 right-4 text-stone-300 p-2"><X size={22} /></button>
@@ -7775,19 +7778,19 @@ function PantryView() {
     <div className="relative pb-16">
       {/* Summary card */}
       <div className="bg-gradient-to-br from-stone-900 to-stone-900/40 border border-stone-800 rounded-xl p-5 mb-4">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">In Your Kitchen</div>
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">In Your Kitchen</div>
         <div className="flex items-baseline gap-2 mt-1">
           <div className="display text-3xl font-semibold text-amber-400 tabular">{inStock.length}</div>
           <div className="text-stone-500 mono text-xs">items in stock</div>
         </div>
         {expiringSoon.length > 0 && (
-          <div className="mono text-[11px] text-rose-400 mt-2 flex items-center gap-1.5">
+          <div className="mono text-[12px] text-rose-400 mt-2 flex items-center gap-1.5">
             <AlertCircle size={11} />
             {expiringSoon.length} expiring soon
           </div>
         )}
         {inStock.length === 0 && (
-          <div className="mono text-[10px] text-stone-600 mt-2 leading-relaxed">
+          <div className="mono text-[11px] text-stone-600 mt-2 leading-relaxed">
             Add a receipt on the Receipts tab to auto-stock your pantry, or tap + below to add an item manually.
           </div>
         )}
@@ -7803,19 +7806,19 @@ function PantryView() {
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
               <Flame size={13} className="text-amber-400" />
-              <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">Meal prep · {shownBatches.length}</div>
+              <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">Meal prep · {shownBatches.length}</div>
             </div>
             <div className="space-y-1.5">
               {shownBatches.map((b) => (
-                <div key={b.id} className="bg-stone-900/40 border border-amber-400/20 rounded px-3 py-2.5 flex items-center justify-between">
+                <div key={b.id} className="bg-stone-900 border border-amber-400/20 rounded px-3 py-2.5 flex items-center justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="text-sm text-stone-200 truncate flex items-center gap-2">
                       {b.name}
-                      <span className="text-[9px] mono uppercase tracking-wider px-1.5 py-0.5 rounded border border-amber-400/40 text-amber-400 bg-amber-400/10 shrink-0">
+                      <span className="text-[11px] mono uppercase tracking-wider px-1.5 py-0.5 rounded border border-amber-400/40 text-amber-400 bg-amber-400/10 shrink-0">
                         {b.servingsRemaining}/{b.totalServings} left
                       </span>
                     </div>
-                    <div className="text-[11px] mono text-stone-500 tabular mt-0.5">
+                    <div className="text-[12px] mono text-stone-500 tabular mt-0.5">
                       {b.cal} cal · {b.protein}p · {b.carbs}c · {b.fat}f
                       {b.costPerServing > 0 && (
                         <span className="ml-2 text-emerald-400/70">· {fmtMoney(b.costPerServing)}/ea</span>
@@ -7826,7 +7829,7 @@ function PantryView() {
                 </div>
               ))}
             </div>
-            <div className="mono text-[10px] text-stone-600 mt-2 leading-snug">
+            <div className="mono text-[11px] text-stone-600 mt-2 leading-snug">
               Log a serving from <span className="text-stone-400">Fuel</span> to draw one down · adjust or restock in <span className="text-stone-400">Library</span>.
             </div>
           </div>
@@ -7844,20 +7847,20 @@ function PantryView() {
             )}
           </div>
           {pendingReadd.length > 1 && (
-            <div className="text-[10px] text-stone-500 mono mb-2 leading-snug">
+            <div className="text-[11px] text-stone-500 mono mb-2 leading-snug">
               {pendingReadd.map((p) => p.name).join(', ')}
             </div>
           )}
           <div className="flex gap-2">
             <button
               onClick={confirmReadd}
-              className="flex-1 bg-amber-400 hover:bg-amber-300 text-stone-950 mono text-[11px] font-semibold tracking-wider py-1.5 rounded uppercase"
+              className="flex-1 bg-amber-400 hover:bg-amber-300 text-stone-950 mono text-[12px] font-semibold py-1.5 rounded"
             >
               {pendingReadd.length > 1 ? `Add all ${pendingReadd.length}` : 'Add to list'}
             </button>
             <button
               onClick={dismissReadd}
-              className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 mono text-[11px] tracking-wider py-1.5 rounded uppercase"
+              className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 mono text-[12px] py-1.5 rounded"
             >
               Skip
             </button>
@@ -7897,10 +7900,10 @@ function PantryView() {
               key={f.id}
               onClick={() => setFilter(f.id)}
               disabled={selectMode}
-              className={`shrink-0 px-3 py-1 rounded-full mono text-[10px] uppercase tracking-wider border transition-colors disabled:opacity-40 ${
+              className={`shrink-0 px-3 py-1 rounded-full mono text-[11px] border transition-colors disabled:opacity-40 ${
                 filter === f.id
                   ? 'bg-amber-400/15 border-amber-400/50 text-amber-400'
-                  : 'bg-stone-900/60 border-stone-800 text-stone-500 hover:text-stone-300'
+                  : 'bg-stone-900 border-stone-800 text-stone-500 hover:text-stone-300'
               }`}
             >
               {f.label}
@@ -7910,10 +7913,10 @@ function PantryView() {
         {visible.length > 0 && (
           <button
             onClick={selectMode ? exitSelectMode : enterSelectMode}
-            className={`shrink-0 px-2.5 py-1 rounded-full mono text-[10px] uppercase tracking-wider border transition-colors ${
+            className={`shrink-0 px-2.5 py-1 rounded-full mono text-[11px] border transition-colors ${
               selectMode
                 ? 'bg-stone-800 border-stone-700 text-stone-300'
-                : 'bg-stone-900/60 border-stone-800 text-stone-500 hover:text-stone-300'
+                : 'bg-stone-900 border-stone-800 text-stone-500 hover:text-stone-300'
             }`}
           >
             {selectMode ? 'Cancel' : 'Select'}
@@ -7924,7 +7927,7 @@ function PantryView() {
       {/* Manual add form */}
       {showAdd && (
         <div className="bg-stone-900 border border-amber-400/30 rounded-xl p-3 mb-3">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-amber-400 mono mb-2">Add Item</div>
+          <div className="text-[11px] uppercase tracking-wider text-amber-400 mono mb-2">Add Item</div>
           <input
             type="text"
             value={draftName}
@@ -7934,7 +7937,7 @@ function PantryView() {
           />
           <div className="grid grid-cols-2 gap-2 mb-2">
             <div>
-              <div className="text-[9px] uppercase tracking-wider mono text-stone-500 mb-0.5">How many</div>
+              <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-0.5">How many</div>
               <input
                 type="number"
                 step="1"
@@ -7945,7 +7948,7 @@ function PantryView() {
               />
             </div>
             <div>
-              <div className="text-[9px] uppercase tracking-wider mono text-stone-500 mb-0.5">Unit</div>
+              <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-0.5">Unit</div>
               <select
                 value={PANTRY_UNITS.includes(draftUnit) ? draftUnit : 'ea'}
                 onChange={(e) => setDraftUnit(e.target.value)}
@@ -7959,13 +7962,13 @@ function PantryView() {
               fraction is added on top of the whole count above. */}
           {PACKAGE_UNITS.has(draftUnit) && (
             <div className="mb-2">
-              <div className="text-[9px] uppercase tracking-wider mono text-stone-500 mb-1">
+              <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1">
                 + a partial one? <span className="text-stone-600 normal-case tracking-normal">(optional)</span>
               </div>
               <div className="flex flex-wrap gap-1">
                 <button
                   onClick={() => setDraftFraction(0)}
-                  className={`mono text-[11px] px-2 py-1 rounded border transition-colors ${
+                  className={`mono text-[12px] px-2 py-1 rounded border transition-colors ${
                     draftFraction === 0 ? 'bg-amber-400 text-stone-950 border-amber-400 font-semibold' : 'bg-stone-950 border-stone-800 text-stone-400'
                   }`}
                 >
@@ -7983,19 +7986,19 @@ function PantryView() {
                   </button>
                 ))}
               </div>
-              <div className="text-[10px] mono text-stone-600 mt-1.5">
+              <div className="text-[11px] mono text-stone-600 mt-1.5">
                 Total: <span className="text-stone-300">{fmtPantryQty((parseFloat(draftQty) || 0) + draftFraction)} {draftUnit}</span>
                 {draftFraction > 0 && <span className="text-stone-600"> ({draftQty || 0} full + {PANTRY_FRACTIONS.find((f) => Math.abs(draftFraction - f.value) < 0.001)?.label} partial)</span>}
               </div>
             </div>
           )}
-          <div className="text-[9px] uppercase tracking-wider mono text-stone-500 mb-1">Category</div>
+          <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1">Category</div>
           <div className="flex flex-wrap gap-1 mb-3">
             {RECEIPT_CATEGORIES.map((c) => (
               <button
                 key={c.id}
                 onClick={() => setDraftCategory(c.id)}
-                className={`text-[10px] mono uppercase tracking-wider px-1.5 py-0.5 rounded border transition-colors ${
+                className={`text-[11px] mono px-1.5 py-0.5 rounded border transition-colors ${
                   c.id === draftCategory ? c.color : 'border-stone-800 text-stone-600 hover:text-stone-300 hover:border-stone-700'
                 }`}
               >
@@ -8006,14 +8009,14 @@ function PantryView() {
           <div className="flex gap-2">
             <button
               onClick={() => setShowAdd(false)}
-              className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-2 mono text-xs uppercase tracking-wider"
+              className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-2 mono text-xs"
             >
               Cancel
             </button>
             <button
               onClick={addManual}
               disabled={!draftName.trim()}
-              className="flex-[2] bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 rounded-md py-2 mono text-xs uppercase tracking-wider font-semibold"
+              className="flex-[2] bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 rounded-md py-2 mono text-xs font-semibold"
             >
               Add to pantry
             </button>
@@ -8023,7 +8026,7 @@ function PantryView() {
 
       {/* Empty state for filtered view */}
       {visible.length === 0 ? (
-        <div className="bg-stone-900/40 border border-dashed border-stone-700 rounded-xl p-6 text-center">
+        <div className="bg-stone-900 border border-dashed border-stone-700 rounded-xl p-6 text-center">
           <div className="text-xs text-stone-500 leading-relaxed">
             {q
               ? <>No pantry items match "<span className="text-stone-300">{search.trim()}</span>".</>
@@ -8042,10 +8045,10 @@ function PantryView() {
             return (
               <div key={cat.id} className="mb-4">
                 <div className="flex items-center gap-2 mb-2 px-1">
-                  <span className={`mono text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${cat.color}`}>
+                  <span className={`mono text-[11px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${cat.color}`}>
                     {cat.label}
                   </span>
-                  <span className="mono text-[10px] text-stone-600">{list.length}</span>
+                  <span className="mono text-[11px] text-stone-600">{list.length}</span>
                 </div>
                 <div className="space-y-1.5">
                   {list.map((it) => (
@@ -8110,10 +8113,10 @@ function PantryView() {
 
       {/* Photo → pantry modal */}
       {photoStage && (
-        <div className="fixed inset-0 z-40 bg-stone-950/90 backdrop-blur-sm flex items-end sm:items-center justify-center p-3" onClick={() => { if (photoStage !== 'parsing') { setPhotoStage(null); setParsedItems([]); } }}>
+        <div className="ios-backdrop fixed inset-0 z-40 bg-stone-950/90 backdrop-blur-sm flex items-end sm:items-center justify-center p-3" onClick={() => { if (photoStage !== 'parsing') { setPhotoStage(null); setParsedItems([]); } }}>
           <div className="bg-stone-900 border border-stone-800 rounded-2xl w-full max-w-md max-h-[85vh] overflow-y-auto p-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
-              <div className="text-[10px] uppercase tracking-[0.2em] text-emerald-400 mono">Add from Photo</div>
+              <div className="text-[11px] uppercase tracking-wider text-emerald-400 mono">Add from Photo</div>
               {photoStage !== 'parsing' && (
                 <button onClick={() => { setPhotoStage(null); setParsedItems([]); }} className="text-stone-500 hover:text-stone-300">
                   <X size={16} />
@@ -8153,10 +8156,10 @@ function PantryView() {
             {photoStage === 'error' && (
               <div className="py-4">
                 <div className="text-sm text-rose-300 mb-1">Couldn't read the photo</div>
-                <div className="mono text-[11px] text-stone-500 leading-relaxed mb-4">{photoError}</div>
+                <div className="mono text-[12px] text-stone-500 leading-relaxed mb-4">{photoError}</div>
                 <button
                   onClick={() => setPhotoStage('pick')}
-                  className="w-full bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-lg py-2 mono text-xs uppercase tracking-wider"
+                  className="w-full bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-lg py-2 mono text-xs"
                 >
                   Try again
                 </button>
@@ -8215,14 +8218,14 @@ function PantryView() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setPhotoStage('pick')}
-                    className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg py-2 mono text-xs uppercase tracking-wider"
+                    className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg py-2 mono text-xs"
                   >
                     Retake
                   </button>
                   <button
                     onClick={confirmParsedItems}
                     disabled={parsedItems.filter((it) => it.name.trim()).length === 0}
-                    className="flex-[2] bg-emerald-400 hover:bg-emerald-300 disabled:opacity-40 text-stone-950 font-semibold rounded-lg py-2 mono text-xs uppercase tracking-wider"
+                    className="flex-[2] bg-emerald-400 hover:bg-emerald-300 disabled:opacity-40 text-stone-950 font-semibold rounded-lg py-2 mono text-xs"
                   >
                     Add {parsedItems.filter((it) => it.name.trim()).length} to pantry
                   </button>
@@ -8247,7 +8250,7 @@ function PantryView() {
                   {selected.size < visible.length && (
                     <button
                       onClick={selectAllVisible}
-                      className="ml-2 text-[10px] mono uppercase tracking-wider text-stone-500 hover:text-amber-400"
+                      className="ml-2 text-[11px] mono text-stone-500 hover:text-amber-400"
                     >
                       Select all
                     </button>
@@ -8255,7 +8258,7 @@ function PantryView() {
                 </div>
                 <button
                   onClick={() => setConfirmingBulk(true)}
-                  className="bg-amber-400 hover:bg-amber-300 text-stone-950 rounded-md px-4 py-2 mono text-xs uppercase tracking-wider font-semibold flex items-center gap-1.5"
+                  className="bg-amber-400 hover:bg-amber-300 text-stone-950 rounded-md px-4 py-2 mono text-xs font-semibold flex items-center gap-1.5"
                 >
                   <Trash2 size={12} />
                   {filter === 'consumed' ? 'Delete' : 'Remove'} {selected.size}
@@ -8273,13 +8276,13 @@ function PantryView() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setConfirmingBulk(false)}
-                    className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-md py-2 mono text-xs uppercase tracking-wider"
+                    className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-md py-2 mono text-xs"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={removeSelected}
-                    className="flex-[2] bg-rose-500 hover:bg-rose-400 text-stone-950 rounded-md py-2 mono text-xs uppercase tracking-wider font-semibold flex items-center justify-center gap-1.5"
+                    className="flex-[2] bg-rose-500 hover:bg-rose-400 text-stone-950 rounded-md py-2 mono text-xs font-semibold flex items-center justify-center gap-1.5"
                   >
                     <Check size={12} strokeWidth={3} /> Yes, {filter === 'consumed' ? 'delete' : 'remove'}
                   </button>
@@ -8353,7 +8356,7 @@ function PantryItemRow({ item, onConsume, onUnconsume, onRemove, onUpdate, selec
             <div className={`text-sm truncate ${isConsumed && !selectMode ? 'text-stone-500 line-through' : 'text-stone-100'}`}>
               {item.name}
             </div>
-            <div className="mono text-[10px] text-stone-500 mt-0.5 truncate">
+            <div className="mono text-[11px] text-stone-500 mt-0.5 truncate">
               {fmtPantryQty(item.qty)} {item.unit}
               {item.purchasedDate && (
                 <>
@@ -8364,7 +8367,7 @@ function PantryItemRow({ item, onConsume, onUnconsume, onRemove, onUpdate, selec
               )}
             </div>
           </div>
-          <div className={`mono text-[10px] uppercase tracking-wider shrink-0 ${statusColor}`}>
+          <div className={`mono text-[11px] uppercase tracking-wider shrink-0 ${statusColor}`}>
             {statusText}
           </div>
         </button>
@@ -8393,7 +8396,7 @@ function PantryItemRow({ item, onConsume, onUnconsume, onRemove, onUpdate, selec
         ) : (
           <button
             onClick={onUnconsume}
-            className="shrink-0 text-[10px] mono uppercase tracking-wider text-stone-500 hover:text-amber-400 px-2 py-1 border border-stone-700 rounded"
+            className="shrink-0 text-[11px] mono text-stone-500 hover:text-amber-400 px-2 py-1 border border-stone-700 rounded"
           >
             Undo
           </button>
@@ -8401,16 +8404,16 @@ function PantryItemRow({ item, onConsume, onUnconsume, onRemove, onUpdate, selec
       </div>
 
       {expanded && !selectMode && (
-        <div className="px-3 pb-3 pt-1 border-t border-stone-800/60">
+        <div className="px-3 pb-3 pt-1 border-t border-stone-800">
           {!editing ? (
             <>
-              <div className="grid grid-cols-2 gap-3 mb-2 text-[11px]">
+              <div className="grid grid-cols-2 gap-3 mb-2 text-[12px]">
                 <div>
-                  <div className="mono text-[9px] uppercase tracking-wider text-stone-600">Purchased</div>
+                  <div className="mono text-[11px] uppercase tracking-wider text-stone-600">Purchased</div>
                   <div className="mono tabular text-stone-300 mt-0.5">{fmtDate(item.purchasedDate)}</div>
                 </div>
                 <div>
-                  <div className="mono text-[9px] uppercase tracking-wider text-stone-600">Expires</div>
+                  <div className="mono text-[11px] uppercase tracking-wider text-stone-600">Expires</div>
                   <div className={`mono tabular mt-0.5 ${statusColor}`}>
                     {fmtDate(item.expiresAt)}
                     {item.expiryEstimated && (
@@ -8420,9 +8423,9 @@ function PantryItemRow({ item, onConsume, onUnconsume, onRemove, onUpdate, selec
                 </div>
               </div>
               {item.receiptId ? (
-                <div className="mono text-[9px] text-stone-600 mb-2">From receipt · auto-tracked</div>
+                <div className="mono text-[11px] text-stone-600 mb-2">From receipt · auto-tracked</div>
               ) : (
-                <div className="mono text-[9px] text-stone-600 mb-2">Manually added</div>
+                <div className="mono text-[11px] text-stone-600 mb-2">Manually added</div>
               )}
               <div className="flex items-center gap-3">
                 <button
@@ -8432,13 +8435,13 @@ function PantryItemRow({ item, onConsume, onUnconsume, onRemove, onUpdate, selec
                     setEditExpires(item.expiresAt || '');
                     setEditing(true);
                   }}
-                  className="text-[10px] mono uppercase tracking-wider text-amber-400/80 hover:text-amber-300 flex items-center gap-1"
+                  className="text-[11px] mono text-amber-400/80 hover:text-amber-300 flex items-center gap-1"
                 >
                   <Edit3 size={10} /> Edit
                 </button>
                 <button
                   onClick={onRemove}
-                  className="text-[10px] mono uppercase tracking-wider text-rose-400/80 hover:text-rose-300 flex items-center gap-1"
+                  className="text-[11px] mono text-rose-400/80 hover:text-rose-300 flex items-center gap-1"
                 >
                   <Trash2 size={10} /> Remove from pantry
                 </button>
@@ -8448,7 +8451,7 @@ function PantryItemRow({ item, onConsume, onUnconsume, onRemove, onUpdate, selec
             <>
               <div className="grid grid-cols-2 gap-2 mb-2">
                 <div>
-                  <div className="mono text-[9px] uppercase tracking-wider text-stone-600 mb-1">Quantity</div>
+                  <div className="mono text-[11px] uppercase tracking-wider text-stone-600 mb-1">Quantity</div>
                   <input
                     type="number"
                     step="0.01"
@@ -8458,7 +8461,7 @@ function PantryItemRow({ item, onConsume, onUnconsume, onRemove, onUpdate, selec
                   />
                 </div>
                 <div>
-                  <div className="mono text-[9px] uppercase tracking-wider text-stone-600 mb-1">Unit</div>
+                  <div className="mono text-[11px] uppercase tracking-wider text-stone-600 mb-1">Unit</div>
                   <select
                     value={PANTRY_UNITS.includes(editUnit) ? editUnit : 'ea'}
                     onChange={(e) => setEditUnit(e.target.value)}
@@ -8472,7 +8475,7 @@ function PantryItemRow({ item, onConsume, onUnconsume, onRemove, onUpdate, selec
                   quantity to a partial package (e.g. ¾ of a box left). */}
               {PACKAGE_UNITS.has(editUnit) && (
                 <div className="mb-3">
-                  <div className="mono text-[9px] uppercase tracking-wider text-stone-600 mb-1">How full is it?</div>
+                  <div className="mono text-[11px] uppercase tracking-wider text-stone-600 mb-1">How full is it?</div>
                   <div className="flex flex-wrap gap-1">
                     {PANTRY_FRACTIONS.map((f) => (
                       <button
@@ -8490,13 +8493,13 @@ function PantryItemRow({ item, onConsume, onUnconsume, onRemove, onUpdate, selec
                       full
                     </button>
                   </div>
-                  <div className="mono text-[10px] text-stone-600 mt-1.5">
+                  <div className="mono text-[11px] text-stone-600 mt-1.5">
                     = <span className="text-stone-300">{fmtPantryQty(editQty)} {editUnit}</span>
                   </div>
                 </div>
               )}
               <div className="mb-3">
-                <div className="mono text-[9px] uppercase tracking-wider text-stone-600 mb-1">Expires</div>
+                <div className="mono text-[11px] uppercase tracking-wider text-stone-600 mb-1">Expires</div>
                 <input
                   type="date"
                   value={editExpires}
@@ -8514,13 +8517,13 @@ function PantryItemRow({ item, onConsume, onUnconsume, onRemove, onUpdate, selec
                     });
                     setEditing(false);
                   }}
-                  className="flex-1 bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold mono text-[11px] py-1.5 rounded uppercase tracking-wider"
+                  className="flex-1 bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold mono text-[12px] py-1.5 rounded"
                 >
                   Save
                 </button>
                 <button
                   onClick={() => setEditing(false)}
-                  className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 mono text-[11px] py-1.5 rounded uppercase tracking-wider"
+                  className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 mono text-[12px] py-1.5 rounded"
                 >
                   Cancel
                 </button>
@@ -8759,14 +8762,14 @@ function MealPlanner({ pantryItems, recipes, targetDate, onClose, onAccepted }) 
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-stone-950/95 backdrop-blur-md flex items-end sm:items-center justify-center">
+    <div className="ios-backdrop fixed inset-0 z-50 bg-stone-950/95 backdrop-blur-md flex items-end sm:items-center justify-center">
       <div className="w-full max-w-3xl bg-stone-950 border-t border-stone-800 sm:border sm:rounded-2xl max-h-[92vh] overflow-y-auto">
         <div className="sticky top-0 bg-stone-950 border-b border-stone-800 px-4 py-3 flex items-center justify-between">
           <div>
             <div className="display text-lg font-semibold text-stone-100">
               {targetDate === today() ? 'Plan Today' : 'Plan Tomorrow'}
             </div>
-            <div className="mono text-[10px] uppercase tracking-wider text-stone-500 mt-0.5">
+            <div className="mono text-[11px] uppercase tracking-wider text-stone-500 mt-0.5">
               {fmtDateLong(targetDate)}
             </div>
           </div>
@@ -8780,7 +8783,7 @@ function MealPlanner({ pantryItems, recipes, targetDate, onClose, onAccepted }) 
             <div className="py-12 flex flex-col items-center gap-3">
               <Loader2 size={20} className="text-amber-400 animate-spin" />
               <div className="text-sm text-stone-300">Building your plan…</div>
-              <div className="mono text-[10px] uppercase tracking-wider text-stone-600 max-w-xs text-center leading-relaxed">
+              <div className="mono text-[11px] uppercase tracking-wider text-stone-600 max-w-xs text-center leading-relaxed">
                 Matching pantry, prioritizing expiring items, hitting your macros
               </div>
             </div>
@@ -8794,14 +8797,14 @@ function MealPlanner({ pantryItems, recipes, targetDate, onClose, onAccepted }) 
                   <div className="flex-1">
                     <div className="text-sm font-semibold text-rose-300 mb-1">Couldn't generate plan</div>
                     <div className="text-xs text-stone-400 leading-relaxed">{error}</div>
-                    <div className="text-[10px] mono text-stone-600 mt-2 leading-relaxed">
+                    <div className="text-[11px] mono text-stone-600 mt-2 leading-relaxed">
                       Needs <span className="text-stone-400">/api/recipe-suggest</span> on your Vercel deploy with ANTHROPIC_API_KEY set. Won't work in the artifact preview.
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={() => generate([])}
-                  className="w-full bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-md py-2 mono text-xs uppercase tracking-wider"
+                  className="w-full bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-md py-2 mono text-xs"
                 >
                   Try again
                 </button>
@@ -8813,7 +8816,7 @@ function MealPlanner({ pantryItems, recipes, targetDate, onClose, onAccepted }) 
             <div>
               {/* Totals card */}
               <div className="bg-gradient-to-br from-stone-900 to-stone-900/40 border border-stone-800 rounded-xl p-4 mb-3">
-                <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-2">Day Totals</div>
+                <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-2">Day Totals</div>
                 <div className="grid grid-cols-4 gap-1.5">
                   {[
                     { key: 'cal', label: 'cal', color: 'amber' },
@@ -8837,8 +8840,8 @@ function MealPlanner({ pantryItems, recipes, targetDate, onClose, onAccepted }) 
                         }`}>
                           {totals[m.key]}{m.key !== 'cal' ? 'g' : ''}
                         </div>
-                        <div className="mono text-[9px] uppercase tracking-wider text-stone-500">{m.label}</div>
-                        <div className="mono text-[9px] text-stone-600 mt-0.5">target {targets[m.key]}{m.key !== 'cal' ? 'g' : ''}</div>
+                        <div className="mono text-[11px] uppercase tracking-wider text-stone-500">{m.label}</div>
+                        <div className="mono text-[11px] text-stone-600 mt-0.5">target {targets[m.key]}{m.key !== 'cal' ? 'g' : ''}</div>
                         <div className="h-0.5 bg-stone-800 rounded-full mt-1 overflow-hidden">
                           <div className={`h-full ${barColor}`} style={{ width: `${pct}%` }} />
                         </div>
@@ -8850,7 +8853,7 @@ function MealPlanner({ pantryItems, recipes, targetDate, onClose, onAccepted }) 
 
               {/* AI reasoning */}
               {reasoning && (
-                <div className="bg-stone-900/40 border border-amber-400/20 rounded-md p-3 mb-3 flex items-start gap-2">
+                <div className="bg-stone-900 border border-amber-400/20 rounded-md p-3 mb-3 flex items-start gap-2">
                   <Sparkles size={12} className="text-amber-400 shrink-0 mt-0.5" />
                   <div className="text-xs text-stone-300 leading-relaxed">{reasoning}</div>
                 </div>
@@ -8866,21 +8869,21 @@ function MealPlanner({ pantryItems, recipes, targetDate, onClose, onAccepted }) 
                   return (
                     <div key={slot} className="bg-stone-900 border border-stone-800 rounded-xl p-3">
                       <div className="flex items-center justify-between mb-1.5">
-                        <div className="text-[10px] uppercase tracking-[0.2em] mono text-stone-500 capitalize">{slot}</div>
+                        <div className="text-[11px] uppercase tracking-wider mono text-stone-500 capitalize">{slot}</div>
                         <button
                           onClick={() => swapSlot(slot)}
                           disabled={swapping}
-                          className="text-[10px] mono uppercase tracking-wider text-stone-500 hover:text-amber-400 disabled:opacity-50 flex items-center gap-1"
+                          className="text-[11px] mono text-stone-500 hover:text-amber-400 disabled:opacity-50 flex items-center gap-1"
                         >
                           {swapping ? <Loader2 size={10} className="animate-spin" /> : '↻'} Swap
                         </button>
                       </div>
                       <div className="text-sm font-medium text-stone-100">{r.name}</div>
-                      <div className="mono text-[10px] text-stone-500 mt-0.5 mb-2">
+                      <div className="mono text-[11px] text-stone-500 mt-0.5 mb-2">
                         {r.totalTime}min · {r.servings} {r.servings === 1 ? 'serving' : 'servings'}
                         {cov.fullyCovered ? ' · all in pantry' : ` · need ${cov.missing.length}`}
                       </div>
-                      <div className="flex items-center gap-2 mono text-[10px]">
+                      <div className="flex items-center gap-2 mono text-[11px]">
                         <span className="text-amber-400 tabular">{r.macros.cal}cal</span>
                         <span className="text-stone-700">·</span>
                         <span className="text-rose-300 tabular">{r.macros.protein}g P</span>
@@ -8897,13 +8900,13 @@ function MealPlanner({ pantryItems, recipes, targetDate, onClose, onAccepted }) 
               <div className="flex gap-2 pb-2">
                 <button
                   onClick={onClose}
-                  className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-3 mono text-xs uppercase tracking-wider"
+                  className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-3 mono text-xs"
                 >
                   Discard
                 </button>
                 <button
                   onClick={accept}
-                  className="flex-[2] bg-amber-400 hover:bg-amber-300 text-stone-950 rounded-md py-3 mono text-xs uppercase tracking-wider font-semibold flex items-center justify-center gap-2"
+                  className="flex-[2] bg-amber-400 hover:bg-amber-300 text-stone-950 rounded-md py-3 mono text-xs font-semibold flex items-center justify-center gap-2"
                 >
                   <Check size={13} strokeWidth={2.5} /> Lock in plan
                 </button>
@@ -8939,16 +8942,16 @@ function PlannedMealsCard({ targetDate, label, plan, recipes, onPickRecipe, onDe
     <div className="bg-gradient-to-br from-amber-400/10 to-stone-900/40 border border-amber-400/30 rounded-xl p-4 mb-3">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.2em] text-amber-400 mono flex items-center gap-1">
+          <div className="text-[11px] uppercase tracking-wider text-amber-400 mono flex items-center gap-1">
             <Sparkles size={11} /> {label}
           </div>
-          <div className="mono text-[10px] text-stone-500 mt-0.5">
+          <div className="mono text-[11px] text-stone-500 mt-0.5">
             {totals.cal} cal · {totals.protein}g protein planned
           </div>
         </div>
         <button
           onClick={onDelete}
-          className="text-[10px] mono uppercase tracking-wider text-stone-500 hover:text-rose-400 px-2 py-1"
+          className="text-[11px] mono text-stone-500 hover:text-rose-400 px-2 py-1"
         >
           Clear
         </button>
@@ -8960,9 +8963,9 @@ function PlannedMealsCard({ targetDate, label, plan, recipes, onPickRecipe, onDe
             onClick={() => onPickRecipe(recipe)}
             className="w-full flex items-center gap-2 px-2 py-1.5 rounded bg-stone-950/50 hover:bg-stone-950 text-left transition-colors"
           >
-            <span className="mono text-[9px] uppercase tracking-wider text-stone-500 w-12 shrink-0 capitalize">{slot}</span>
+            <span className="mono text-[11px] uppercase tracking-wider text-stone-500 w-12 shrink-0 capitalize">{slot}</span>
             <span className="text-xs text-stone-200 flex-1 truncate">{recipe.name}</span>
-            <span className="mono text-[10px] text-amber-400 tabular shrink-0">{recipe.macros.cal}cal</span>
+            <span className="mono text-[11px] text-amber-400 tabular shrink-0">{recipe.macros.cal}cal</span>
             <ChevronRight size={12} className="text-stone-600 shrink-0" />
           </button>
         ))}
@@ -9193,7 +9196,7 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
         <button onClick={onCancel} className="text-stone-400 hover:text-stone-100 p-1.5 -ml-1.5">
           <ChevronLeft size={18} />
         </button>
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">
           {stage === 'generated' ? 'Recipe Ideas' : 'Import Recipe'}
         </div>
       </div>
@@ -9204,7 +9207,7 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
           {canGenerate && (
             <div className="mb-3">
               <div className="bg-stone-900 border border-stone-800 rounded-xl p-3 mb-2">
-                <div className="text-[10px] mono uppercase tracking-wider text-stone-500 mb-1.5 flex items-center gap-1.5">
+                <div className="text-[11px] mono uppercase tracking-wider text-stone-500 mb-1.5 flex items-center gap-1.5">
                   <Sparkles size={11} className="text-amber-400" /> Guidance <span className="text-stone-600 normal-case tracking-normal">(optional)</span>
                 </div>
                 <textarea
@@ -9214,7 +9217,7 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
                   placeholder='e.g. "use the cocoa powder", "at least 10 cal per 1g protein", "no dairy", "high volume, low calorie"'
                   className="w-full bg-stone-950 border border-stone-800 rounded-md px-2 py-1.5 text-xs text-stone-200 resize-none focus:border-amber-400 focus:outline-none"
                 />
-                <div className="text-[10px] mono text-stone-600 mt-1 leading-snug">
+                <div className="text-[11px] mono text-stone-600 mt-1 leading-snug">
                   Tell the AI any ingredients to include, macro rules, or restrictions. Plain English works.
                 </div>
               </div>
@@ -9225,7 +9228,7 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
                 <Sparkles size={18} className="text-amber-400 shrink-0" />
                 <div className="text-left flex-1">
                   <div className="text-sm font-semibold text-amber-400">Generate from pantry</div>
-                  <div className="text-[10px] mono uppercase tracking-wider text-stone-400 mt-0.5">
+                  <div className="text-[11px] mono uppercase tracking-wider text-stone-400 mt-0.5">
                     AI invents 3 ideas using {inStock.length} items you have{genGuidance.trim() ? ' · with your guidance' : ''}
                   </div>
                 </div>
@@ -9249,7 +9252,7 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
                 <Camera size={18} className="text-amber-400" />
                 <div className="text-left">
                   <div className="text-sm font-medium">Take photo</div>
-                  <div className="text-[10px] mono uppercase tracking-wider text-stone-500">Cookbook page, screenshot, handwritten</div>
+                  <div className="text-[11px] mono uppercase tracking-wider text-stone-500">Cookbook page, screenshot, handwritten</div>
                 </div>
               </button>
 
@@ -9261,7 +9264,7 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
                 <ImageIcon size={18} className="text-sky-400" />
                 <div className="text-left">
                   <div className="text-sm font-medium">Photo library</div>
-                  <div className="text-[10px] mono uppercase tracking-wider text-stone-500">Pick existing photo</div>
+                  <div className="text-[11px] mono uppercase tracking-wider text-stone-500">Pick existing photo</div>
                 </div>
               </button>
 
@@ -9272,7 +9275,7 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
                 <Search size={18} className="text-emerald-400" />
                 <div className="text-left">
                   <div className="text-sm font-medium">Paste URL</div>
-                  <div className="text-[10px] mono uppercase tracking-wider text-stone-500">From a recipe blog or site</div>
+                  <div className="text-[11px] mono uppercase tracking-wider text-stone-500">From a recipe blog or site</div>
                 </div>
               </button>
 
@@ -9283,7 +9286,7 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
                 <Play size={18} className="text-violet-400" />
                 <div className="text-left">
                   <div className="text-sm font-medium">Paste video URL</div>
-                  <div className="text-[10px] mono uppercase tracking-wider text-stone-500">YouTube, Instagram Reel, TikTok</div>
+                  <div className="text-[11px] mono uppercase tracking-wider text-stone-500">YouTube, Instagram Reel, TikTok</div>
                 </div>
               </button>
 
@@ -9294,7 +9297,7 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
                 <Edit3 size={18} className="text-rose-400" />
                 <div className="text-left">
                   <div className="text-sm font-medium">Paste text</div>
-                  <div className="text-[10px] mono uppercase tracking-wider text-stone-500">From notes, email, ChatGPT, anywhere</div>
+                  <div className="text-[11px] mono uppercase tracking-wider text-stone-500">From notes, email, ChatGPT, anywhere</div>
                 </div>
               </button>
 
@@ -9306,16 +9309,16 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
                 <FileText size={18} className="text-violet-400" />
                 <div className="text-left">
                   <div className="text-sm font-medium">Upload PDF</div>
-                  <div className="text-[10px] mono uppercase tracking-wider text-stone-500">Cookbook scan, saved recipe doc</div>
+                  <div className="text-[11px] mono uppercase tracking-wider text-stone-500">Cookbook scan, saved recipe doc</div>
                 </div>
               </button>
             </div>
           </div>
 
           {!canGenerate && (
-            <div className="bg-stone-900/40 border border-dashed border-stone-700 rounded-md p-3 mb-3 flex items-start gap-2">
+            <div className="bg-stone-900 border border-dashed border-stone-700 rounded-md p-3 mb-3 flex items-start gap-2">
               <Info size={11} className="text-stone-500 shrink-0 mt-0.5" />
-              <div className="text-[10px] mono text-stone-500 leading-relaxed">
+              <div className="text-[11px] mono text-stone-500 leading-relaxed">
                 Need at least 3 items in your pantry to generate recipe ideas. Add a receipt or stock items manually.
               </div>
             </div>
@@ -9323,7 +9326,7 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
 
           <button
             onClick={onManual}
-            className="w-full text-center text-xs mono uppercase tracking-wider text-stone-500 hover:text-stone-300 py-2"
+            className="w-full text-center text-xs mono text-stone-500 hover:text-stone-300 py-2"
           >
             or enter manually →
           </button>
@@ -9332,7 +9335,7 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
 
       {stage === 'url' && (
         <div className="bg-stone-900 border border-stone-800 rounded-xl p-4">
-          <div className="text-[10px] uppercase tracking-[0.2em] mono text-stone-500 mb-2">Recipe URL</div>
+          <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-2">Recipe URL</div>
           <input
             type="url"
             value={urlInput}
@@ -9341,20 +9344,20 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
             autoFocus
             className="w-full bg-stone-950 border border-stone-800 rounded-md px-3 py-2 text-sm text-stone-100 mb-3"
           />
-          <div className="text-[10px] mono text-stone-600 mb-3 leading-relaxed">
+          <div className="text-[11px] mono text-stone-600 mb-3 leading-relaxed">
             We'll fetch the page and extract the recipe. Works best on standard recipe blogs with structured ingredient lists.
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => { setStage('pick'); setUrlInput(''); }}
-              className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-2 mono text-xs uppercase tracking-wider"
+              className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-2 mono text-xs"
             >
               Back
             </button>
             <button
               onClick={handleUrl}
               disabled={!urlInput.trim()}
-              className="flex-[2] bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 rounded-md py-2 mono text-xs uppercase tracking-wider font-semibold"
+              className="flex-[2] bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 rounded-md py-2 mono text-xs font-semibold"
             >
               Extract recipe
             </button>
@@ -9364,7 +9367,7 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
 
       {stage === 'video' && (
         <div className="bg-stone-900 border border-stone-800 rounded-xl p-4">
-          <div className="text-[10px] uppercase tracking-[0.2em] mono text-stone-500 mb-2">Recipe From Video</div>
+          <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-2">Recipe From Video</div>
           <input
             type="url"
             value={videoUrlInput}
@@ -9373,21 +9376,21 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
             autoFocus
             className="w-full bg-stone-950 border border-stone-800 rounded-md px-3 py-2 text-sm text-stone-100 mb-3"
           />
-          <div className="text-[10px] mono text-stone-600 mb-3 leading-relaxed space-y-1">
+          <div className="text-[11px] mono text-stone-600 mb-3 leading-relaxed space-y-1">
             <div><span className="text-stone-400">YouTube</span> — pulls the auto-generated transcript. Works best on full cooking tutorials with clear narration.</div>
             <div><span className="text-stone-400">Instagram Reel / TikTok</span> — pulls the post caption. Most recipe creators put the recipe in the caption; for video-only Reels with no caption text, this won't find a recipe.</div>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => { setStage('pick'); setVideoUrlInput(''); }}
-              className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-2 mono text-xs uppercase tracking-wider"
+              className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-2 mono text-xs"
             >
               Back
             </button>
             <button
               onClick={handleVideoUrl}
               disabled={!videoUrlInput.trim()}
-              className="flex-[2] bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 rounded-md py-2 mono text-xs uppercase tracking-wider font-semibold"
+              className="flex-[2] bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 rounded-md py-2 mono text-xs font-semibold"
             >
               Extract recipe
             </button>
@@ -9397,7 +9400,7 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
 
       {stage === 'text' && (
         <div className="bg-stone-900 border border-stone-800 rounded-xl p-4">
-          <div className="text-[10px] uppercase tracking-[0.2em] mono text-stone-500 mb-2">Paste Recipe Text</div>
+          <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-2">Paste Recipe Text</div>
           <textarea
             value={textInput}
             onChange={(e) => setTextInput(e.target.value)}
@@ -9407,32 +9410,32 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
             className="w-full bg-stone-950 border border-stone-800 rounded-md px-3 py-2 text-sm text-stone-100 mb-2 leading-relaxed font-sans resize-y"
           />
           <div className="flex items-center justify-between mb-3">
-            <div className="text-[10px] mono text-stone-600">
+            <div className="text-[11px] mono text-stone-600">
               {textInput.length > 0 ? `${textInput.length.toLocaleString()} chars` : 'Paste or type the recipe'}
             </div>
             {textInput.length > 0 && (
               <button
                 onClick={() => setTextInput('')}
-                className="text-[10px] mono uppercase tracking-wider text-stone-500 hover:text-rose-400"
+                className="text-[11px] mono text-stone-500 hover:text-rose-400"
               >
                 Clear
               </button>
             )}
           </div>
-          <div className="text-[10px] mono text-stone-600 mb-3 leading-relaxed">
+          <div className="text-[11px] mono text-stone-600 mb-3 leading-relaxed">
             AI will pull out ingredients, quantities, and steps. Doesn't matter if the format is messy — paste raw and we'll figure it out.
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => { setStage('pick'); setTextInput(''); }}
-              className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-2 mono text-xs uppercase tracking-wider"
+              className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-2 mono text-xs"
             >
               Back
             </button>
             <button
               onClick={handleText}
               disabled={!textInput.trim()}
-              className="flex-[2] bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 rounded-md py-2 mono text-xs uppercase tracking-wider font-semibold"
+              className="flex-[2] bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 rounded-md py-2 mono text-xs font-semibold"
             >
               Extract recipe
             </button>
@@ -9451,7 +9454,7 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
             <Loader2 size={16} className="text-amber-400 animate-spin" />
             <div className="text-sm text-stone-300">Reading recipe…</div>
           </div>
-          <div className="text-[10px] mono uppercase tracking-wider text-stone-600 text-center mt-1">
+          <div className="text-[11px] mono uppercase tracking-wider text-stone-600 text-center mt-1">
             Claude is extracting ingredients, instructions, and macros
           </div>
         </div>
@@ -9463,7 +9466,7 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
             <Loader2 size={16} className="text-amber-400 animate-spin" />
             <div className="text-sm text-stone-300">Inventing recipes…</div>
           </div>
-          <div className="text-[10px] mono uppercase tracking-wider text-stone-600 text-center mt-1 leading-relaxed">
+          <div className="text-[11px] mono uppercase tracking-wider text-stone-600 text-center mt-1 leading-relaxed">
             Building 3 ideas from {inStock.length} pantry items, prioritizing what's expiring
           </div>
         </div>
@@ -9471,7 +9474,7 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
 
       {stage === 'generated' && generatedRecipes.length > 0 && (
         <div>
-          <div className="text-[10px] mono text-stone-500 mb-3 leading-relaxed">
+          <div className="text-[11px] mono text-stone-500 mb-3 leading-relaxed">
             Tap a card to edit before saving, or tap Save to add it directly to your library.
           </div>
           <div className="space-y-3">
@@ -9492,15 +9495,15 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
                     <div className="flex items-start justify-between gap-2 mb-1.5">
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-semibold text-stone-100">{r.name}</div>
-                        <div className="mono text-[10px] text-stone-500 mt-0.5">
+                        <div className="mono text-[11px] text-stone-500 mt-0.5">
                           {r.totalTime}min · {r.difficulty} · serves {r.servings}
                         </div>
                       </div>
-                      <span className="shrink-0 mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border border-amber-400/40 text-amber-400 bg-amber-400/10">
+                      <span className="shrink-0 mono text-[11px] uppercase tracking-wider px-1.5 py-0.5 rounded border border-amber-400/40 text-amber-400 bg-amber-400/10">
                         AI
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 mono text-[10px] mb-2">
+                    <div className="flex items-center gap-2 mono text-[11px] mb-2">
                       <span className="text-amber-400 tabular">{r.macros.cal}cal</span>
                       <span className="text-stone-700">·</span>
                       <span className="text-rose-300 tabular">{r.macros.protein}g P</span>
@@ -9512,31 +9515,31 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
                     {r.rationale && (
                       <div className="bg-stone-950/60 border border-amber-400/20 rounded p-2 mb-2 flex items-start gap-1.5">
                         <Sparkles size={10} className="text-amber-400 shrink-0 mt-0.5" />
-                        <div className="text-[11px] text-stone-300 leading-relaxed">{r.rationale}</div>
+                        <div className="text-[12px] text-stone-300 leading-relaxed">{r.rationale}</div>
                       </div>
                     )}
-                    <div className="mono text-[10px] text-stone-500 leading-relaxed">
+                    <div className="mono text-[11px] text-stone-500 leading-relaxed">
                       <span className="text-stone-400">Ingredients:</span> {r.ingredients.slice(0, 8).map((i) => i.name).join(', ')}
                       {r.ingredients.length > 8 && ` +${r.ingredients.length - 8} more`}
                     </div>
                   </button>
 
-                  <div className="px-4 pb-3 pt-0 flex gap-2 border-t border-stone-800/60 pt-3">
+                  <div className="px-4 pb-3 pt-0 flex gap-2 border-t border-stone-800 pt-3">
                     {isSaved ? (
-                      <div className="flex-1 flex items-center justify-center gap-1.5 py-1.5 mono text-[10px] uppercase tracking-wider text-emerald-400">
+                      <div className="flex-1 flex items-center justify-center gap-1.5 py-1.5 mono text-[11px] uppercase tracking-wider text-emerald-400">
                         <Check size={11} strokeWidth={3} /> Saved to library
                       </div>
                     ) : (
                       <>
                         <button
                           onClick={() => editGenerated(r)}
-                          className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-md py-1.5 mono text-[10px] uppercase tracking-wider"
+                          className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-md py-1.5 mono text-[11px]"
                         >
                           Edit first
                         </button>
                         <button
                           onClick={() => saveGenerated(r)}
-                          className="flex-[1.5] bg-amber-400 hover:bg-amber-300 text-stone-950 rounded-md py-1.5 mono text-[10px] uppercase tracking-wider font-semibold flex items-center justify-center gap-1.5"
+                          className="flex-[1.5] bg-amber-400 hover:bg-amber-300 text-stone-950 rounded-md py-1.5 mono text-[11px] font-semibold flex items-center justify-center gap-1.5"
                         >
                           <Save size={11} /> Save to library
                         </button>
@@ -9551,13 +9554,13 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
           <div className="mt-4 flex gap-2">
             <button
               onClick={handleGenerate}
-              className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-md py-2.5 mono text-xs uppercase tracking-wider flex items-center justify-center gap-1.5"
+              className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-md py-2.5 mono text-xs flex items-center justify-center gap-1.5"
             >
               <Sparkles size={12} /> Generate 3 more
             </button>
             <button
               onClick={onCancel}
-              className="flex-1 bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-300 rounded-md py-2.5 mono text-xs uppercase tracking-wider"
+              className="flex-1 bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-300 rounded-md py-2.5 mono text-xs"
             >
               Done
             </button>
@@ -9572,7 +9575,7 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
             <div className="flex-1">
               <div className="text-sm font-semibold text-rose-300 mb-1">Couldn't complete</div>
               <div className="text-xs text-stone-400 leading-relaxed">{error}</div>
-              <div className="text-[10px] mono text-stone-600 mt-2 leading-relaxed">
+              <div className="text-[11px] mono text-stone-600 mt-2 leading-relaxed">
                 If this keeps happening on the live app, it's almost always the Anthropic credit balance (top up at console.anthropic.com) or a missing/undeployed endpoint. In the artifact preview it won't work at all, since /api/* isn't routed there.
               </div>
             </div>
@@ -9580,13 +9583,13 @@ function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect
           <div className="flex gap-2">
             <button
               onClick={() => { setStage('pick'); setError(null); }}
-              className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-md py-2 mono text-xs uppercase tracking-wider"
+              className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-md py-2 mono text-xs"
             >
               Back
             </button>
             <button
               onClick={onManual}
-              className="flex-1 bg-amber-400 hover:bg-amber-300 text-stone-950 rounded-md py-2 mono text-xs uppercase tracking-wider font-semibold"
+              className="flex-1 bg-amber-400 hover:bg-amber-300 text-stone-950 rounded-md py-2 mono text-xs font-semibold"
             >
               Enter manually
             </button>
@@ -9777,7 +9780,7 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
         <button onClick={onCancel} className="text-stone-400 hover:text-stone-100 p-1.5 -ml-1.5">
           <ChevronLeft size={18} />
         </button>
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">
           {isEdit ? 'Edit Recipe' : 'New Recipe'}
         </div>
         <div className="w-6" />
@@ -9785,7 +9788,7 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
 
       {/* Basics */}
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
-        <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1">Name</div>
+        <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1">Name</div>
         <input
           type="text"
           value={name}
@@ -9795,17 +9798,17 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
         />
         <div className="grid grid-cols-3 gap-2">
           <div>
-            <div className="text-[9px] uppercase tracking-wider mono text-stone-500 mb-0.5">Time (min)</div>
+            <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-0.5">Time (min)</div>
             <input type="number" value={totalTime} onChange={(e) => setTotalTime(e.target.value)}
               className="w-full bg-stone-950 border border-stone-800 rounded px-1.5 py-1 mono tabular text-xs text-stone-100" />
           </div>
           <div>
-            <div className="text-[9px] uppercase tracking-wider mono text-stone-500 mb-0.5">Servings</div>
+            <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-0.5">Servings</div>
             <input type="number" value={servings} onChange={(e) => setServings(e.target.value)}
               className="w-full bg-stone-950 border border-stone-800 rounded px-1.5 py-1 mono tabular text-xs text-stone-100" />
           </div>
           <div>
-            <div className="text-[9px] uppercase tracking-wider mono text-stone-500 mb-0.5">Difficulty</div>
+            <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-0.5">Difficulty</div>
             <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}
               className="w-full bg-stone-950 border border-stone-800 rounded px-1.5 py-1 mono text-xs text-stone-100">
               <option value="easy">easy</option>
@@ -9814,7 +9817,7 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
             </select>
           </div>
         </div>
-        <div className="text-[9px] uppercase tracking-wider mono text-stone-500 mt-3 mb-1">Meal types</div>
+        <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mt-3 mb-1">Meal types</div>
         <div className="flex flex-wrap gap-1">
           {[
             { id: 'breakfast', label: 'Breakfast' },
@@ -9828,7 +9831,7 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
               <button
                 key={m.id}
                 onClick={() => toggleMealType(m.id)}
-                className={`text-[10px] mono uppercase tracking-wider px-2 py-1 rounded border transition-colors ${
+                className={`text-[11px] mono px-2 py-1 rounded border transition-colors ${
                   active
                     ? 'bg-amber-400/15 border-amber-400/50 text-amber-400'
                     : 'border-stone-700 text-stone-500 hover:text-stone-300'
@@ -9843,7 +9846,7 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
 
       {/* Macros */}
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
-        <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-2">Per serving</div>
+        <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-2">Per serving</div>
         <div className="grid grid-cols-4 gap-2">
           {[
             { label: 'cal', value: cal, set: setCal, color: 'text-amber-400' },
@@ -9852,7 +9855,7 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
             { label: 'fat', value: fat, set: setFat, color: 'text-emerald-300' },
           ].map((m) => (
             <div key={m.label}>
-              <div className="text-[9px] uppercase tracking-wider mono text-stone-500 mb-0.5">{m.label}</div>
+              <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-0.5">{m.label}</div>
               <input
                 type="number"
                 value={m.value}
@@ -9867,8 +9870,8 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
       {/* Ingredients */}
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
         <div className="flex items-center justify-between mb-2">
-          <div className="text-[10px] uppercase tracking-wider mono text-stone-500">Ingredients ({ingredients.length})</div>
-          <button onClick={addIngredient} className="text-[10px] mono uppercase tracking-wider text-amber-400 hover:text-amber-300 flex items-center gap-1">
+          <div className="text-[11px] uppercase tracking-wider mono text-stone-500">Ingredients ({ingredients.length})</div>
+          <button onClick={addIngredient} className="text-[11px] mono text-amber-400 hover:text-amber-300 flex items-center gap-1">
             <Plus size={11} /> Add
           </button>
         </div>
@@ -9906,7 +9909,7 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
                     placeholder="unit"
                     className="bg-stone-900 border border-stone-800 rounded px-1.5 py-1 mono text-xs text-stone-100"
                   />
-                  <label className="flex items-center gap-1.5 text-[10px] mono uppercase tracking-wider text-stone-500 cursor-pointer px-1">
+                  <label className="flex items-center gap-1.5 text-[11px] mono uppercase tracking-wider text-stone-500 cursor-pointer px-1">
                     <input
                       type="checkbox"
                       checked={!!it.primary}
@@ -9920,7 +9923,7 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
             ))}
           </div>
         )}
-        <div className="mono text-[10px] text-stone-600 mt-2 leading-relaxed">
+        <div className="mono text-[11px] text-stone-600 mt-2 leading-relaxed">
           Mark a few ingredients as <span className="text-amber-400">primary</span> — the ones that define the dish. Pantry-matching weights them 2× so recipes missing their main protein rank lower than ones missing a garnish.
         </div>
       </div>
@@ -9928,8 +9931,8 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
       {/* Instructions */}
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
         <div className="flex items-center justify-between mb-2">
-          <div className="text-[10px] uppercase tracking-wider mono text-stone-500">Instructions ({instructions.length})</div>
-          <button onClick={addInstruction} className="text-[10px] mono uppercase tracking-wider text-amber-400 hover:text-amber-300 flex items-center gap-1">
+          <div className="text-[11px] uppercase tracking-wider mono text-stone-500">Instructions ({instructions.length})</div>
+          <button onClick={addInstruction} className="text-[11px] mono text-amber-400 hover:text-amber-300 flex items-center gap-1">
             <Plus size={11} /> Step
           </button>
         </div>
@@ -9959,12 +9962,12 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
       {/* Versions (optional) — same recipe, different sauce/spin, own macros */}
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
         <div className="flex items-center justify-between mb-1">
-          <div className="text-[10px] uppercase tracking-wider mono text-stone-500">Versions (optional)</div>
-          <button onClick={addVariant} className="text-[10px] mono uppercase tracking-wider text-amber-400 hover:text-amber-300 flex items-center gap-1">
+          <div className="text-[11px] uppercase tracking-wider mono text-stone-500">Versions (optional)</div>
+          <button onClick={addVariant} className="text-[11px] mono text-amber-400 hover:text-amber-300 flex items-center gap-1">
             <Plus size={11} /> Version
           </button>
         </div>
-        <div className="text-[10px] text-stone-600 leading-snug mb-2">
+        <div className="text-[11px] text-stone-600 leading-snug mb-2">
           E.g. "Chipotle sauce" vs "Hot honey" — shared base above, each version gets its own total macros (per serving) and any extra ingredients.
         </div>
         {variants.length > 0 && (
@@ -9983,7 +9986,7 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
                     <X size={13} />
                   </button>
                 </div>
-                <div className="text-[9px] uppercase tracking-wider mono text-stone-600 mb-1">Total macros per serving (this version)</div>
+                <div className="text-[11px] uppercase tracking-wider mono text-stone-600 mb-1">Total macros per serving (this version)</div>
                 <div className="grid grid-cols-4 gap-1.5 mb-2">
                   <LabeledInput label="Cal" type="number" value={v.cal} onChange={(val) => updateVariant(idx, { cal: val })} />
                   <LabeledInput label="P (g)" type="number" value={v.protein} onChange={(val) => updateVariant(idx, { protein: val })} />
@@ -9991,8 +9994,8 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
                   <LabeledInput label="F (g)" type="number" value={v.fat} onChange={(val) => updateVariant(idx, { fat: val })} />
                 </div>
                 <div className="flex items-center justify-between mb-1">
-                  <div className="text-[9px] uppercase tracking-wider mono text-stone-600">Extra ingredients (this version only)</div>
-                  <button onClick={() => addVariantIng(idx)} className="text-[9px] mono uppercase tracking-wider text-amber-400 hover:text-amber-300 flex items-center gap-0.5">
+                  <div className="text-[11px] uppercase tracking-wider mono text-stone-600">Extra ingredients (this version only)</div>
+                  <button onClick={() => addVariantIng(idx)} className="text-[11px] mono text-amber-400 hover:text-amber-300 flex items-center gap-0.5">
                     <Plus size={10} /> Add
                   </button>
                 </div>
@@ -10032,7 +10035,7 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
                   onChange={(e) => updateVariant(idx, { note: e.target.value })}
                   placeholder="Prep note (e.g. mix yogurt + chipotle + paprika + garlic + lime)"
                   rows={2}
-                  className="w-full bg-stone-950 border border-stone-800 rounded px-2 py-1.5 text-[11px] text-stone-300 resize-y"
+                  className="w-full bg-stone-950 border border-stone-800 rounded px-2 py-1.5 text-[12px] text-stone-300 resize-y"
                 />
               </div>
             ))}
@@ -10042,7 +10045,7 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
 
       {/* Source (optional) */}
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
-        <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1">Source (optional)</div>
+        <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1">Source (optional)</div>
         <input
           type="text"
           value={sourceRef}
@@ -10054,7 +10057,7 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
 
       {/* Notes (optional) */}
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
-        <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1">Notes (optional)</div>
+        <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1">Notes (optional)</div>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -10066,14 +10069,14 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
 
       {/* Tags */}
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
-        <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-2">Tags</div>
+        <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-2">Tags</div>
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-2">
             {tags.map((t) => (
               <button
                 key={t}
                 onClick={() => removeTag(t)}
-                className="flex items-center gap-1 rounded-full pl-2 pr-1.5 py-0.5 mono text-[11px]"
+                className="flex items-center gap-1 rounded-full pl-2 pr-1.5 py-0.5 mono text-[12px]"
                 style={tagChipStyle(t, tagColors)}
               >
                 #{t}
@@ -10094,12 +10097,12 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
           <button
             onClick={() => addTag(tagInput)}
             disabled={!tagInput.trim()}
-            className="bg-stone-800 hover:bg-stone-700 disabled:opacity-40 text-stone-200 rounded-md px-3 mono text-[11px] uppercase tracking-wider"
+            className="bg-stone-800 hover:bg-stone-700 disabled:opacity-40 text-stone-200 rounded-md px-3 mono text-[12px]"
           >
             Add
           </button>
         </div>
-        <div className="mono text-[10px] text-stone-600 mt-1.5">
+        <div className="mono text-[11px] text-stone-600 mt-1.5">
           Tags let you filter recipes by trait (e.g. #quickprotein). A recipe can have several. Tap a tag to remove it.
         </div>
       </div>
@@ -10112,14 +10115,14 @@ function RecipeForm({ recipe, onSave, onCancel, tagColors = {} }) {
         <div className="max-w-3xl mx-auto flex gap-2">
           <button
             onClick={onCancel}
-            className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-3 mono text-xs uppercase tracking-wider"
+            className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-3 mono text-xs"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={!name.trim()}
-            className="flex-[2] bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 rounded-md py-3 mono text-xs uppercase tracking-wider font-semibold flex items-center justify-center gap-2"
+            className="flex-[2] bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 rounded-md py-3 mono text-xs font-semibold flex items-center justify-center gap-2"
           >
             <Save size={13} /> {isEdit ? 'Save changes' : 'Save recipe'}
           </button>
@@ -10561,11 +10564,11 @@ function RecipesView() {
       <div className="bg-gradient-to-br from-stone-900 to-stone-900/40 border border-stone-800 rounded-xl p-4 mb-3">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">From Your Pantry</div>
+            <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">From Your Pantry</div>
             <div className="display text-2xl font-semibold text-amber-400 tabular mt-0.5">
               {fullyCovered.length} <span className="text-base text-stone-400 font-normal">{fullyCovered.length === 1 ? 'recipe' : 'recipes'} ready</span>
             </div>
-            <div className="mono text-[10px] text-stone-600 mt-1">
+            <div className="mono text-[11px] text-stone-600 mt-1">
               {inStock} items in stock{expiringSoon > 0 ? ` · ${expiringSoon} expiring soon` : ''}
             </div>
           </div>
@@ -10622,7 +10625,7 @@ function RecipesView() {
               <div className="text-sm text-stone-100 font-medium">
                 {todayPlan ? 'Plan Tomorrow' : 'Plan Today'} with AI
               </div>
-              <div className="mono text-[10px] text-stone-500 mt-0.5">
+              <div className="mono text-[11px] text-stone-500 mt-0.5">
                 3-meal day built around your pantry + macro targets
               </div>
             </div>
@@ -10633,7 +10636,7 @@ function RecipesView() {
 
       {/* Empty state when no recipes have been imported yet */}
       {recipes.length === 0 ? (
-        <div className="bg-stone-900/40 border border-dashed border-stone-700 rounded-xl p-8 text-center">
+        <div className="bg-stone-900 border border-dashed border-stone-700 rounded-xl p-8 text-center">
           <BookMarked size={28} className="mx-auto text-stone-600 mb-3" />
           <div className="text-sm text-stone-300 mb-1">No recipes yet</div>
           <div className="text-xs text-stone-500 mb-4 leading-relaxed max-w-xs mx-auto">
@@ -10641,7 +10644,7 @@ function RecipesView() {
           </div>
           <button
             onClick={() => setView('intake')}
-            className="bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded-md px-4 py-2 mono text-xs uppercase tracking-wider active:scale-95 transition-all"
+            className="bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded-md px-4 py-2 mono text-xs active:scale-95 transition-all"
           >
             Add your first recipe
           </button>
@@ -10665,8 +10668,8 @@ function RecipesView() {
             )}
           </div>
           {(microJobs.length > 0 || microBulk) && (
-            <div className="flex items-center justify-between gap-2 mb-3 bg-stone-900/40 border border-stone-800 rounded-lg px-3 py-2">
-              <span className="mono text-[10px] text-stone-400 leading-snug">
+            <div className="flex items-center justify-between gap-2 mb-3 bg-stone-900 border border-stone-800 rounded-lg px-3 py-2">
+              <span className="mono text-[11px] text-stone-400 leading-snug">
                 {microBulk?.total
                   ? `Estimating micronutrients… ${microBulk.done}/${microBulk.total}`
                   : microBulk?.error
@@ -10674,7 +10677,7 @@ function RecipesView() {
                     : `${microJobs.length} recipe${microJobs.length === 1 ? '' : ' versions'} without micronutrients`}
               </span>
               {!microBulk?.total && microJobs.length > 0 && (
-                <button onClick={runBulkMicros} className="shrink-0 flex items-center gap-1 text-[10px] mono uppercase tracking-wider text-amber-400 hover:text-amber-300">
+                <button onClick={runBulkMicros} className="shrink-0 flex items-center gap-1 text-[11px] mono text-amber-400 hover:text-amber-300">
                   <RefreshCw size={11} /> Calculate
                 </button>
               )}
@@ -10683,11 +10686,11 @@ function RecipesView() {
           )}
           {searching && (
             <div className="mb-3">
-              <div className="mono text-[10px] uppercase tracking-wider text-stone-500 mb-2">
+              <div className="mono text-[11px] uppercase tracking-wider text-stone-500 mb-2">
                 {searchResults.length} {searchResults.length === 1 ? 'result' : 'results'}
               </div>
               {searchResults.length === 0 ? (
-                <div className="bg-stone-900/40 border border-dashed border-stone-700 rounded-xl p-6 text-center text-xs text-stone-500">
+                <div className="bg-stone-900 border border-dashed border-stone-700 rounded-xl p-6 text-center text-xs text-stone-500">
                   Nothing matches "{recipeQuery.trim()}".
                 </div>
               ) : (
@@ -10719,7 +10722,7 @@ function RecipesView() {
                       if (isActive) { setBrowseMode('folders'); setActiveTag(null); }
                       else { setBrowseMode('tag'); setActiveTag(tag); setActiveFolderId(null); }
                     }}
-                    className="shrink-0 px-2.5 py-1 rounded-full mono text-[11px] transition-colors"
+                    className="shrink-0 px-2.5 py-1 rounded-full mono text-[12px] transition-colors"
                     style={tagChipStyle(tag, tagColors, isActive)}
                   >
                     #{tag} <span style={{ opacity: 0.55 }}>{count}</span>
@@ -10731,8 +10734,8 @@ function RecipesView() {
 
           {/* Color picker for the active tag — applies to this tag everywhere */}
           {browseMode === 'tag' && activeTag && (
-            <div className="flex items-center gap-2 mb-3 bg-stone-900/40 border border-stone-800 rounded-lg px-3 py-2">
-              <span className="mono text-[9px] uppercase tracking-wider text-stone-500 shrink-0">#{activeTag} color</span>
+            <div className="flex items-center gap-2 mb-3 bg-stone-900 border border-stone-800 rounded-lg px-3 py-2">
+              <span className="mono text-[11px] uppercase tracking-wider text-stone-500 shrink-0">#{activeTag} color</span>
               <div className="flex gap-1.5 overflow-x-auto">
                 {TAG_PALETTE.map((p) => {
                   const current = tagColorHex(activeTag, tagColors) === p.hex;
@@ -10766,7 +10769,7 @@ function RecipesView() {
                 >
                   <BookMarked size={16} className="text-amber-400 mb-1.5" />
                   <div className="text-sm text-stone-100 font-medium">All recipes</div>
-                  <div className="mono text-[10px] text-stone-500 mt-0.5">{enriched.length} total</div>
+                  <div className="mono text-[11px] text-stone-500 mt-0.5">{enriched.length} total</div>
                 </button>
                 {/* Folder cards */}
                 {folders.map((f) => {
@@ -10784,9 +10787,9 @@ function RecipesView() {
                             className="w-full bg-stone-950 border border-stone-700 rounded px-1.5 py-1 text-sm text-stone-100 mb-1.5"
                           />
                           <div className="flex gap-1">
-                            <button onClick={() => renameFolder(f.id, renameFolderText)} className="flex-1 bg-amber-400 text-stone-950 mono text-[9px] uppercase tracking-wider rounded py-1 font-semibold">Save</button>
-                            <button onClick={() => deleteFolder(f.id)} className="bg-rose-500/80 hover:bg-rose-500 text-white mono text-[9px] uppercase tracking-wider rounded px-2 py-1">Delete</button>
-                            <button onClick={() => { setRenamingFolderId(null); setRenameFolderText(''); }} className="bg-stone-800 text-stone-300 mono text-[9px] uppercase tracking-wider rounded px-2 py-1">×</button>
+                            <button onClick={() => renameFolder(f.id, renameFolderText)} className="flex-1 bg-amber-400 text-stone-950 mono text-[11px] rounded py-1 font-semibold">Save</button>
+                            <button onClick={() => deleteFolder(f.id)} className="bg-rose-500/80 hover:bg-rose-500 text-white mono text-[11px] rounded px-2 py-1">Delete</button>
+                            <button onClick={() => { setRenamingFolderId(null); setRenameFolderText(''); }} className="bg-stone-800 text-stone-300 mono text-[11px] rounded px-2 py-1">×</button>
                           </div>
                         </div>
                       ) : (
@@ -10797,7 +10800,7 @@ function RecipesView() {
                           >
                             <BookMarked size={16} className="text-stone-400 mb-1.5" />
                             <div className="text-sm text-stone-100 font-medium truncate pr-5">{f.name}</div>
-                            <div className="mono text-[10px] text-stone-500 mt-0.5">{count} {count === 1 ? 'recipe' : 'recipes'}</div>
+                            <div className="mono text-[11px] text-stone-500 mt-0.5">{count} {count === 1 ? 'recipe' : 'recipes'}</div>
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); setRenamingFolderId(f.id); setRenameFolderText(f.name); }}
@@ -10815,11 +10818,11 @@ function RecipesView() {
                 {enriched.filter((r) => !r.folderId).length > 0 && (
                   <button
                     onClick={() => { setActiveFolderId('__unfiled__'); setBrowseMode('folder'); }}
-                    className="bg-stone-900/60 border border-dashed border-stone-700 hover:border-stone-600 rounded-xl p-3 text-left transition-colors"
+                    className="bg-stone-900 border border-dashed border-stone-700 hover:border-stone-600 rounded-xl p-3 text-left transition-colors"
                   >
                     <BookMarked size={16} className="text-stone-600 mb-1.5" />
                     <div className="text-sm text-stone-300 font-medium">Unfiled</div>
-                    <div className="mono text-[10px] text-stone-500 mt-0.5">{enriched.filter((r) => !r.folderId).length} {enriched.filter((r) => !r.folderId).length === 1 ? 'recipe' : 'recipes'}</div>
+                    <div className="mono text-[11px] text-stone-500 mt-0.5">{enriched.filter((r) => !r.folderId).length} {enriched.filter((r) => !r.folderId).length === 1 ? 'recipe' : 'recipes'}</div>
                   </button>
                 )}
               </div>
@@ -10834,13 +10837,13 @@ function RecipesView() {
                     placeholder="Folder name"
                     className="flex-1 bg-stone-950 border border-stone-800 rounded-md px-3 py-2 text-sm text-stone-100"
                   />
-                  <button onClick={() => createFolder(newFolderName)} disabled={!newFolderName.trim()} className="bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 font-semibold mono text-[11px] uppercase tracking-wider rounded-md px-3">Create</button>
-                  <button onClick={() => { setShowNewFolder(false); setNewFolderName(''); }} className="bg-stone-800 text-stone-300 mono text-[11px] uppercase tracking-wider rounded-md px-3">Cancel</button>
+                  <button onClick={() => createFolder(newFolderName)} disabled={!newFolderName.trim()} className="bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 font-semibold mono text-[12px] rounded-md px-3">Create</button>
+                  <button onClick={() => { setShowNewFolder(false); setNewFolderName(''); }} className="bg-stone-800 text-stone-300 mono text-[12px] rounded-md px-3">Cancel</button>
                 </div>
               ) : (
                 <button
                   onClick={() => setShowNewFolder(true)}
-                  className="w-full border border-dashed border-stone-700 hover:border-amber-400/50 text-stone-400 hover:text-amber-400 rounded-xl py-2.5 mono text-[11px] uppercase tracking-wider flex items-center justify-center gap-1.5 mb-3 transition-colors"
+                  className="w-full border border-dashed border-stone-700 hover:border-amber-400/50 text-stone-400 hover:text-amber-400 rounded-xl py-2.5 mono text-[12px] flex items-center justify-center gap-1.5 mb-3 transition-colors"
                 >
                   <Plus size={13} /> New folder
                 </button>
@@ -10854,7 +10857,7 @@ function RecipesView() {
               <div className="flex items-center gap-2 mb-3">
                 <button
                   onClick={() => { setBrowseMode('folders'); setActiveFolderId(null); setActiveTag(null); }}
-                  className="flex items-center gap-1 text-stone-400 hover:text-stone-100 mono text-[10px] uppercase tracking-wider"
+                  className="flex items-center gap-1 text-stone-400 hover:text-stone-100 mono text-[11px]"
                 >
                   <ChevronLeft size={14} /> Folders
                 </button>
@@ -10872,10 +10875,10 @@ function RecipesView() {
                   <button
                     key={f.id}
                     onClick={() => setFilter(f.id)}
-                    className={`shrink-0 px-3 py-1 rounded-full mono text-[10px] uppercase tracking-wider border transition-colors ${
+                    className={`shrink-0 px-3 py-1 rounded-full mono text-[11px] border transition-colors ${
                       filter === f.id
                         ? 'bg-amber-400/15 border-amber-400/50 text-amber-400'
-                        : 'bg-stone-900/60 border-stone-800 text-stone-500 hover:text-stone-300'
+                        : 'bg-stone-900 border-stone-800 text-stone-500 hover:text-stone-300'
                     }`}
                   >
                     {f.label}
@@ -10884,15 +10887,15 @@ function RecipesView() {
               </div>
               {/* max-time filter chips */}
               <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1 -mx-1 px-1 items-center">
-                <span className="shrink-0 mono text-[9px] uppercase tracking-wider text-stone-600 pr-0.5">Ready in</span>
+                <span className="shrink-0 mono text-[11px] uppercase tracking-wider text-stone-600 pr-0.5">Ready in</span>
                 {[15, 30, 45, 60].map((t) => (
                   <button
                     key={t}
                     onClick={() => setMaxTime(maxTime === t ? null : t)}
-                    className={`shrink-0 px-3 py-1 rounded-full mono text-[10px] uppercase tracking-wider border transition-colors ${
+                    className={`shrink-0 px-3 py-1 rounded-full mono text-[11px] border transition-colors ${
                       maxTime === t
                         ? 'bg-sky-400/15 border-sky-400/50 text-sky-400'
-                        : 'bg-stone-900/60 border-stone-800 text-stone-500 hover:text-stone-300'
+                        : 'bg-stone-900 border-stone-800 text-stone-500 hover:text-stone-300'
                     }`}
                   >
                     ≤{t} min
@@ -10905,7 +10908,7 @@ function RecipesView() {
                 )}
               </div>
               {recipesForView.length === 0 ? (
-                <div className="bg-stone-900/40 border border-dashed border-stone-700 rounded-xl p-6 text-center">
+                <div className="bg-stone-900 border border-dashed border-stone-700 rounded-xl p-6 text-center">
                   <div className="text-xs text-stone-500 leading-relaxed">
                     {browseMode === 'tag'
                       ? `No recipes tagged #${activeTag} match that filter.`
@@ -10978,7 +10981,7 @@ function RecipeCard({ recipe, onPick, onToggleFavorite, tagColors = {} }) {
         <div className="flex items-start justify-between gap-2 mb-1.5">
           <div className="min-w-0 flex-1">
             <div className="text-sm font-medium text-stone-100 truncate">{recipe.name}</div>
-            <div className="mono text-[10px] text-stone-500 mt-0.5">
+            <div className="mono text-[11px] text-stone-500 mt-0.5">
               {recipe.totalTime}min · {recipe.difficulty} · serves {recipe.servings}
               {Array.isArray(recipe.variants) && recipe.variants.length > 0 && (
                 <span className="text-amber-400/80"> · {recipe.variants.length} versions</span>
@@ -10990,19 +10993,19 @@ function RecipeCard({ recipe, onPick, onToggleFavorite, tagColors = {} }) {
             {Array.isArray(recipe.tags) && recipe.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-1.5">
                 {recipe.tags.slice(0, 4).map((t) => (
-                  <span key={t} className="mono text-[9px] rounded-full px-1.5 py-0.5" style={tagChipStyle(t, tagColors)}>#{t}</span>
+                  <span key={t} className="mono text-[11px] rounded-full px-1.5 py-0.5" style={tagChipStyle(t, tagColors)}>#{t}</span>
                 ))}
-                {recipe.tags.length > 4 && <span className="mono text-[9px] text-stone-600">+{recipe.tags.length - 4}</span>}
+                {recipe.tags.length > 4 && <span className="mono text-[11px] text-stone-600">+{recipe.tags.length - 4}</span>}
               </div>
             )}
           </div>
-          <span className={`shrink-0 mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${badge.color}`}>
+          <span className={`shrink-0 mono text-[11px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${badge.color}`}>
             {badge.label}
           </span>
         </div>
 
         {/* Macros row */}
-        <div className="flex items-center gap-2 mb-2 mono text-[10px]">
+        <div className="flex items-center gap-2 mb-2 mono text-[11px]">
           <span className="text-amber-400 tabular">{recipe.macros.cal}cal</span>
           <span className="text-stone-700">·</span>
           <span className="text-rose-300 tabular">{recipe.macros.protein}g P</span>
@@ -11028,14 +11031,14 @@ function RecipeCard({ recipe, onPick, onToggleFavorite, tagColors = {} }) {
               style={{ width: `${Math.max(2, ratio * 100)}%` }}
             />
           </div>
-          <span className="mono text-[10px] text-stone-500 tabular shrink-0">{have}/{total}</span>
+          <span className="mono text-[11px] text-stone-500 tabular shrink-0">{have}/{total}</span>
         </div>
       </button>
 
       {/* Inline favorite toggle (separate so the row click doesn't trigger it) */}
       <button
         onClick={onToggleFavorite}
-        className={`w-full px-3 py-1.5 text-[10px] mono uppercase tracking-wider border-t border-stone-800/60 flex items-center justify-center gap-1.5 transition-colors ${
+        className={`w-full px-3 py-1.5 text-[11px] mono border-t border-stone-800 flex items-center justify-center gap-1.5 transition-colors ${
           recipe.isFavorite ? 'text-amber-400 hover:text-amber-300' : 'text-stone-600 hover:text-stone-400'
         }`}
       >
@@ -11134,13 +11137,13 @@ function RecipeCookPhotos({ recipeId }) {
   return (
     <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
       <div className="flex items-center justify-between mb-3">
-        <div className="text-[10px] uppercase tracking-[0.2em] mono text-stone-500">
+        <div className="text-[11px] uppercase tracking-wider mono text-stone-500">
           How it turned out{photos.length > 0 ? ` · ${photos.length}` : ''}
         </div>
         <button
           onClick={() => fileRef.current?.click()}
           disabled={busy}
-          className="text-[10px] mono uppercase tracking-wider rounded px-2.5 py-1.5 border border-stone-700 text-stone-400 hover:text-amber-400 hover:border-amber-400/50 flex items-center gap-1.5 transition-colors disabled:opacity-50"
+          className="text-[11px] mono rounded px-2.5 py-1.5 border border-stone-700 text-stone-400 hover:text-amber-400 hover:border-amber-400/50 flex items-center gap-1.5 transition-colors disabled:opacity-50"
         >
           {busy ? <Loader2 size={11} className="animate-spin" /> : <Camera size={11} />} Add photo
         </button>
@@ -11154,7 +11157,7 @@ function RecipeCookPhotos({ recipeId }) {
         />
       </div>
 
-      {error && <div className="mono text-[10px] text-rose-300 mb-2">{error}</div>}
+      {error && <div className="mono text-[11px] text-rose-300 mb-2">{error}</div>}
 
       {!loaded ? null : photos.length === 0 ? (
         <button
@@ -11168,16 +11171,16 @@ function RecipeCookPhotos({ recipeId }) {
           {photos.map((p) => (
             <button key={p.id} onClick={() => { setViewer(p.id); setConfirmDel(false); }} className="relative aspect-square overflow-hidden rounded-lg border border-stone-800">
               <img src={p.dataUrl} alt={p.note || 'Cooked dish'} className="w-full h-full object-cover" loading="lazy" />
-              <span className="absolute bottom-0 inset-x-0 bg-stone-950/70 text-[9px] mono text-stone-300 px-1 py-0.5 text-left">{p.date}</span>
+              <span className="absolute bottom-0 inset-x-0 bg-stone-950/70 text-[11px] mono text-stone-300 px-1 py-0.5 text-left">{p.date}</span>
             </button>
           ))}
         </div>
       )}
 
       {viewing && (
-        <div className="fixed inset-0 z-[60] bg-stone-950/95 flex flex-col" onClick={() => { setViewer(null); setConfirmDel(false); }}>
+        <div className="ios-backdrop fixed inset-0 z-[60] bg-stone-950/95 flex flex-col" onClick={() => { setViewer(null); setConfirmDel(false); }}>
           <div className="flex items-center justify-between p-3" onClick={(e) => e.stopPropagation()}>
-            <span className="mono text-[11px] text-stone-400">{viewing.date}</span>
+            <span className="mono text-[12px] text-stone-400">{viewing.date}</span>
             <button onClick={() => { setViewer(null); setConfirmDel(false); }} className="text-stone-300 p-1" aria-label="Close"><X size={20} /></button>
           </div>
           <div className="flex-1 flex items-center justify-center px-3 min-h-0">
@@ -11192,7 +11195,7 @@ function RecipeCookPhotos({ recipeId }) {
             />
             <button
               onClick={() => (confirmDel ? removePhoto(viewing.id) : setConfirmDel(true))}
-              className={`w-full rounded-md py-2 mono text-[11px] uppercase tracking-wider ${confirmDel ? 'bg-rose-500 text-white' : 'bg-stone-800 text-stone-400'}`}
+              className={`w-full rounded-md py-2 mono text-[12px] ${confirmDel ? 'bg-rose-500 text-white' : 'bg-stone-800 text-stone-400'}`}
             >
               {confirmDel ? 'Tap again to delete' : 'Delete photo'}
             </button>
@@ -11525,20 +11528,20 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
       <div className="flex items-center justify-between mb-4">
         <button onClick={onBack} className="flex items-center gap-1.5 text-stone-400 hover:text-stone-100 p-1.5 -ml-1.5">
           <ChevronLeft size={18} />
-          <span className="text-[10px] uppercase tracking-[0.2em] mono">Recipes</span>
+          <span className="text-[11px] uppercase tracking-wider mono">Recipes</span>
         </button>
         <div className="flex items-center gap-1.5">
           {onEdit && (
             <button
               onClick={onEdit}
-              className="text-[10px] mono uppercase tracking-wider rounded px-2.5 py-1.5 border border-stone-700 text-stone-500 hover:text-amber-400 hover:border-amber-400/50 flex items-center gap-1.5 transition-colors"
+              className="text-[11px] mono rounded px-2.5 py-1.5 border border-stone-700 text-stone-500 hover:text-amber-400 hover:border-amber-400/50 flex items-center gap-1.5 transition-colors"
             >
               <Edit3 size={11} /> Edit
             </button>
           )}
           <button
             onClick={onToggleFavorite}
-            className={`text-[10px] mono uppercase tracking-wider rounded px-2.5 py-1.5 border transition-colors ${
+            className={`text-[11px] mono rounded px-2.5 py-1.5 border transition-colors ${
               isFavorite
                 ? 'border-amber-400/50 text-amber-400 hover:text-amber-300'
                 : 'border-stone-700 text-stone-500 hover:text-stone-300'
@@ -11552,7 +11555,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
       {/* Title block */}
       <div className="bg-gradient-to-br from-stone-900 to-stone-900/40 border border-stone-800 rounded-xl p-5 mb-3">
         <div className="display text-2xl font-semibold text-stone-100">{baseRecipe.name}</div>
-        <div className="mono text-[10px] uppercase tracking-wider text-stone-500 mt-1">
+        <div className="mono text-[11px] uppercase tracking-wider text-stone-500 mt-1">
           {recipe.totalTime} min · {recipe.difficulty} · base {recipe.servings} {recipe.servings === 1 ? 'serving' : 'servings'}
         </div>
 
@@ -11562,7 +11565,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
             <div className="flex gap-1.5 flex-wrap">
               <button
                 onClick={() => setVariantIdx(-1)}
-                className={`mono text-[10px] uppercase tracking-wider px-2.5 py-1.5 rounded-md border transition-colors ${
+                className={`mono text-[11px] px-2.5 py-1.5 rounded-md border transition-colors ${
                   variantIdx < 0
                     ? 'bg-amber-400/10 border-amber-400 text-amber-400'
                     : 'bg-stone-950/60 border-stone-800 text-stone-400 hover:border-stone-700'
@@ -11574,7 +11577,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
                 <button
                   key={i}
                   onClick={() => setVariantIdx(i)}
-                  className={`mono text-[10px] uppercase tracking-wider px-2.5 py-1.5 rounded-md border transition-colors ${
+                  className={`mono text-[11px] px-2.5 py-1.5 rounded-md border transition-colors ${
                     i === variantIdx
                       ? 'bg-amber-400/10 border-amber-400 text-amber-400'
                       : 'bg-stone-950/60 border-stone-800 text-stone-400 hover:border-stone-700'
@@ -11585,7 +11588,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
               ))}
             </div>
             {activeVariant?.note && (
-              <div className="text-[11px] text-stone-400 leading-snug mt-2">{activeVariant.note}</div>
+              <div className="text-[12px] text-stone-400 leading-snug mt-2">{activeVariant.note}</div>
             )}
           </div>
         )}
@@ -11593,14 +11596,14 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
         {/* Swaps made for this version (lean versions carry these) */}
         {Array.isArray(activeVariant?.swaps) && activeVariant.swaps.length > 0 && (
           <div className="mt-3 bg-stone-950/50 border border-emerald-400/20 rounded-lg p-2.5">
-            <div className="mono text-[9px] uppercase tracking-wider text-emerald-400/80 mb-1.5">Swaps made</div>
+            <div className="mono text-[11px] uppercase tracking-wider text-emerald-400/80 mb-1.5">Swaps made</div>
             <div className="space-y-1">
               {activeVariant.swaps.map((s, i) => (
-                <div key={i} className="text-[11px] leading-snug">
+                <div key={i} className="text-[12px] leading-snug">
                   <span className="text-stone-500 line-through">{s.from}</span>
                   <span className="text-stone-600 mx-1">→</span>
                   <span className="text-stone-300">{s.to}</span>
-                  {s.saves && <span className="mono text-[10px] text-emerald-400/70 ml-1.5">{s.saves}</span>}
+                  {s.saves && <span className="mono text-[11px] text-emerald-400/70 ml-1.5">{s.saves}</span>}
                 </div>
               ))}
             </div>
@@ -11613,26 +11616,26 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
             {leanState === 'working' ? (
               <div className="flex items-center gap-2 text-stone-400 py-1.5">
                 <Loader2 size={14} className={`animate-spin ${leanMode === 'bulk' ? 'text-sky-400' : 'text-emerald-400'}`} />
-                <span className="mono text-[11px]">
+                <span className="mono text-[12px]">
                   {leanMode === 'bulk' ? 'Building a higher-calorie version…' : 'Building a leaner version…'}
                 </span>
               </div>
             ) : leanState === 'preview' && preview ? (
               <div className={`bg-stone-950/60 border rounded-lg p-3 ${preview.mode === 'bulk' ? 'border-sky-400/30' : 'border-emerald-400/30'}`}>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+                  <span className={`mono text-[11px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${
                     preview.mode === 'bulk'
                       ? 'border-sky-400/40 text-sky-400 bg-sky-400/10'
                       : 'border-emerald-400/40 text-emerald-400 bg-emerald-400/10'
                   }`}>
                     Preview · {preview.name}
                   </span>
-                  <span className="mono text-[10px] text-stone-600">not saved yet</span>
+                  <span className="mono text-[11px] text-stone-600">not saved yet</span>
                 </div>
 
                 {/* Macro delta vs the base recipe */}
                 {baseRecipe.macros && (
-                  <div className="mono text-[11px] tabular text-stone-400 mb-2">
+                  <div className="mono text-[12px] tabular text-stone-400 mb-2">
                     {baseRecipe.macros.cal} → <span className="text-stone-100">{preview.macros.cal} cal</span>
                     {(() => {
                       const d = preview.macros.cal - (baseRecipe.macros.cal || 0);
@@ -11646,24 +11649,24 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
                 )}
 
                 {preview.headroom && (
-                  <div className="text-[11px] text-stone-400 leading-snug mb-2 flex items-start gap-1.5">
+                  <div className="text-[12px] text-stone-400 leading-snug mb-2 flex items-start gap-1.5">
                     <Sparkles size={10} className="shrink-0 mt-0.5 text-stone-500" />
                     <span>{preview.headroom}</span>
                   </div>
                 )}
                 {preview.note && (
-                  <div className="text-[11px] text-stone-500 leading-snug mb-2">{preview.note}</div>
+                  <div className="text-[12px] text-stone-500 leading-snug mb-2">{preview.note}</div>
                 )}
 
                 {preview.swaps.length > 0 && (
                   <div className="space-y-1 mb-3">
                     {preview.swaps.map((s, i) => (
-                      <div key={i} className="text-[11px] leading-snug">
+                      <div key={i} className="text-[12px] leading-snug">
                         <span className="text-stone-500 line-through">{s.from}</span>
                         <span className="text-stone-600 mx-1">→</span>
                         <span className="text-stone-300">{s.to}</span>
                         {s.saves && (
-                          <span className={`mono text-[10px] ml-1.5 ${preview.mode === 'bulk' ? 'text-sky-400/70' : 'text-emerald-400/70'}`}>{s.saves}</span>
+                          <span className={`mono text-[11px] ml-1.5 ${preview.mode === 'bulk' ? 'text-sky-400/70' : 'text-emerald-400/70'}`}>{s.saves}</span>
                         )}
                       </div>
                     ))}
@@ -11673,19 +11676,19 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
                 <div className="flex gap-2">
                   <button
                     onClick={() => { setPreview(null); setLeanState('idle'); }}
-                    className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded py-2 mono text-[10px] uppercase tracking-wider"
+                    className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded py-2 mono text-[11px]"
                   >
                     Discard
                   </button>
                   <button
                     onClick={() => runTransform(preview.mode)}
-                    className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded py-2 mono text-[10px] uppercase tracking-wider"
+                    className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded py-2 mono text-[11px]"
                   >
                     Regenerate
                   </button>
                   <button
                     onClick={savePreview}
-                    className="flex-[2] bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded py-2 mono text-[10px] uppercase tracking-wider"
+                    className="flex-[2] bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded py-2 mono text-[11px]"
                   >
                     {findVariantIdxByMode(preview.mode) >= 0 ? 'Replace saved version' : 'Save as version'}
                   </button>
@@ -11695,14 +11698,14 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
               <div className="flex gap-2">
                 <button
                   onClick={() => runTransform('cut')}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-stone-800 hover:bg-stone-700 border border-emerald-400/30 text-stone-200 rounded-lg py-2 mono text-[10px] uppercase tracking-wider"
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-stone-800 hover:bg-stone-700 border border-emerald-400/30 text-stone-200 rounded-lg py-2 mono text-[11px]"
                 >
                   <Sparkles size={12} className="text-emerald-400" />
                   {findVariantIdxByMode('cut') >= 0 ? 'Redo cut' : 'Make it cut-friendly'}
                 </button>
                 <button
                   onClick={() => runTransform('bulk')}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-stone-800 hover:bg-stone-700 border border-sky-400/30 text-stone-200 rounded-lg py-2 mono text-[10px] uppercase tracking-wider"
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-stone-800 hover:bg-stone-700 border border-sky-400/30 text-stone-200 rounded-lg py-2 mono text-[11px]"
                 >
                   <Sparkles size={12} className="text-sky-400" />
                   {findVariantIdxByMode('bulk') >= 0 ? 'Redo bulk' : 'Make it bulk-friendly'}
@@ -11710,10 +11713,10 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
               </div>
             )}
             {leanState === 'error' && (
-              <div className="mono text-[10px] text-rose-300 leading-snug mt-1.5">{leanError}</div>
+              <div className="mono text-[11px] text-rose-300 leading-snug mt-1.5">{leanError}</div>
             )}
             {leanState === 'idle' && (
-              <div className="mono text-[9px] text-stone-600 leading-snug mt-1.5">
+              <div className="mono text-[11px] text-stone-600 leading-snug mt-1.5">
                 Generates a version and shows it before anything is saved. Cut protects protein while dropping calories; bulk adds calorie-dense ingredients rather than a bigger portion.
               </div>
             )}
@@ -11724,19 +11727,19 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
         <div className="grid grid-cols-4 gap-1.5 mt-4">
           <div className="bg-stone-950/60 border border-amber-400/20 rounded-md py-1.5 text-center">
             <div className="mono tabular text-base text-amber-400 font-semibold">{scaledMacros.cal}</div>
-            <div className="mono text-[9px] uppercase tracking-wider text-stone-500">cal</div>
+            <div className="mono text-[11px] uppercase tracking-wider text-stone-500">cal</div>
           </div>
           <div className="bg-stone-950/60 border border-rose-400/20 rounded-md py-1.5 text-center">
             <div className="mono tabular text-base text-rose-300 font-semibold">{scaledMacros.protein}g</div>
-            <div className="mono text-[9px] uppercase tracking-wider text-stone-500">protein</div>
+            <div className="mono text-[11px] uppercase tracking-wider text-stone-500">protein</div>
           </div>
           <div className="bg-stone-950/60 border border-sky-400/20 rounded-md py-1.5 text-center">
             <div className="mono tabular text-base text-sky-300 font-semibold">{scaledMacros.carbs}g</div>
-            <div className="mono text-[9px] uppercase tracking-wider text-stone-500">carbs</div>
+            <div className="mono text-[11px] uppercase tracking-wider text-stone-500">carbs</div>
           </div>
           <div className="bg-stone-950/60 border border-emerald-400/20 rounded-md py-1.5 text-center">
             <div className="mono tabular text-base text-emerald-300 font-semibold">{scaledMacros.fat}g</div>
-            <div className="mono text-[9px] uppercase tracking-wider text-stone-500">fat</div>
+            <div className="mono text-[11px] uppercase tracking-wider text-stone-500">fat</div>
           </div>
         </div>
 
@@ -11767,12 +11770,12 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
         {Array.isArray(recipe.tags) && recipe.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-3">
             {recipe.tags.map((t) => (
-              <span key={t} className="mono text-[10px] rounded-full px-2 py-0.5" style={tagChipStyle(t, tagColors)}>#{t}</span>
+              <span key={t} className="mono text-[11px] rounded-full px-2 py-0.5" style={tagChipStyle(t, tagColors)}>#{t}</span>
             ))}
           </div>
         )}
         <div className="mt-3 flex items-center gap-2">
-          <span className="mono text-[9px] uppercase tracking-wider text-stone-600 shrink-0">Folder</span>
+          <span className="mono text-[11px] uppercase tracking-wider text-stone-600 shrink-0">Folder</span>
           <select
             value={recipe.folderId || ''}
             onChange={(e) => onMoveToFolder?.(e.target.value || null)}
@@ -11790,20 +11793,20 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
       {(cost.matched > 0 || cost.unpriced?.length > 0) && (
         <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
           <div className="flex items-center justify-between mb-1">
-            <div className="text-[10px] uppercase tracking-[0.2em] mono text-stone-500">Estimated Cost</div>
-            <div className="mono text-[10px] text-stone-600">{cost.matched}/{cost.totalIngredients} ingredients priced</div>
+            <div className="text-[11px] uppercase tracking-wider mono text-stone-500">Estimated Cost</div>
+            <div className="mono text-[11px] text-stone-600">{cost.matched}/{cost.totalIngredients} ingredients priced</div>
           </div>
           {cost.matched > 0 ? (
             <div className="flex items-baseline gap-2">
               <div className="display text-2xl font-semibold text-amber-400 tabular">
                 ≈{fmtMoney(cost.total * servings / baseServings)}
               </div>
-              <div className="mono text-[11px] text-stone-500">
+              <div className="mono text-[12px] text-stone-500">
                 total · {fmtMoney(cost.perServing)}/serving
               </div>
             </div>
           ) : (
-            <div className="mono text-[11px] text-stone-500">
+            <div className="mono text-[12px] text-stone-500">
               Couldn't price any ingredients from your receipts yet.
             </div>
           )}
@@ -11813,8 +11816,8 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
               and its share of the total. Makes the number auditable instead of
               a black box (and makes a bad match obvious at a glance). */}
           {cost.matched > 0 && (
-            <div className="mt-3 pt-2.5 border-t border-stone-800/60">
-              <div className="mono text-[9px] uppercase tracking-wider text-stone-500 mb-2">
+            <div className="mt-3 pt-2.5 border-t border-stone-800">
+              <div className="mono text-[11px] uppercase tracking-wider text-stone-500 mb-2">
                 Priced ingredients ({cost.matched})
               </div>
               <div className="space-y-2">
@@ -11824,14 +11827,14 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
                   return (
                     <div key={i}>
                       <div className="flex items-baseline justify-between gap-2">
-                        <span className="text-[11px] text-stone-300 truncate flex-1">
+                        <span className="text-[12px] text-stone-300 truncate flex-1">
                           {fmtQty(p.qty, p.unit)} {fmtUnitLabel(p.unit, p.qty * mult)} {p.name}
                         </span>
-                        <span className="mono tabular text-[11px] text-emerald-400 shrink-0">
+                        <span className="mono tabular text-[12px] text-emerald-400 shrink-0">
                           {fmtMoney(scaledCost)}
                         </span>
                       </div>
-                      <div className="mono text-[9px] truncate mt-0.5 flex items-center gap-1.5">
+                      <div className="mono text-[11px] truncate mt-0.5 flex items-center gap-1.5">
                         <span className={
                           p.source === 'estimate' ? 'text-sky-400/70'
                           : p.source === 'manual' ? 'text-amber-400/70'
@@ -11854,16 +11857,16 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
                   );
                 })}
               </div>
-              <div className="flex items-baseline justify-between gap-2 mt-2.5 pt-2 border-t border-stone-800/60">
-                <span className="mono text-[10px] uppercase tracking-wider text-stone-500">Sum of priced</span>
-                <span className="mono tabular text-[11px] text-stone-200">{fmtMoney(cost.total * mult)}</span>
+              <div className="flex items-baseline justify-between gap-2 mt-2.5 pt-2 border-t border-stone-800">
+                <span className="mono text-[11px] uppercase tracking-wider text-stone-500">Sum of priced</span>
+                <span className="mono tabular text-[12px] text-stone-200">{fmtMoney(cost.total * mult)}</span>
               </div>
             </div>
           )}
 
           {cost.matched < cost.totalIngredients && (
-            <div className="mt-2 pt-2 border-t border-stone-800/60">
-              <div className="mono text-[10px] text-amber-400/80 mb-1.5 leading-relaxed">
+            <div className="mt-2 pt-2 border-t border-stone-800">
+              <div className="mono text-[11px] text-amber-400/80 mb-1.5 leading-relaxed">
                 Partial estimate — {cost.totalIngredients - cost.matched} of {cost.totalIngredients} ingredient{cost.totalIngredients - cost.matched === 1 ? '' : 's'} not priced, so the real cost is higher:
               </div>
               <div className="space-y-1">
@@ -11877,11 +11880,11 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
                     'unit-scale-suspect': 'receipt amount looks mis-scaled',
                   }[u.reason] || u.reason;
                   return (
-                    <div key={i} className="flex items-center justify-between text-[11px] gap-2">
+                    <div key={i} className="flex items-center justify-between text-[12px] gap-2">
                       <span className="text-stone-400 truncate">
                         {u.qty ? `${fmtPantryQty(roundCountableQty(u.qty, u.unit))} ` : ''}{fmtUnitLabel(u.unit, roundCountableQty(u.qty, u.unit))}{u.unit ? ' ' : ''}{u.name}
                       </span>
-                      <span className="mono text-[9px] text-stone-600 shrink-0">{reasonLabel}</span>
+                      <span className="mono text-[11px] text-stone-600 shrink-0">{reasonLabel}</span>
                     </div>
                   );
                 })}
@@ -11890,12 +11893,12 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
                 priceState === 'working' ? (
                   <div className="flex items-center gap-2 mt-2 text-stone-400">
                     <Loader2 size={13} className="animate-spin text-emerald-400" />
-                    <span className="mono text-[10px]">Looking up typical prices…</span>
+                    <span className="mono text-[11px]">Looking up typical prices…</span>
                   </div>
                 ) : (
                   <button
                     onClick={fillMissingPrices}
-                    className="w-full mt-2 flex items-center justify-center gap-1.5 bg-stone-800 hover:bg-stone-700 border border-emerald-400/30 text-stone-200 rounded-lg py-2 mono text-[10px] uppercase tracking-wider"
+                    className="w-full mt-2 flex items-center justify-center gap-1.5 bg-stone-800 hover:bg-stone-700 border border-emerald-400/30 text-stone-200 rounded-lg py-2 mono text-[11px]"
                   >
                     <Sparkles size={12} className="text-emerald-400" />
                     Estimate the missing prices
@@ -11903,9 +11906,9 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
                 )
               )}
               {priceState === 'error' && (
-                <div className="mono text-[10px] text-rose-300 leading-snug mt-1.5">{priceError}</div>
+                <div className="mono text-[11px] text-rose-300 leading-snug mt-1.5">{priceError}</div>
               )}
-              <div className="mono text-[10px] text-stone-600 mt-2 leading-relaxed">
+              <div className="mono text-[11px] text-stone-600 mt-2 leading-relaxed">
                 Estimated prices are typical US grocery prices, saved to your price book and reused everywhere. A real receipt always wins, and you can edit any price in Settings → Ingredient Prices.
               </div>
             </div>
@@ -11913,13 +11916,13 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
           {scaledMacros.protein > 0 && cost.total > 0 && (
             <div className="mt-3 pt-3 border-t border-stone-800 grid grid-cols-2 gap-3">
               <div>
-                <div className="mono text-[9px] uppercase tracking-wider text-stone-600">$/g protein</div>
+                <div className="mono text-[11px] uppercase tracking-wider text-stone-600">$/g protein</div>
                 <div className="mono tabular text-sm text-rose-300 mt-0.5">
                   ${((cost.total * servings / baseServings) / scaledMacros.protein).toFixed(3)}
                 </div>
               </div>
               <div>
-                <div className="mono text-[9px] uppercase tracking-wider text-stone-600">$/100 cal</div>
+                <div className="mono text-[11px] uppercase tracking-wider text-stone-600">$/100 cal</div>
                 <div className="mono tabular text-sm text-amber-300 mt-0.5">
                   ${(((cost.total * servings / baseServings) / scaledMacros.cal) * 100).toFixed(2)}
                 </div>
@@ -11931,11 +11934,11 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
 
       {/* Pantry coverage */}
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
-        <div className="text-[10px] uppercase tracking-[0.2em] mono text-stone-500 mb-3">Pantry Coverage</div>
+        <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-3">Pantry Coverage</div>
 
         {cov.matched.length > 0 && (
           <div className="mb-3">
-            <div className="text-[10px] uppercase tracking-wider mono text-emerald-400 mb-1.5">
+            <div className="text-[11px] uppercase tracking-wider mono text-emerald-400 mb-1.5">
               In your pantry ({cov.matched.length})
             </div>
             <div className="space-y-1">
@@ -11950,10 +11953,10 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
                     <Check size={11} className="text-emerald-400 shrink-0" />
                     <span className="text-stone-300 flex-1 truncate">
                       {fmtQty(m.ing.qty, m.ing.unit)} {fmtUnitLabel(m.ing.unit, m.ing.qty * mult)} {m.ing.name}
-                      {m.ing.variantName && <span className="mono text-[9px] text-amber-400/70 ml-1.5">· {m.ing.variantName}</span>}
+                      {m.ing.variantName && <span className="mono text-[11px] text-amber-400/70 ml-1.5">· {m.ing.variantName}</span>}
                     </span>
                     {(exp.status === 'soon' || exp.status === 'expired') && (
-                      <span className={`mono text-[9px] uppercase tracking-wider ${expClass} shrink-0`}>
+                      <span className={`mono text-[11px] uppercase tracking-wider ${expClass} shrink-0`}>
                         {exp.status === 'expired' ? 'expired' : `${exp.daysLeft}d left`}
                       </span>
                     )}
@@ -11966,7 +11969,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
 
         {cov.missing.length > 0 && (
           <div>
-            <div className="text-[10px] uppercase tracking-wider mono text-rose-400 mb-1.5">
+            <div className="text-[11px] uppercase tracking-wider mono text-rose-400 mb-1.5">
               Missing ({cov.missing.length})
             </div>
             <div className="space-y-1">
@@ -11975,10 +11978,10 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
                   <X size={11} className="text-rose-400 shrink-0" />
                   <span className="text-stone-400 flex-1 truncate">
                     {fmtQty(ing.qty, ing.unit)} {fmtUnitLabel(ing.unit, ing.qty * mult)} {ing.name}
-                    {ing.variantName && <span className="mono text-[9px] text-amber-400/70 ml-1.5">· {ing.variantName}</span>}
+                    {ing.variantName && <span className="mono text-[11px] text-amber-400/70 ml-1.5">· {ing.variantName}</span>}
                   </span>
                   {ing.primary && (
-                    <span className="mono text-[9px] uppercase tracking-wider text-rose-400/70 shrink-0">primary</span>
+                    <span className="mono text-[11px] uppercase tracking-wider text-rose-400/70 shrink-0">primary</span>
                   )}
                 </div>
               ))}
@@ -11987,7 +11990,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
         )}
 
         {cov.fullyCovered && (
-          <div className="mt-3 pt-3 border-t border-stone-800 mono text-[10px] text-emerald-400 flex items-center gap-1.5">
+          <div className="mt-3 pt-3 border-t border-stone-800 mono text-[11px] text-emerald-400 flex items-center gap-1.5">
             <Check size={11} /> You have everything to make this
           </div>
         )}
@@ -11997,8 +12000,8 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.2em] mono text-stone-500">Servings</div>
-            <div className="mono text-[10px] text-stone-600 mt-0.5">scales macros + shopping qty · recipe base: {recipe.servings}</div>
+            <div className="text-[11px] uppercase tracking-wider mono text-stone-500">Servings</div>
+            <div className="mono text-[11px] text-stone-600 mt-0.5">scales macros + shopping qty · recipe base: {recipe.servings}</div>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -12024,8 +12027,8 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
       {recipe.ingredients.length > 0 && (
         <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
           <div className="flex items-center justify-between mb-3">
-            <div className="text-[10px] uppercase tracking-[0.2em] mono text-stone-500">Shopping</div>
-            <div className="mono text-[10px] text-stone-600">for {servings} {servings === 1 ? 'serving' : 'servings'}</div>
+            <div className="text-[11px] uppercase tracking-wider mono text-stone-500">Shopping</div>
+            <div className="mono text-[11px] text-stone-600">for {servings} {servings === 1 ? 'serving' : 'servings'}</div>
           </div>
 
           {addedConfirm ? (
@@ -12045,7 +12048,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
                 <button
                   onClick={() => handleAddToShoppingList(cov.missing, 'missing')}
                   disabled={adding}
-                  className="w-full bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 rounded-md py-2.5 mono text-xs uppercase tracking-wider font-semibold flex items-center justify-center gap-2 mb-2"
+                  className="w-full bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 rounded-md py-2.5 mono text-xs font-semibold flex items-center justify-center gap-2 mb-2"
                 >
                   {adding ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} strokeWidth={2.5} />}
                   Add {cov.missing.length} missing to shopping list
@@ -12054,13 +12057,13 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
               <button
                 onClick={() => handleAddToShoppingList(recipe.ingredients, 'all')}
                 disabled={adding}
-                className="w-full bg-stone-800 hover:bg-stone-700 disabled:opacity-40 text-stone-200 rounded-md py-2 mono text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+                className="w-full bg-stone-800 hover:bg-stone-700 disabled:opacity-40 text-stone-200 rounded-md py-2 mono text-xs flex items-center justify-center gap-2"
               >
                 {adding ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
                 Add all {recipe.ingredients.length} ingredients
               </button>
               {cov.fullyCovered && (
-                <div className="mono text-[10px] text-stone-600 mt-2 leading-relaxed text-center">
+                <div className="mono text-[11px] text-stone-600 mt-2 leading-relaxed text-center">
                   Pantry already has everything — useful for restocking ahead
                 </div>
               )}
@@ -12071,7 +12074,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
 
       {/* Instructions */}
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
-        <div className="text-[10px] uppercase tracking-[0.2em] mono text-stone-500 mb-3">Instructions</div>
+        <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-3">Instructions</div>
         <ol className="space-y-2.5">
           {recipe.instructions.map((step, i) => (
             <li key={i} className="flex gap-3 text-sm text-stone-300 leading-relaxed">
@@ -12085,7 +12088,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
       {/* Notes — free-text notes the user (or the source) added to this recipe */}
       {recipe.notes && recipe.notes.trim() && (
         <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
-          <div className="text-[10px] uppercase tracking-[0.2em] mono text-stone-500 mb-2">Notes</div>
+          <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-2">Notes</div>
           <div className="text-sm text-stone-300 leading-relaxed whitespace-pre-wrap">{recipe.notes}</div>
         </div>
       )}
@@ -12103,8 +12106,8 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
                 <div className="flex items-center gap-2 text-stone-400 text-xs"><Loader2 size={13} className="animate-spin text-amber-400" /> Estimating micronutrients…</div>
               ) : (
                 <>
-                  {microError && <div className="mono text-[10px] text-rose-300 leading-snug mb-1.5">{microError}</div>}
-                  <button onClick={() => runRecipeMicros()} className="text-[10px] mono uppercase tracking-wider text-amber-400 hover:text-amber-300">Calculate micronutrients</button>
+                  {microError && <div className="mono text-[11px] text-rose-300 leading-snug mb-1.5">{microError}</div>}
+                  <button onClick={() => runRecipeMicros()} className="text-[11px] mono text-amber-400 hover:text-amber-300">Calculate micronutrients</button>
                 </>
               )}
             </div>
@@ -12114,7 +12117,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
           <button
             onClick={() => runRecipeMicros(true)}
             disabled={microState === 'working'}
-            className="mt-1 text-[9px] mono uppercase tracking-wider text-stone-600 hover:text-stone-400 flex items-center gap-1 disabled:opacity-50"
+            className="mt-1 text-[11px] mono text-stone-600 hover:text-stone-400 flex items-center gap-1 disabled:opacity-50"
           >
             <RefreshCw size={10} className={microState === 'working' ? 'animate-spin' : ''} /> Recalculate micronutrients
           </button>
@@ -12126,7 +12129,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
 
       {/* Meal Prep — cook a batch, deduct pantry, create a Saved Meal with inventory */}
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
-        <div className="text-[10px] uppercase tracking-[0.2em] mono text-stone-500 mb-3">Meal Prep</div>
+        <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-3">Meal Prep</div>
 
         {prepResult && prepResult.success ? (
           <div>
@@ -12136,11 +12139,11 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
             <div className="text-xs text-stone-300 mb-3 tabular">
               {fmtMoney(prepResult.totalCost)} total · {fmtMoney(prepResult.perServingCost)}/serving
             </div>
-            <div className="text-[11px] text-emerald-400 mono mb-2">
+            <div className="text-[12px] text-emerald-400 mono mb-2">
               ✓ Pantry deducted · Saved Meal created
             </div>
             {prepResult.deducted.length > 0 && (
-              <div className="text-[10px] text-stone-500 mono mb-2 leading-snug">
+              <div className="text-[11px] text-stone-500 mono mb-2 leading-snug">
                 Deducted: {prepResult.deducted.map((d) => `${d.name} (${d.deductQty} ${d.unit})`).join(', ')}
               </div>
             )}
@@ -12150,7 +12153,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
                 (byReason[u.reason] || byReason['not-in-pantry']).push(u);
               }
               return (
-                <div className="text-[10px] mono mb-2 leading-snug space-y-1.5">
+                <div className="text-[11px] mono mb-2 leading-snug space-y-1.5">
                   {byReason['insufficient-stock'].length > 0 && (
                     <div className="text-amber-300">
                       <div className="font-semibold">⚠ Not enough in pantry ({byReason['insufficient-stock'].length}):</div>
@@ -12181,7 +12184,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
             })()}
             <button
               onClick={() => setPrepResult(null)}
-              className="mt-2 text-[11px] mono uppercase tracking-wider text-stone-400 hover:text-amber-400"
+              className="mt-2 text-[12px] mono text-stone-400 hover:text-amber-400"
             >
               Cook another batch →
             </button>
@@ -12191,7 +12194,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
             <div className="text-xs text-rose-300 mb-2">Cook failed: {prepResult.error || 'unknown error'}</div>
             <button
               onClick={() => setPrepResult(null)}
-              className="text-[11px] mono uppercase tracking-wider text-stone-400 hover:text-amber-400"
+              className="text-[12px] mono text-stone-400 hover:text-amber-400"
             >
               Try again
             </button>
@@ -12202,7 +12205,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
               Deduct ingredients from pantry and create a Saved Meal with inventory. Each portion you log later attributes its cost to that day.
             </div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="text-[10px] mono uppercase tracking-wider text-stone-500 shrink-0">Servings:</div>
+              <div className="text-[11px] mono uppercase tracking-wider text-stone-500 shrink-0">Servings:</div>
               <button
                 onClick={() => setPrepServings(Math.max(1, prepServings - 1))}
                 className="w-8 h-8 bg-stone-800 hover:bg-stone-700 rounded text-stone-300 mono"
@@ -12214,13 +12217,13 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
                 className="w-8 h-8 bg-stone-800 hover:bg-stone-700 rounded text-stone-300 mono"
                 aria-label="Increase prep servings"
               >+</button>
-              <div className="text-[10px] text-stone-600 mono">recipe base: {baseServings}</div>
+              <div className="text-[11px] text-stone-600 mono">recipe base: {baseServings}</div>
             </div>
-            <div className="text-[11px] mono text-stone-500 mb-3 tabular leading-snug">
+            <div className="text-[12px] mono text-stone-500 mb-3 tabular leading-snug">
               Est. batch cost: <span className="text-stone-300">{fmtMoney(cost.total * (prepServings / baseServings))}</span>
               {' '}· per serving: <span className="text-stone-300">{fmtMoney(cost.perServing)}</span>
               {cost.matched < cost.totalIngredients && (
-                <div className="text-[10px] text-stone-600 mt-0.5">
+                <div className="text-[11px] text-stone-600 mt-0.5">
                   ({cost.matched}/{cost.totalIngredients} ingredients have receipt cost data)
                 </div>
               )}
@@ -12228,7 +12231,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
             <button
               onClick={cookAndStock}
               disabled={prepping}
-              className="w-full bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 font-semibold mono text-xs py-2.5 rounded uppercase tracking-wider flex items-center justify-center gap-2"
+              className="w-full bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 font-semibold mono text-xs py-2.5 rounded flex items-center justify-center gap-2"
             >
               {prepping ? (
                 <><Loader2 size={12} className="animate-spin" /> Cooking…</>
@@ -12246,7 +12249,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
           {!confirmDelete ? (
             <button
               onClick={() => setConfirmDelete(true)}
-              className="w-full text-[10px] mono uppercase tracking-wider text-stone-500 hover:text-rose-400 py-3 flex items-center justify-center gap-1.5"
+              className="w-full text-[11px] mono text-stone-500 hover:text-rose-400 py-3 flex items-center justify-center gap-1.5"
             >
               <Trash2 size={11} /> Delete recipe
             </button>
@@ -12256,13 +12259,13 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
               <div className="flex gap-2">
                 <button
                   onClick={() => setConfirmDelete(false)}
-                  className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded py-1.5 mono text-[10px] uppercase tracking-wider"
+                  className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded py-1.5 mono text-[11px]"
                 >
                   Keep
                 </button>
                 <button
                   onClick={onDelete}
-                  className="flex-1 bg-rose-500 hover:bg-rose-400 text-stone-950 rounded py-1.5 mono text-[10px] uppercase tracking-wider font-semibold"
+                  className="flex-1 bg-rose-500 hover:bg-rose-400 text-stone-950 rounded py-1.5 mono text-[11px] font-semibold"
                 >
                   Delete
                 </button>
@@ -12281,7 +12284,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
           <button
             onClick={logToFuel}
             disabled={logging}
-            className={`w-full rounded-md py-3 mono text-xs uppercase tracking-wider font-semibold flex items-center justify-center gap-2 transition-colors ${
+            className={`w-full rounded-md py-3 mono text-xs font-semibold flex items-center justify-center gap-2 transition-colors ${
               logged
                 ? 'bg-emerald-400 text-stone-950'
                 : 'bg-amber-400 hover:bg-amber-300 disabled:opacity-60 text-stone-950'
@@ -12820,13 +12823,13 @@ function ShoppingView({ onConvertToReceipt }) {
     <div className="pb-32">
       {/* Summary card */}
       <div className="bg-gradient-to-br from-stone-900 to-stone-900/40 border border-stone-800 rounded-xl p-4 mb-3">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">Shopping List</div>
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">Shopping List</div>
         <div className="flex items-baseline gap-2 mt-1">
           <div className="display text-2xl font-semibold text-amber-400 tabular">
             {needed.length} <span className="text-base text-stone-400 font-normal">to buy</span>
           </div>
         </div>
-        <div className="mono text-[10px] text-stone-600 mt-1">
+        <div className="mono text-[11px] text-stone-600 mt-1">
           {got.length > 0 && `${got.length} checked off · `}
           {todayCount > 0 ? `${todayCount} for today's plan` : 'no items urgent today'}
         </div>
@@ -12871,12 +12874,12 @@ function ShoppingView({ onConvertToReceipt }) {
       <div className="bg-stone-900 border border-stone-800 rounded-xl mb-3 overflow-hidden">
         <button
           onClick={() => setCommonsExpanded(!commonsExpanded)}
-          className="w-full px-3 py-2.5 flex items-center justify-between hover:bg-stone-900/60"
+          className="w-full px-3 py-2.5 flex items-center justify-between hover:bg-stone-900"
         >
           <div className="flex items-center gap-2">
-            <span className="mono text-[10px] uppercase tracking-[0.2em] text-stone-400">Common Items</span>
+            <span className="mono text-[11px] uppercase tracking-wider text-stone-400">Common Items</span>
             {commons.length > 0 && (
-              <span className="mono text-[10px] text-stone-600">{commons.length}</span>
+              <span className="mono text-[11px] text-stone-600">{commons.length}</span>
             )}
           </div>
           <ChevronDown
@@ -12886,9 +12889,9 @@ function ShoppingView({ onConvertToReceipt }) {
         </button>
 
         {commonsExpanded && (
-          <div className="px-3 pb-3 pt-0 border-t border-stone-800/60">
+          <div className="px-3 pb-3 pt-0 border-t border-stone-800">
             {commons.length === 0 && !showAddCommon && (
-              <div className="text-[11px] text-stone-500 leading-relaxed py-2">
+              <div className="text-[12px] text-stone-500 leading-relaxed py-2">
                 Save items you buy often for one-tap re-add. Star any item in your active list, or hit + to add manually.
               </div>
             )}
@@ -12917,8 +12920,8 @@ function ShoppingView({ onConvertToReceipt }) {
                         {showHeaders && (
                           <div className="flex items-center gap-1.5 mb-1.5 px-0.5">
                             <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: meta.hex }} />
-                            <span className="mono text-[9px] uppercase tracking-[0.15em] text-stone-500">{meta.label}</span>
-                            <span className="mono text-[9px] text-stone-600">{byCat[catId].length}</span>
+                            <span className="mono text-[11px] uppercase tracking-wider text-stone-500">{meta.label}</span>
+                            <span className="mono text-[11px] text-stone-600">{byCat[catId].length}</span>
                           </div>
                         )}
                         <div className="space-y-1">
@@ -12938,7 +12941,7 @@ function ShoppingView({ onConvertToReceipt }) {
                                   <Plus size={12} className={`shrink-0 ${isFlashing ? 'text-amber-300' : 'text-amber-400/60'}`} />
                                   <div className="min-w-0 flex-1">
                                     <div className="text-xs text-stone-200 truncate">{c.name}</div>
-                                    <div className="mono text-[10px] text-stone-500 tabular">
+                                    <div className="mono text-[11px] text-stone-500 tabular">
                                       {c.defaultQty} {c.defaultUnit}
                                       {c.useCount > 0 && (
                                         <span className="text-stone-600 ml-1.5">· used {c.useCount}×</span>
@@ -12946,7 +12949,7 @@ function ShoppingView({ onConvertToReceipt }) {
                                     </div>
                                   </div>
                                   {isFlashing && (
-                                    <span className="text-[9px] mono uppercase tracking-wider text-amber-300 shrink-0">
+                                    <span className="text-[11px] mono uppercase tracking-wider text-amber-300 shrink-0">
                                       Added
                                     </span>
                                   )}
@@ -12999,13 +13002,13 @@ function ShoppingView({ onConvertToReceipt }) {
                   <button
                     onClick={addCommonManual}
                     disabled={!commonDraft.name.trim()}
-                    className="flex-1 bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 font-semibold mono text-[11px] py-1.5 rounded uppercase tracking-wider"
+                    className="flex-1 bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 font-semibold mono text-[12px] py-1.5 rounded"
                   >
                     Save
                   </button>
                   <button
                     onClick={() => { setShowAddCommon(false); setCommonDraft({ name: '', qty: '1', unit: 'ea' }); }}
-                    className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 mono text-[11px] py-1.5 rounded uppercase tracking-wider"
+                    className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 mono text-[12px] py-1.5 rounded"
                   >
                     Cancel
                   </button>
@@ -13014,7 +13017,7 @@ function ShoppingView({ onConvertToReceipt }) {
             ) : (
               <button
                 onClick={() => setShowAddCommon(true)}
-                className="mt-2 w-full flex items-center justify-center gap-1.5 text-[11px] mono uppercase tracking-wider text-stone-500 hover:text-amber-400 py-1.5 border border-dashed border-stone-800 rounded hover:border-amber-400/40 transition-colors"
+                className="mt-2 w-full flex items-center justify-center gap-1.5 text-[12px] mono text-stone-500 hover:text-amber-400 py-1.5 border border-dashed border-stone-800 rounded hover:border-amber-400/40 transition-colors"
               >
                 <Plus size={11} /> Add common item
               </button>
@@ -13025,7 +13028,7 @@ function ShoppingView({ onConvertToReceipt }) {
 
       {/* Needed items, grouped */}
       {needed.length === 0 && suggestions.length === 0 && got.length === 0 && (
-        <div className="bg-stone-900/40 border border-dashed border-stone-700 rounded-xl p-6 text-center">
+        <div className="bg-stone-900 border border-dashed border-stone-700 rounded-xl p-6 text-center">
           <div className="text-xs text-stone-500 leading-relaxed">
             Nothing to buy. Plan a meal or save a recipe and missing ingredients show up here automatically.
           </div>
@@ -13040,10 +13043,10 @@ function ShoppingView({ onConvertToReceipt }) {
             return (
               <div key={cat.id} className="mb-3">
                 <div className="flex items-center gap-2 mb-2 px-1">
-                  <span className={`mono text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${cat.color}`}>
+                  <span className={`mono text-[11px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${cat.color}`}>
                     {cat.label}
                   </span>
-                  <span className="mono text-[10px] text-stone-600">{list.length}</span>
+                  <span className="mono text-[11px] text-stone-600">{list.length}</span>
                 </div>
                 <div className="space-y-1.5">
                   {list.map((it) => (
@@ -13072,8 +13075,8 @@ function ShoppingView({ onConvertToReceipt }) {
       {got.length > 0 && (
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2 px-1">
-            <span className="mono text-[10px] uppercase tracking-[0.2em] text-emerald-400">✓ In cart</span>
-            <span className="mono text-[10px] text-stone-600">{got.length}</span>
+            <span className="mono text-[11px] uppercase tracking-wider text-emerald-400">✓ In cart</span>
+            <span className="mono text-[11px] text-stone-600">{got.length}</span>
           </div>
           <div className="space-y-1.5">
             {got.map((it) => (
@@ -13089,33 +13092,33 @@ function ShoppingView({ onConvertToReceipt }) {
       )}
 
       {/* For You — grounded in logged eating (nutrient gaps + cost) */}
-      <div className="bg-stone-900/60 border border-stone-800 rounded-xl p-3 mt-4">
+      <div className="bg-stone-900 border border-stone-800 rounded-xl p-3 mt-4">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-1.5">
             <Sparkles size={11} className="text-sky-400" />
-            <div className="mono text-[10px] uppercase tracking-[0.2em] text-stone-400">For You</div>
+            <div className="mono text-[11px] uppercase tracking-wider text-stone-400">For You</div>
           </div>
           {forYouState !== 'working' && (
-            <button onClick={runForYou} className="text-[10px] mono uppercase tracking-wider text-sky-400 hover:text-sky-300">
+            <button onClick={runForYou} className="text-[11px] mono text-sky-400 hover:text-sky-300">
               {forYouState === 'done' || forYou.length > 0 ? 'Refresh' : 'Suggest'}
             </button>
           )}
         </div>
-        <div className="mono text-[10px] text-stone-600 leading-snug mb-2">
+        <div className="mono text-[11px] text-stone-600 leading-snug mb-2">
           Grocery ideas based on what you actually log — nutrient gaps you're low on and cheaper protein sources.
         </div>
 
         {forYouState === 'working' && (
           <div className="flex items-center gap-2 py-2 text-stone-400">
             <Loader2 size={13} className="animate-spin text-sky-400" />
-            <span className="mono text-[11px]">Reading your last few weeks of logs…</span>
+            <span className="mono text-[12px]">Reading your last few weeks of logs…</span>
           </div>
         )}
         {forYouState === 'error' && (
-          <div className="mono text-[10px] text-rose-300 leading-snug py-1">{forYouError}</div>
+          <div className="mono text-[11px] text-rose-300 leading-snug py-1">{forYouError}</div>
         )}
         {forYouState === 'done' && forYou.length === 0 && (
-          <div className="mono text-[11px] text-stone-500 py-1 leading-snug">
+          <div className="mono text-[12px] text-stone-500 py-1 leading-snug">
             Not enough logged data to say anything grounded yet. Log meals via Search or a barcode scan (which carry nutrient data) and try again.
           </div>
         )}
@@ -13141,7 +13144,7 @@ function ShoppingView({ onConvertToReceipt }) {
                       {s.axis === 'cost' ? 'cheaper' : 'gap'}
                     </span>
                   </div>
-                  <div className="text-[11px] text-stone-500 leading-snug mt-0.5">{s.reason}</div>
+                  <div className="text-[12px] text-stone-500 leading-snug mt-0.5">{s.reason}</div>
                 </div>
               </div>
             ))}
@@ -13151,16 +13154,16 @@ function ShoppingView({ onConvertToReceipt }) {
 
       {/* Suggestions */}
       {suggestions.length > 0 && (
-        <div className="bg-stone-900/60 border border-stone-800 rounded-xl p-3 mt-4">
+        <div className="bg-stone-900 border border-stone-800 rounded-xl p-3 mt-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
               <Sparkles size={11} className="text-amber-400" />
-              <div className="mono text-[10px] uppercase tracking-[0.2em] text-stone-400">Suggested ({suggestions.length})</div>
+              <div className="mono text-[11px] uppercase tracking-wider text-stone-400">Suggested ({suggestions.length})</div>
             </div>
             {suggestions.length > 1 && (
               <button
                 onClick={addAllSuggestions}
-                className="text-[10px] mono uppercase tracking-wider text-amber-400 hover:text-amber-300"
+                className="text-[11px] mono text-amber-400 hover:text-amber-300"
               >
                 Add all
               </button>
@@ -13183,14 +13186,14 @@ function ShoppingView({ onConvertToReceipt }) {
                     <div className="text-xs text-stone-200 truncate flex items-center gap-1.5">
                       {sug.name}
                       {isUrgent && (
-                        <span className="mono text-[9px] uppercase tracking-wider text-amber-400 shrink-0">today</span>
+                        <span className="mono text-[11px] uppercase tracking-wider text-amber-400 shrink-0">today</span>
                       )}
                     </div>
-                    <div className="mono text-[10px] text-stone-600 truncate">
+                    <div className="mono text-[11px] text-stone-600 truncate">
                       {sug.sources.map((s) => s.label).join(' · ')}
                     </div>
                   </div>
-                  <span className={`mono text-[9px] uppercase tracking-wider shrink-0 ${cat?.color || 'text-stone-500'} px-1.5 py-0.5 rounded border`}>
+                  <span className={`mono text-[11px] uppercase tracking-wider shrink-0 ${cat?.color || 'text-stone-500'} px-1.5 py-0.5 rounded border`}>
                     {cat?.label || 'Other'}
                   </span>
                 </button>
@@ -13206,7 +13209,7 @@ function ShoppingView({ onConvertToReceipt }) {
           {!confirmClear ? (
             <button
               onClick={() => setConfirmClear(true)}
-              className="w-full text-[10px] mono uppercase tracking-wider text-stone-500 hover:text-rose-400 py-2 flex items-center justify-center gap-1.5"
+              className="w-full text-[11px] mono text-stone-500 hover:text-rose-400 py-2 flex items-center justify-center gap-1.5"
             >
               <Trash2 size={11} /> Clear entire list
             </button>
@@ -13216,13 +13219,13 @@ function ShoppingView({ onConvertToReceipt }) {
               <div className="flex gap-2">
                 <button
                   onClick={() => setConfirmClear(false)}
-                  className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded py-1.5 mono text-[10px] uppercase tracking-wider"
+                  className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded py-1.5 mono text-[11px]"
                 >
                   Keep
                 </button>
                 <button
                   onClick={clearAll}
-                  className="flex-1 bg-rose-500 hover:bg-rose-400 text-stone-950 rounded py-1.5 mono text-[10px] uppercase tracking-wider font-semibold"
+                  className="flex-1 bg-rose-500 hover:bg-rose-400 text-stone-950 rounded py-1.5 mono text-[11px] font-semibold"
                 >
                   Clear all
                 </button>
@@ -13241,12 +13244,12 @@ function ShoppingView({ onConvertToReceipt }) {
           <div className="max-w-3xl mx-auto">
             <button
               onClick={handleConvertToReceipt}
-              className="w-full bg-amber-400 hover:bg-amber-300 text-stone-950 rounded-md py-3 mono text-xs uppercase tracking-wider font-semibold flex items-center justify-center gap-2"
+              className="w-full bg-amber-400 hover:bg-amber-300 text-stone-950 rounded-md py-3 mono text-xs font-semibold flex items-center justify-center gap-2"
             >
               <Receipt size={14} />
               Convert {got.length} {got.length === 1 ? 'item' : 'items'} to receipt
             </button>
-            <div className="mono text-[10px] text-stone-500 text-center mt-1.5">
+            <div className="mono text-[11px] text-stone-500 text-center mt-1.5">
               Pre-fills a new receipt — add the store and prices to finalize
             </div>
           </div>
@@ -13829,7 +13832,7 @@ function ShoppingItemRow({ item, onToggle, onRemove, onQty, isCommon = false, on
         <div className={`text-sm truncate ${isGot ? 'line-through text-stone-500' : 'text-stone-100'}`}>
           {item.name}
         </div>
-        <div className="mono text-[10px] text-stone-500 mt-0.5 truncate flex items-center gap-1.5">
+        <div className="mono text-[11px] text-stone-500 mt-0.5 truncate flex items-center gap-1.5">
           <span>{item.qty} {item.unit}</span>
           {sourceText && (
             <>
@@ -13838,7 +13841,7 @@ function ShoppingItemRow({ item, onToggle, onRemove, onQty, isCommon = false, on
             </>
           )}
           {hasToday && !isGot && (
-            <span className="mono text-[9px] uppercase tracking-wider text-amber-400 shrink-0">today</span>
+            <span className="mono text-[11px] uppercase tracking-wider text-amber-400 shrink-0">today</span>
           )}
         </div>
       </div>
@@ -13887,6 +13890,8 @@ function ShoppingItemRow({ item, onToggle, onRemove, onQty, isCommon = false, on
 
 export default function FitnessTracker() {
   const [tab, setTab] = useState(SHARE_INBOX ? 'receipts' : 'today');
+  // Each tab opens at its top, as on iOS.
+  useEffect(() => { try { window.scrollTo(0, 0); } catch {} }, [tab]);
   const [activeDate, setActiveDate] = useState(today());
   const [currentDay, setCurrentDay] = useState(getDayOfWeek());
   const [showSettings, setShowSettings] = useState(false);
@@ -13963,17 +13968,11 @@ export default function FitnessTracker() {
 
   return (
     <ErrorBoundary>
-    <div className="min-h-screen bg-stone-950 text-stone-100" style={{ fontFamily: '"Inter", system-ui, sans-serif' }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800&display=swap');
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        .display { font-family: 'Fraunces', serif; font-optical-sizing: auto; }
-        .tabular { font-variant-numeric: tabular-nums; }
-      `}</style>
+    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans">
 
       <Header day={currentDay} activeDate={activeDate} onOpenSettings={() => setShowSettings(true)} />
 
-      <main className="max-w-3xl mx-auto px-4 pb-32 pt-4">
+      <main key={tab} className="ios-view max-w-3xl mx-auto px-4 pb-32 pt-4">
         {tab === 'today' && (
           <TodayView
             day={currentDay}
@@ -13997,7 +13996,7 @@ export default function FitnessTracker() {
       </main>
 
       <nav
-        className="fixed bottom-0 left-0 right-0 bg-stone-900/95 backdrop-blur-lg border-t border-stone-800"
+        className="fixed bottom-0 left-0 right-0 z-30 bg-stone-950/80 ios-bar ios-hairline-t"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <div className="max-w-3xl mx-auto grid grid-cols-6">
@@ -14008,10 +14007,11 @@ export default function FitnessTracker() {
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`flex flex-col items-center gap-1 py-3 px-1 transition-colors ${active ? 'text-amber-400' : 'text-stone-500'}`}
+                aria-current={active ? 'page' : undefined}
+                className={`flex flex-col items-center gap-0.5 pt-2 pb-1.5 px-1 ${active ? 'text-amber-400' : 'text-stone-500'}`}
               >
-                <Icon size={20} strokeWidth={active ? 2.5 : 1.75} />
-                <span className="text-[10px] uppercase tracking-wider mono">{t.label}</span>
+                <Icon size={24} strokeWidth={active ? 2.2 : 1.8} />
+                <span className="text-[10px] font-medium leading-tight">{t.label}</span>
               </button>
             );
           })}
@@ -14078,26 +14078,26 @@ function Header({ day, activeDate, onOpenSettings }) {
   const isToday = activeDate === today();
   return (
     <header
-      className="border-b border-stone-800 bg-stone-950 sticky top-0 z-30"
+      className="bg-stone-950/80 ios-bar ios-hairline-b sticky top-0 z-30"
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
-      <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
+      <div className="max-w-3xl mx-auto px-4 pt-2 pb-2.5 flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">Recomp Protocol · v6</div>
-          <h1 className="display text-2xl font-semibold mt-0.5 truncate">227 → 200 <span className="text-stone-500">·</span> <span className="text-amber-400">Lean Athletic</span></h1>
+          <div className="text-[11px] uppercase tracking-wider text-stone-500">Recomp Protocol · v6</div>
+          <h1 className="display text-[22px] leading-7 truncate">227 → 200 <span className="text-stone-600">·</span> <span className="text-amber-400">Lean Athletic</span></h1>
         </div>
         <div className="flex items-center gap-2.5 shrink-0">
           <StreakBadge />
           <div className="text-right">
-            <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">
+            <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">
               {isToday ? `Day ${day}/7` : fmtDate(activeDate)}
             </div>
-            <div className="text-xs mono text-stone-300 mt-0.5">{session.type === 'lift' ? 'LIFT' : session.type === 'cardio' ? 'CARDIO' : 'REST'}</div>
+            <div className="text-xs mono text-stone-300 mt-0.5">{session.type === 'lift' ? 'Lift' : session.type === 'cardio' ? 'Cardio' : 'Rest'}</div>
           </div>
           {onOpenSettings && (
             <button
               onClick={onOpenSettings}
-              className="text-stone-400 hover:text-stone-100 transition-colors p-1.5 -mr-1.5"
+              className="w-9 h-9 -mr-1 rounded-full bg-stone-800 text-stone-300 flex items-center justify-center"
               aria-label="Settings"
             >
               <Settings size={18} />
@@ -14231,7 +14231,7 @@ function ProgramCoach() {
   };
 
   return (
-    <div className="mt-6 bg-stone-900/40 border border-stone-800 rounded-xl overflow-hidden">
+    <div className="mt-6 bg-stone-900 border border-stone-800 rounded-xl overflow-hidden">
       <button
         onClick={() => setExpanded((v) => !v)}
         className="w-full flex items-center justify-between px-4 py-3 text-left"
@@ -14244,7 +14244,7 @@ function ProgramCoach() {
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4 border-t border-stone-800/60 pt-3">
+        <div className="px-4 pb-4 border-t border-stone-800 pt-3">
           {state === 'idle' && (
             <div>
               <div className="text-xs text-stone-400 leading-relaxed mb-3">
@@ -14254,7 +14254,7 @@ function ProgramCoach() {
                 onClick={analyze}
                 className="w-full bg-amber-400 text-stone-950 font-semibold mono text-xs py-2.5 rounded hover:bg-amber-300"
               >
-                ANALYZE MY PROGRAM
+                Analyze my program
               </button>
             </div>
           )}
@@ -14268,8 +14268,8 @@ function ProgramCoach() {
 
           {state === 'error' && (
             <div>
-              <div className="mono text-[11px] text-rose-300 leading-snug mb-2">{error}</div>
-              <button onClick={analyze} className="text-[10px] mono uppercase tracking-wider text-stone-400 hover:text-amber-400">
+              <div className="mono text-[12px] text-rose-300 leading-snug mb-2">{error}</div>
+              <button onClick={analyze} className="text-[11px] mono text-stone-400 hover:text-amber-400">
                 Try again
               </button>
             </div>
@@ -14278,21 +14278,21 @@ function ProgramCoach() {
           {(state === 'review' || state === 'applied') && proposal && (
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <span className={`text-[9px] mono uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+                <span className={`text-[11px] mono uppercase tracking-wider px-1.5 py-0.5 rounded border ${
                   proposal.confidence === 'high' ? 'border-emerald-400/40 text-emerald-400 bg-emerald-400/10'
                   : proposal.confidence === 'low' ? 'border-rose-400/40 text-rose-300 bg-rose-400/10'
                   : 'border-amber-400/40 text-amber-400 bg-amber-400/10'
                 }`}>
                   {proposal.confidence} confidence
                 </span>
-                <span className="text-[10px] mono text-stone-600">{proposal.changes.length} change{proposal.changes.length !== 1 ? 's' : ''}</span>
+                <span className="text-[11px] mono text-stone-600">{proposal.changes.length} change{proposal.changes.length !== 1 ? 's' : ''}</span>
               </div>
               <div className="text-xs text-stone-300 leading-relaxed mb-3">{proposal.summary}</div>
 
               <div className="space-y-2 mb-3">
                 {proposal.changes.map((c, i) => (
                   <div key={i} className="bg-stone-950/60 border border-stone-800 rounded p-2.5">
-                    <div className="text-[9px] mono uppercase tracking-wider text-stone-500 mb-1">
+                    <div className="text-[11px] mono uppercase tracking-wider text-stone-500 mb-1">
                       D{c.day} · {c.dayName} · {String(c.type || '').replace(/_/g, ' ')}
                     </div>
                     <div className="text-xs">
@@ -14300,7 +14300,7 @@ function ProgramCoach() {
                       {c.before && c.after && <span className="text-stone-600 mx-1.5">→</span>}
                       {c.after && <span className="text-stone-200">{c.after}</span>}
                     </div>
-                    {c.rationale && <div className="text-[11px] text-stone-500 leading-snug mt-1">{c.rationale}</div>}
+                    {c.rationale && <div className="text-[12px] text-stone-500 leading-snug mt-1">{c.rationale}</div>}
                   </div>
                 ))}
                 {proposal.changes.length === 0 && (
@@ -14312,14 +14312,14 @@ function ProgramCoach() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => { setProposal(null); setState('idle'); }}
-                    className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded py-2 mono text-[10px] uppercase tracking-wider"
+                    className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded py-2 mono text-[11px]"
                   >
                     Dismiss
                   </button>
                   {proposal.changes.length > 0 && (
                     <button
                       onClick={apply}
-                      className="flex-[2] bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded py-2 mono text-[10px] uppercase tracking-wider"
+                      className="flex-[2] bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded py-2 mono text-[11px]"
                     >
                       Apply as new schedule
                     </button>
@@ -14474,7 +14474,7 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
           className="flex-1 bg-stone-900 border border-stone-800 rounded-md px-3 py-1.5 flex items-center justify-center gap-2 hover:border-stone-700"
         >
           <CalendarDays size={13} className="text-stone-500" />
-          <span className="text-xs mono text-stone-200">{isToday ? 'TODAY' : fmtDateLong(activeDate).toUpperCase()}</span>
+          <span className="text-xs mono text-stone-200">{isToday ? 'Today' : fmtDateLong(activeDate)}</span>
         </button>
         <button
           onClick={() => setActiveDate(addDays(activeDate, 1))}
@@ -14486,9 +14486,9 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
         {!isToday && (
           <button
             onClick={() => setActiveDate(today())}
-            className="bg-amber-400 text-stone-950 mono text-[10px] font-semibold px-2.5 py-1.5 rounded-md"
+            className="bg-amber-400 text-stone-950 mono text-[11px] font-semibold px-2.5 py-1.5 rounded-md"
           >
-            TODAY
+            Today
           </button>
         )}
       </div>
@@ -14508,17 +14508,14 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
 
       {/* Day switcher — tap to navigate to that day's date in the cycle */}
       <div className="mb-1.5">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono text-center mb-1.5">Schedule</div>
-        <div className="flex gap-1 justify-center flex-wrap">
+        <div className="ios-seg" role="tablist" aria-label="Schedule day">
           {[1, 2, 3, 4, 5, 6, 7].map((d) => (
             <button
               key={d}
+              role="tab"
+              aria-selected={d === effectiveDay}
               onClick={() => setDay(d)}
-              className={`flex-shrink-0 mono text-xs px-2.5 py-1 rounded-md border transition-colors ${
-                d === effectiveDay
-                  ? 'bg-amber-400 text-stone-950 border-amber-400 font-semibold'
-                  : 'bg-stone-900 text-stone-400 border-stone-800 hover:border-stone-700'
-              }`}
+              className={`ios-seg-item mono ${d === effectiveDay ? 'bg-amber-400 text-stone-950 font-semibold shadow' : 'text-stone-400'}`}
             >
               D{d}
             </button>
@@ -14531,16 +14528,16 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
       <div className="flex items-center justify-center mb-4">
         <button
           onClick={() => { setReassignTarget(effectiveDay); setShowReassign(true); }}
-          className="text-[10px] mono uppercase tracking-wider text-stone-600 hover:text-amber-400 transition-colors"
+          className="text-xs text-stone-500 py-1"
         >
-          Did a different workout? Reassign this date →
+          Did a different workout? <span className="text-amber-400">Reassign this date</span>
         </button>
       </div>
 
       {/* Reassign modal */}
       {showReassign && (
         <div
-          className="fixed inset-0 bg-stone-950/80 z-40 flex items-end sm:items-center justify-center p-4"
+          className="ios-backdrop fixed inset-0 bg-stone-950/80 z-40 flex items-end sm:items-center justify-center p-4"
           onClick={() => setShowReassign(false)}
         >
           <div
@@ -14572,18 +14569,18 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
               ))}
             </div>
             {reassignTarget && reassignTarget !== day && (
-              <div className="text-[11px] text-stone-500 mb-3 leading-snug">
+              <div className="text-[12px] text-stone-500 mb-3 leading-snug">
                 Will become: <span className="text-stone-300">D{reassignTarget} ({SCHEDULE[reassignTarget]?.name})</span>
               </div>
             )}
-            <div className="text-[11px] text-stone-400 leading-snug mb-4 bg-stone-950/60 border border-stone-800 rounded-md p-2.5">
+            <div className="text-[12px] text-stone-400 leading-snug mb-4 bg-stone-950/60 border border-stone-800 rounded-md p-2.5">
               This re-anchors your whole cycle to this date. {fmtDate(activeDate)} becomes D{reassignTarget || '?'}, and every day before and after follows in sequence
               {reassignTarget ? ` (tomorrow → D${(reassignTarget % 7) + 1}, then D${((reassignTarget + 1) % 7) + 1}, …).` : '.'}
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowReassign(false)}
-                className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-2 mono text-xs uppercase tracking-wider"
+                className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-2 mono text-xs"
               >
                 Cancel
               </button>
@@ -14595,7 +14592,7 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
                   setShowReassign(false);
                 }}
                 disabled={!reassignTarget || reassignTarget === day}
-                className="flex-[2] bg-amber-400 hover:bg-amber-300 disabled:opacity-40 disabled:cursor-not-allowed text-stone-950 rounded-md py-2 mono text-xs uppercase tracking-wider font-semibold"
+                className="flex-[2] bg-amber-400 hover:bg-amber-300 disabled:opacity-40 disabled:cursor-not-allowed text-stone-950 rounded-md py-2 mono text-xs font-semibold"
               >
                 Re-anchor
               </button>
@@ -14626,7 +14623,7 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
           return (
             <div className="mt-4 pt-4 border-t border-stone-800">
               <div className="flex items-center justify-between mb-1.5">
-                <div className={`mono text-[10px] uppercase tracking-[0.2em] ${allDone ? 'text-emerald-400' : 'text-stone-500'}`}>
+                <div className={`mono text-[11px] uppercase tracking-wider ${allDone ? 'text-emerald-400' : 'text-stone-500'}`}>
                   {allDone ? '✓ Workout complete' : 'Progress'}
                 </div>
                 <div className="mono tabular text-xs text-stone-300">{done}<span className="text-stone-500">/{total}</span></div>
@@ -14645,7 +14642,7 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
       {/* Save indicator */}
       {saved && (
         <div className="fixed top-4 right-4 bg-emerald-500/90 text-stone-950 text-xs mono px-3 py-1.5 rounded-full flex items-center gap-1 z-50 font-semibold">
-          <Check size={12} /> SAVED
+          <Check size={12} /> Saved
         </div>
       )}
 
@@ -14655,10 +14652,10 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
       {session.blocks.some((b) => b.exercises.some((e) => e.track)) && (
         <div className="mb-5">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="mono text-[9px] uppercase tracking-[0.2em] text-stone-500">Training Phase</span>
-            <span className="mono text-[9px] text-stone-600">shapes progression</span>
+            <span className="text-[11px] uppercase tracking-wider text-stone-500">Training phase</span>
+            <span className="mono text-[11px] text-stone-600">shapes progression</span>
           </div>
-          <div className="grid grid-cols-4 gap-1">
+          <div className="ios-seg" role="tablist" aria-label="Training phase">
             {[
               { id: 'cut', label: 'Cut' },
               { id: 'recomp', label: 'Recomp' },
@@ -14668,19 +14665,19 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
               <button
                 key={p.id}
                 onClick={async () => { setPhase(p.id); await storage.set('training:phase', p.id); }}
-                className={`mono text-[10px] uppercase tracking-wider py-1.5 rounded-md border transition-colors ${
+                role="tab"
+                aria-selected={phase === p.id}
+                className={`ios-seg-item ${
                   phase === p.id
-                    ? p.id === 'cut' ? 'bg-emerald-400/15 border-emerald-400/60 text-emerald-400'
-                      : p.id === 'bulk' ? 'bg-sky-400/15 border-sky-400/60 text-sky-400'
-                      : 'bg-amber-400/15 border-amber-400/60 text-amber-400'
-                    : 'bg-stone-900/60 border-stone-800 text-stone-500 hover:text-stone-300'
+                    ? `ios-seg-on shadow font-semibold ${p.id === 'cut' ? 'text-emerald-400' : p.id === 'bulk' ? 'text-sky-400' : 'text-amber-400'}`
+                    : 'text-stone-400'
                 }`}
               >
                 {p.label}
               </button>
             ))}
           </div>
-          <div className="mono text-[9px] text-stone-600 leading-snug mt-1.5">
+          <div className="text-xs text-stone-500 leading-snug mt-2 px-1">
             {phase === 'cut' && 'In a deficit, holding your numbers is a win — strength is largely preserved while fat drops. Chase reps before load.'}
             {phase === 'recomp' && 'Slow, steady progression. Expect small gains in both strength and size.'}
             {phase === 'maintain' && 'Modest, consistent progression at maintenance calories.'}
@@ -14698,17 +14695,17 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
         if (rows.length === 0) return null;
         const maxSets = rows[0].planned || 1;
         return (
-          <div className="mb-5 bg-stone-900/40 border border-stone-900 rounded-lg p-3">
+          <div className="mb-5 bg-stone-900 border border-stone-900 rounded-lg p-3">
             <div className="flex items-center justify-between mb-2">
-              <span className="mono text-[9px] uppercase tracking-[0.2em] text-stone-500">Muscles Worked</span>
-              <span className="mono text-[9px] text-stone-600">sets · done / planned</span>
+              <span className="mono text-[11px] uppercase tracking-wider text-stone-500">Muscles Worked</span>
+              <span className="mono text-[11px] text-stone-600">sets · done / planned</span>
             </div>
             <div className="space-y-1.5">
               {rows.map((r) => {
                 const pct = Math.round((r.done / r.planned) * 100);
                 return (
                   <div key={r.muscle} className="flex items-center gap-2">
-                    <span className="text-[11px] text-stone-300 capitalize w-24 shrink-0 truncate">
+                    <span className="text-[12px] text-stone-300 capitalize w-24 shrink-0 truncate">
                       {MUSCLE_LABELS[r.muscle] || r.muscle}
                     </span>
                     <div className="flex-1 h-1.5 bg-stone-950 rounded-full overflow-hidden">
@@ -14717,7 +14714,7 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
                         style={{ width: `${Math.max(pct, 0)}%` }}
                       />
                     </div>
-                    <span className="mono text-[10px] tabular text-stone-500 w-11 text-right shrink-0">
+                    <span className="mono text-[11px] tabular text-stone-500 w-11 text-right shrink-0">
                       {r.done}/{r.planned}
                     </span>
                     {/* relative volume within this session */}
@@ -14731,7 +14728,7 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
               })}
             </div>
             {untracked.length > 0 && (
-              <div className="mono text-[9px] text-stone-600 leading-snug mt-2">
+              <div className="mono text-[11px] text-stone-600 leading-snug mt-2">
                 Not counted: {untracked.join(', ')} — no muscle mapping yet.
               </div>
             )}
@@ -14744,7 +14741,7 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
         <div key={block.name} className="mb-6">
           <div className="flex items-center gap-2 mb-3">
             <div className="h-px flex-1 bg-stone-800" />
-            <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">{block.name}</div>
+            <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">{block.name}</div>
             <div className="h-px flex-1 bg-stone-800" />
           </div>
           {block.exercises.map((ex) => (
@@ -17533,7 +17530,7 @@ function FigureSilhouette({ f, view, opacity = 1, color, accentColor, isGhost = 
   const computedFacing = facing != null
     ? facing
     : ((f.head[0] - f.pelvis[0]) > 1 ? 1 : (f.head[0] - f.pelvis[0]) < -1 ? -1 : 1);
-  const stroke = isGhost ? color : '#0c0a09';  // dark background color creates separation
+  const stroke = isGhost ? color : '#000000';  // dark background color creates separation
   const fill = isGhost ? 'none' : color;
   const sw = isGhost ? 1.2 : 1.8;
   const op = opacity;
@@ -18164,7 +18161,7 @@ function ExerciseFigure({ exerciseName }) {
   const EditOverlay = () => (
     <button
       onClick={(e) => { e.stopPropagation(); openEditor(); }}
-      className="absolute top-1 right-1 bg-stone-900/70 hover:bg-stone-800 text-stone-400 hover:text-amber-400 rounded p-1 transition-colors backdrop-blur-sm z-10"
+      className="absolute top-1 right-1 bg-stone-900 hover:bg-stone-800 text-stone-400 hover:text-amber-400 rounded p-1 transition-colors backdrop-blur-sm z-10"
       aria-label="Customize demo"
       title="Set custom demo URL"
     >
@@ -18176,7 +18173,7 @@ function ExerciseFigure({ exerciseName }) {
   const EditorPanel = () => (
     <div className="absolute inset-0 z-20 bg-stone-950/95 backdrop-blur-sm rounded p-3 flex flex-col">
       <div className="flex items-center justify-between mb-2">
-        <div className="text-[10px] uppercase tracking-wider text-amber-400 mono">Custom demo</div>
+        <div className="text-[11px] uppercase tracking-wider text-amber-400 mono">Custom demo</div>
         <button onClick={() => { setShowEditor(false); setUrlInput(''); }} className="text-stone-500 hover:text-stone-300">
           <X size={14} />
         </button>
@@ -18186,13 +18183,13 @@ function ExerciseFigure({ exerciseName }) {
         value={urlInput}
         onChange={(e) => setUrlInput(e.target.value)}
         placeholder="Paste GIF URL or data:image/gif;base64,..."
-        className="w-full bg-stone-900 border border-stone-700 rounded px-2 py-1.5 text-[10px] mono text-stone-200 focus:border-amber-400 focus:outline-none mb-2"
+        className="w-full bg-stone-900 border border-stone-700 rounded px-2 py-1.5 text-[11px] mono text-stone-200 focus:border-amber-400 focus:outline-none mb-2"
         autoFocus
       />
-      <div className="text-[9px] text-stone-500 mb-2 leading-snug">Direct URLs work after deploy. For this preview, paste a data:image/... base64 URL.</div>
+      <div className="text-[11px] text-stone-500 mb-2 leading-snug">Direct URLs work after deploy. For this preview, paste a data:image/... base64 URL.</div>
       <div className="flex gap-1 mt-auto">
-        <button onClick={saveCustomUrl} className="flex-1 bg-amber-400 text-stone-950 mono text-[10px] font-semibold py-1.5 rounded hover:bg-amber-300">
-          {urlInput.trim() ? 'SAVE' : 'CLEAR'}
+        <button onClick={saveCustomUrl} className="flex-1 bg-amber-400 text-stone-950 mono text-[11px] font-semibold py-1.5 rounded hover:bg-amber-300">
+          {urlInput.trim() ? 'Save' : 'Clear'}
         </button>
       </div>
     </div>
@@ -18232,7 +18229,7 @@ function ExerciseFigure({ exerciseName }) {
       <div className="w-full h-full relative flex flex-col items-center justify-center bg-stone-950 rounded p-4 text-center">
         <Info size={20} className="text-stone-600 mb-2" />
         <div className="text-xs mono text-stone-400">No built-in demo</div>
-        <button onClick={openEditor} className="text-[10px] mono text-amber-400 hover:text-amber-300 mt-2 underline-offset-2 hover:underline">
+        <button onClick={openEditor} className="text-[11px] mono text-amber-400 hover:text-amber-300 mt-2 underline-offset-2 hover:underline">
           Set custom demo →
         </button>
         {showEditor && <EditorPanel />}
@@ -18260,12 +18257,12 @@ function ExerciseFigure({ exerciseName }) {
   const theme = {
     body: '#fbbf24',   // amber-400 — main figure fill
     bodyStroke: '#fde68a', // amber-200 — outline
-    bar: '#e7e5e4',    // stone-200 — barbell/handle
-    plate: '#1c1917',  // stone-900 — plate fill
+    bar: '#E5E5EA',    // stone-200 — barbell/handle
+    plate: '#1C1C1E',  // stone-900 — plate fill
     accent: '#fbbf24', // amber-400 — plate stroke / accents
-    bench: '#57534e',  // stone-600 — bench/structure
-    benchAccent: '#78716c', // stone-500 — bench accents
-    floor: '#44403c',  // stone-700 — floor line
+    bench: '#636366',  // stone-600 — bench/structure
+    benchAccent: '#8E8E93', // stone-500 — bench accents
+    floor: '#3A3A3C',  // stone-700 — floor line
   };
 
   // Single view rendering
@@ -18303,10 +18300,10 @@ function ExerciseFigure({ exerciseName }) {
       <FigureComponent f={f} view={pose.view} opacity={1} color={theme.body} facing={pose.facing} />
       <Equipment eq={f.equipment} theme={theme} layer="front" view={pose.view} />
       {/* View label */}
-      <text x="100" y="14" textAnchor="middle" fontSize="8" fill="#78716c" fontFamily="monospace" letterSpacing="1">{(pose.view || 'side').toUpperCase()}</text>
+      <text x="100" y="14" textAnchor="middle" fontSize="8" fill="#8E8E93" fontFamily="-apple-system, system-ui, sans-serif" letterSpacing="1">{(pose.view || 'side').toUpperCase()}</text>
 
       {/* Divider */}
-      <line x1="205" y1="20" x2="205" y2="180" stroke="#44403c" strokeWidth="0.5" strokeDasharray="2 3" opacity="0.5" />
+      <line x1="205" y1="20" x2="205" y2="180" stroke="#3A3A3C" strokeWidth="0.5" strokeDasharray="2 3" opacity="0.5" />
 
       {/* Panel 2 — translated by 210px */}
       <g transform="translate(210, 0)">
@@ -18315,7 +18312,7 @@ function ExerciseFigure({ exerciseName }) {
         <Equipment eq={f2.equipment} theme={theme} layer="back" view={pose.secondView} />
         <FigureComponent f={f2} view={pose.secondView} opacity={1} color={theme.body} facing={pose.secondFacing} />
         <Equipment eq={f2.equipment} theme={theme} layer="front" view={pose.secondView} />
-        <text x="100" y="14" textAnchor="middle" fontSize="8" fill="#78716c" fontFamily="monospace" letterSpacing="1">{pose.secondView.toUpperCase()}</text>
+        <text x="100" y="14" textAnchor="middle" fontSize="8" fill="#8E8E93" fontFamily="-apple-system, system-ui, sans-serif" letterSpacing="1">{pose.secondView.toUpperCase()}</text>
       </g>
     </svg>
   );
@@ -18330,21 +18327,21 @@ function FormGuide({ exerciseName }) {
     <div className="bg-stone-950/60 border border-stone-800 rounded-lg overflow-hidden mb-2">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full px-3 py-2 flex items-center justify-between hover:bg-stone-900/40 transition-colors"
+        className="w-full px-3 py-2 flex items-center justify-between hover:bg-stone-900 transition-colors"
       >
-        <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] mono text-stone-500">
+        <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider mono text-stone-500">
           <Info size={11} className="text-sky-400" />
           Form Guide
         </div>
         <ChevronDown size={12} className={`text-stone-600 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
-        <div className="border-t border-stone-800/60 p-3 grid grid-cols-[130px_1fr] gap-3 items-start">
+        <div className="border-t border-stone-800 p-3 grid grid-cols-[130px_1fr] gap-3 items-start">
           <div className="bg-stone-950 rounded border border-stone-900 aspect-square">
             <ExerciseFigure exerciseName={exerciseName} />
           </div>
-          <div className="text-[11px] leading-relaxed">
-            <div className="text-stone-300 mono text-[9px] uppercase tracking-wider mb-1.5">Cues</div>
+          <div className="text-[12px] leading-relaxed">
+            <div className="text-stone-300 mono text-[11px] uppercase tracking-wider mb-1.5">Cues</div>
             <ul className="space-y-1 mb-2">
               {guide.cues.map((c, i) => (
                 <li key={i} className="text-stone-300 flex gap-1.5">
@@ -18354,7 +18351,7 @@ function FormGuide({ exerciseName }) {
               ))}
             </ul>
             {guide.avoid && (
-              <div className="text-[10px] mt-2 pt-2 border-t border-stone-800/60">
+              <div className="text-[11px] mt-2 pt-2 border-t border-stone-800">
                 <span className="mono text-rose-400/80 uppercase tracking-wider">Avoid:</span>
                 <span className="text-stone-400 ml-1">{guide.avoid}</span>
               </div>
@@ -18850,7 +18847,7 @@ function ExerciseCard({ exercise, log, history, onUpdate, onFillWeight, complete
   if (!exercise.track) {
     const hasGuide = !!FORM_GUIDES[exercise.name];
     return (
-      <div className={`border rounded-lg mb-2 overflow-hidden transition-colors ${completed ? 'bg-emerald-400/[0.04] border-emerald-400/30' : 'bg-stone-900/40 border-stone-800/60'}`}>
+      <div className={`border rounded-lg mb-2 overflow-hidden transition-colors ${completed ? 'bg-emerald-400/[0.04] border-emerald-400/30' : 'bg-stone-900 border-stone-800'}`}>
         <div className={`w-full px-3 py-2.5 flex items-center gap-3 ${hasGuide ? 'hover:bg-stone-800/20' : ''} transition-colors`}>
           <CheckButton />
           <button
@@ -18863,7 +18860,7 @@ function ExerciseCard({ exercise, log, history, onUpdate, onFillWeight, complete
                 <div className={`text-sm ${completed ? 'text-stone-400 line-through decoration-emerald-400/50' : 'text-stone-200'}`}>{exercise.name}</div>
                 {hasGuide && <Info size={10} className="text-sky-400/60" />}
               </div>
-              {exercise.note && <div className="text-[11px] text-stone-500 mt-0.5">{exercise.note}</div>}
+              {exercise.note && <div className="text-[12px] text-stone-500 mt-0.5">{exercise.note}</div>}
             </div>
             <div className="mono text-xs text-stone-500 text-right flex items-center gap-2">
               <div>{exercise.sets}×{exercise.reps}</div>
@@ -18892,7 +18889,7 @@ function ExerciseCard({ exercise, log, history, onUpdate, onFillWeight, complete
         >
           <div className="flex-1">
             <div className={`text-sm font-medium ${completed ? 'text-stone-400 line-through decoration-emerald-400/50' : 'text-stone-100'}`}>{exercise.name}</div>
-            <div className="flex items-center gap-2 mt-0.5 mono text-[10px] text-stone-500">
+            <div className="flex items-center gap-2 mt-0.5 mono text-[11px] text-stone-500">
               <span>{exercise.sets}×{exercise.reps}</span>
               {exercise.rpe && <><span>·</span><span>RPE {exercise.rpe}</span></>}
               {suggestion && suggestion.type === 'increase' && (
@@ -18912,41 +18909,41 @@ function ExerciseCard({ exercise, log, history, onUpdate, onFillWeight, complete
 
       {expanded && (
         <div className="px-4 pb-3 pt-1">
-          {exercise.note && <div className="text-[11px] text-stone-500 italic mb-2">{exercise.note}</div>}
+          {exercise.note && <div className="text-[12px] text-stone-500 italic mb-2">{exercise.note}</div>}
           <FormGuide exerciseName={exercise.name} />
 
           {/* Last-time / today recommendation panel */}
           {rec ? (
             <div className="bg-stone-950/60 border border-stone-800 rounded-md px-3 py-2.5 mb-3">
               <div className="grid grid-cols-[58px_1fr_auto] gap-x-3 gap-y-1.5 items-center">
-                <div className="mono text-[9px] uppercase tracking-[0.15em] text-stone-500">LAST</div>
+                <div className="mono text-[11px] uppercase tracking-wider text-stone-500">Last</div>
                 <div className="mono tabular text-xs text-stone-300">
                   {rec.lastSessionSets
                     .filter((s) => parseFloat(s.weight) > 0)
                     .map((s) => `${s.weight}×${s.reps || '—'}`)
                     .join('  ·  ') || `${rec.lastSet.weight}×${rec.lastSet.reps}`}
                 </div>
-                <div className="mono text-[10px] text-stone-600">{fmtDate(rec.lastSet.date)}</div>
+                <div className="mono text-[11px] text-stone-600">{fmtDate(rec.lastSet.date)}</div>
 
-                <div className="mono text-[9px] uppercase tracking-[0.15em] text-amber-400">TARGET</div>
+                <div className="mono text-[11px] uppercase tracking-wider text-amber-400">Target</div>
                 <div className="mono tabular text-sm font-semibold text-amber-400 flex items-center gap-1">
                   {rec.targetWeight} lb
                   {rec.shouldIncrease && <ArrowUp size={11} className="text-amber-400" />}
                 </div>
                 <button
                   onClick={() => onFillWeight(rec.targetWeight)}
-                  className="text-[10px] mono uppercase tracking-wider text-amber-400 hover:text-amber-300 border border-amber-400/40 hover:border-amber-300 rounded px-2 py-0.5"
+                  className="text-[11px] mono text-amber-400 hover:text-amber-300 border border-amber-400/40 hover:border-amber-300 rounded px-2 py-0.5"
                 >
                   Fill
                 </button>
               </div>
               {rec.targetPercent != null && rec.est1RM != null && (
-                <div className="mono text-[10px] text-stone-500 mt-1.5 pl-[70px]">
+                <div className="mono text-[11px] text-stone-500 mt-1.5 pl-[70px]">
                   ~{rec.targetPercent}% of est 1RM ({rec.est1RM} lb)
                 </div>
               )}
               {rec.note && (
-                <div className={`text-[11px] leading-snug mt-1.5 pl-[70px] ${
+                <div className={`text-[12px] leading-snug mt-1.5 pl-[70px] ${
                   rec.progType === 'increase-reset' ? 'text-sky-300/90'
                   : rec.progType === 'maintain' ? 'text-stone-400'
                   : 'text-amber-400/90'
@@ -18957,15 +18954,15 @@ function ExerciseCard({ exercise, log, history, onUpdate, onFillWeight, complete
             </div>
           ) : (
             exercise.track && (
-              <div className="bg-stone-950/60 border border-stone-800/60 rounded-md px-3 py-2 mb-3 text-[11px] mono text-stone-500">
+              <div className="bg-stone-950/60 border border-stone-800 rounded-md px-3 py-2 mb-3 text-[12px] mono text-stone-500">
                 First time logging — start light, find a weight that lets you hit {exercise.reps} reps at RPE {Number(exercise.rpe) || 7}-{(Number(exercise.rpe) || 7) + 1}.
               </div>
             )
           )}
 
-          <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-2 items-center mb-1.5 text-[10px] uppercase tracking-wider mono text-stone-500">
+          <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-2 items-center mb-1.5 text-[11px] uppercase tracking-wider mono text-stone-500">
             <div className="w-6">SET</div>
-            <div>WEIGHT</div>
+            <div>Weight</div>
             <div>REPS</div>
             <div className="w-6"></div>
           </div>
@@ -19003,7 +19000,7 @@ function ExerciseCard({ exercise, log, history, onUpdate, onFillWeight, complete
               enter reps for the first time on a set). */}
           <button
             onClick={() => startRest(90)}
-            className="w-full mt-2 flex items-center justify-center gap-1.5 bg-stone-950/60 border border-stone-800 hover:border-amber-400/40 rounded-md py-2 text-[11px] mono uppercase tracking-wider text-stone-400 hover:text-amber-400 transition-colors active:scale-[0.98]"
+            className="w-full mt-2 flex items-center justify-center gap-1.5 bg-stone-950/60 border border-stone-800 hover:border-amber-400/40 rounded-md py-2 text-[12px] mono text-stone-400 hover:text-amber-400 transition-colors active:scale-[0.98]"
           >
             <Clock size={12} />
             Start rest · 1:30
@@ -19011,9 +19008,9 @@ function ExerciseCard({ exercise, log, history, onUpdate, onFillWeight, complete
 
           {history.length > 0 && (
             <div className="mt-3 pt-3 border-t border-stone-800">
-              <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1.5">Last 3 sessions</div>
+              <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1.5">Last 3 sessions</div>
               {history.slice(0, 3).map((h, i) => (
-                <div key={i} className="flex items-center gap-2 text-[11px] mono text-stone-400 mb-0.5">
+                <div key={i} className="flex items-center gap-2 text-[12px] mono text-stone-400 mb-0.5">
                   <span className="text-stone-600 w-12">{fmtDate(h.date)}</span>
                   <span className="tabular">
                     {h.sets.map((s) => `${s.weight || '—'}×${s.reps || '—'}`).join('  ·  ')}
@@ -19180,7 +19177,7 @@ function BodyMapView() {
     low:  { stroke: '#fbbf24', fill: 'rgba(251,191,36,0.16)' },
     ok:   { stroke: '#34d399', fill: 'rgba(52,211,153,0.15)' },
     high: { stroke: '#fb7185', fill: 'rgba(251,113,133,0.16)' },
-    none: { stroke: '#57534e', fill: 'rgba(41,37,36,0.5)' },
+    none: { stroke: '#636366', fill: 'rgba(41,37,36,0.5)' },
   };
 
   // Drag-to-rotate: horizontal drag spins the figure. scaleX foreshortens him
@@ -19232,9 +19229,9 @@ function BodyMapView() {
     const labelColor = status === 'ok' ? 'text-emerald-400' : status === 'low' ? 'text-stone-400' : 'text-rose-400';
     return (
       <div key={m} className={primary ? '' : 'opacity-90'}>
-        <div className="flex items-center justify-between text-[11px] mb-1">
+        <div className="flex items-center justify-between text-[12px] mb-1">
           <span className="mono text-stone-300 capitalize">{MUSCLE_LABELS[m] || m}</span>
-          <span className={`mono tabular ${labelColor}`}>{sets} <span className="text-stone-600 text-[10px]">/ {t.min}–{t.max}</span></span>
+          <span className={`mono tabular ${labelColor}`}>{sets} <span className="text-stone-600 text-[11px]">/ {t.min}–{t.max}</span></span>
         </div>
         <div className="h-1.5 bg-stone-800 rounded-full overflow-hidden relative">
           <div className="absolute h-full bg-emerald-400/15" style={{ left: `${bandStartPct}%`, right: 0 }} />
@@ -19272,19 +19269,19 @@ function BodyMapView() {
 
   return (
     <div>
-      <div className="bg-stone-900/40 border border-stone-800/60 rounded-lg p-3 mb-4">
+      <div className="bg-stone-900 border border-stone-800 rounded-lg p-3 mb-4">
         <div className="text-xs text-stone-400 leading-relaxed">
           Tap any muscle to see its weekly volume, the lifts driving it, and its InBody segment. Colors flag <span className="text-amber-400">under target</span>, <span className="text-emerald-400">on target</span>, and <span className="text-rose-400">over target</span>. Flip to the back for delts, back, hamstrings &amp; more.
         </div>
       </div>
 
       {/* Front / Back toggle (or drag the figure to rotate) */}
-      <div className="flex gap-1 mb-3 bg-stone-900/60 border border-stone-800 rounded-lg p-1 max-w-[200px] mx-auto">
+      <div className="flex gap-1 mb-3 bg-stone-900 border border-stone-800 rounded-lg p-1 max-w-[200px] mx-auto">
         {[{ id: 'front', label: 'Front', rot: 0 }, { id: 'back', label: 'Back', rot: 180 }].map((v) => (
           <button
             key={v.id}
             onClick={() => setRotation(v.rot)}
-            className={`flex-1 mono text-[10px] uppercase tracking-wider py-1.5 rounded-md transition-colors ${
+            className={`flex-1 mono text-[11px] py-1.5 rounded-md transition-colors ${
               view === v.id ? 'bg-stone-800 text-amber-400' : 'text-stone-500 hover:text-stone-300'
             }`}
           >
@@ -19346,12 +19343,12 @@ function BodyMapView() {
           </g>
           </g>
         </svg>
-        <div className="flex items-center justify-center gap-3 mt-2 flex-wrap text-[9px] mono uppercase tracking-wider text-stone-500">
+        <div className="flex items-center justify-center gap-3 mt-2 flex-wrap text-[11px] mono uppercase tracking-wider text-stone-500">
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: '#34d399' }} /> On target</span>
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: '#fbbf24' }} /> Under</span>
           <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: '#fb7185' }} /> Over</span>
         </div>
-        <div className="text-center text-[9px] mono text-stone-600 mt-1.5">Drag left/right to rotate · tap a muscle</div>
+        <div className="text-center text-[11px] mono text-stone-600 mt-1.5">Drag left/right to rotate · tap a muscle</div>
       </div>
 
       {/* Selected muscle detail */}
@@ -19359,17 +19356,17 @@ function BodyMapView() {
         <div className="display text-lg font-semibold text-amber-400 mb-3 capitalize">{MUSCLE_LABELS[selected] || selected}</div>
 
         {/* Volume */}
-        <div className="bg-stone-900/40 border border-stone-800 rounded-lg p-3 mb-3">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-2">Weekly volume · working sets</div>
+        <div className="bg-stone-900 border border-stone-800 rounded-lg p-3 mb-3">
+          <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-2">Weekly volume · working sets</div>
           <div className="space-y-2.5">
             {detailMuscles.map((m, i) => volBar(m, i === 0))}
           </div>
-          {volHint && <div className="text-[11px] mono text-stone-500 mt-2.5">{volHint}</div>}
+          {volHint && <div className="text-[12px] mono text-stone-500 mt-2.5">{volHint}</div>}
         </div>
 
         {/* Driving lifts */}
-        <div className="bg-stone-900/40 border border-stone-800 rounded-lg p-3 mb-3">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-2">Driving this · last 7 days</div>
+        <div className="bg-stone-900 border border-stone-800 rounded-lg p-3 mb-3">
+          <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-2">Driving this · last 7 days</div>
           {zoneLifts.length > 0 ? (
             <div className="space-y-1">
               {zoneLifts.map((l) => (
@@ -19385,8 +19382,8 @@ function BodyMapView() {
         </div>
 
         {/* Segment context */}
-        <div className="bg-stone-900/40 border border-stone-800 rounded-lg p-3">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-2">InBody context</div>
+        <div className="bg-stone-900 border border-stone-800 rounded-lg p-3">
+          <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-2">InBody context</div>
           {segCtx.empty ? (
             <div className="text-xs mono text-stone-500 py-1">{segCtx.empty}</div>
           ) : segCtx.note ? (
@@ -19397,13 +19394,13 @@ function BodyMapView() {
               const pct = r != null && l != null && Math.max(r, l) > 0 ? Math.round((Math.abs(r - l) / Math.max(r, l)) * 100) : null;
               return (
                 <div>
-                  <div className="text-[10px] mono uppercase tracking-wider text-stone-600 mb-1.5">{segCtx.label} · lean mass</div>
+                  <div className="text-[11px] mono uppercase tracking-wider text-stone-600 mb-1.5">{segCtx.label} · lean mass</div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div><span className="text-[10px] mono text-stone-500">Right </span><span className="mono tabular text-stone-100">{r != null ? r.toFixed(1) : '—'}<span className="text-[10px] text-stone-500"> lb</span></span></div>
-                    <div><span className="text-[10px] mono text-stone-500">Left </span><span className="mono tabular text-stone-100">{l != null ? l.toFixed(1) : '—'}<span className="text-[10px] text-stone-500"> lb</span></span></div>
+                    <div><span className="text-[11px] mono text-stone-500">Right </span><span className="mono tabular text-stone-100">{r != null ? r.toFixed(1) : '—'}<span className="text-[11px] text-stone-500"> lb</span></span></div>
+                    <div><span className="text-[11px] mono text-stone-500">Left </span><span className="mono tabular text-stone-100">{l != null ? l.toFixed(1) : '—'}<span className="text-[11px] text-stone-500"> lb</span></span></div>
                   </div>
                   {pct != null && (
-                    <div className={`text-[11px] mono mt-2 ${pct >= 8 ? 'text-rose-300' : 'text-stone-400'}`}>
+                    <div className={`text-[12px] mono mt-2 ${pct >= 8 ? 'text-rose-300' : 'text-stone-400'}`}>
                       {pct === 0 ? 'Left and right are balanced.' : `${r > l ? 'Right' : 'Left'} side is ${pct}% larger${pct >= 8 ? ' — worth some single-side work.' : ' — within normal range.'}`}
                     </div>
                   )}
@@ -19413,12 +19410,12 @@ function BodyMapView() {
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <div className="text-[10px] mono uppercase tracking-wider text-stone-600 mb-0.5">Lean mass</div>
-                <div className="mono tabular text-stone-100">{segCtx.lean != null ? segCtx.lean.toFixed(1) : '—'}<span className="text-[10px] text-stone-500"> lb</span></div>
+                <div className="text-[11px] mono uppercase tracking-wider text-stone-600 mb-0.5">Lean mass</div>
+                <div className="mono tabular text-stone-100">{segCtx.lean != null ? segCtx.lean.toFixed(1) : '—'}<span className="text-[11px] text-stone-500"> lb</span></div>
               </div>
               <div>
-                <div className="text-[10px] mono uppercase tracking-wider text-stone-600 mb-0.5">Fat mass</div>
-                <div className="mono tabular text-stone-100">{segCtx.fat != null ? segCtx.fat.toFixed(1) : '—'}<span className="text-[10px] text-stone-500"> lb</span></div>
+                <div className="text-[11px] mono uppercase tracking-wider text-stone-600 mb-0.5">Fat mass</div>
+                <div className="mono tabular text-stone-100">{segCtx.fat != null ? segCtx.fat.toFixed(1) : '—'}<span className="text-[11px] text-stone-500"> lb</span></div>
               </div>
             </div>
           )}
@@ -19427,7 +19424,7 @@ function BodyMapView() {
 
       {/* Biomarkers with trend graphs */}
       <div className="mb-4">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-2">What your numbers mean</div>
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-2">What your numbers mean</div>
         <div className="space-y-1.5">
           {BIOMARKERS.map((b) => {
             const val = L ? _bnum(L[b.key]) : null;
@@ -19436,7 +19433,7 @@ function BodyMapView() {
               .map((s) => ({ value: _bnum(s[b.key]), date: s.date }))
               .filter((p) => p.value != null);
             return (
-              <div key={b.key} className="bg-stone-900/40 border border-stone-800 rounded-lg overflow-hidden">
+              <div key={b.key} className="bg-stone-900 border border-stone-800 rounded-lg overflow-hidden">
                 <button
                   onClick={() => setOpenBio(isOpen ? null : b.key)}
                   className="w-full flex items-center justify-between px-3 py-2.5 text-left"
@@ -19448,12 +19445,12 @@ function BodyMapView() {
                   </span>
                 </button>
                 {isOpen && (
-                  <div className="px-3 pb-3 border-t border-stone-800/60 pt-2">
+                  <div className="px-3 pb-3 border-t border-stone-800 pt-2">
                     <div className="text-xs text-stone-400 leading-relaxed mb-2">{b.explain}</div>
                     {series.length >= 2 ? (
                       <MiniChart data={series} label={`${b.label} over time`} unit={b.unit} color="#fbbf24" />
                     ) : (
-                      <div className="text-[11px] mono text-stone-600">
+                      <div className="text-[12px] mono text-stone-600">
                         {series.length === 1 ? 'Only one scan with this value so far — add another to see a trend.' : 'No values logged for this yet.'}
                       </div>
                     )}
@@ -19473,7 +19470,7 @@ function BodyView() {
 
   return (
     <div>
-      <div className="flex gap-1 mb-4 bg-stone-900/60 border border-stone-800 rounded-lg p-1">
+      <div className="flex gap-1 mb-4 bg-stone-900 border border-stone-800 rounded-lg p-1">
         {[
           { id: 'map', label: 'Map' },
           { id: 'measurements', label: 'Measure' },
@@ -19483,7 +19480,7 @@ function BodyView() {
           <button
             key={s.id}
             onClick={() => setSubtab(s.id)}
-            className={`flex-1 mono text-[10px] uppercase tracking-wider py-2 rounded-md transition-colors ${
+            className={`flex-1 mono text-[11px] py-2 rounded-md transition-colors ${
               subtab === s.id ? 'bg-stone-800 text-amber-400' : 'text-stone-500'
             }`}
           >
@@ -19607,14 +19604,14 @@ function MeasurementsView() {
   return (
     <div>
       <div className="bg-gradient-to-br from-amber-400/10 via-stone-900 to-stone-900 border border-stone-800 rounded-xl p-5 mb-5">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-1">Current</div>
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-1">Current</div>
         <div className="flex items-baseline gap-3">
           <div className="display text-5xl font-semibold tabular">{latest?.weight?.toFixed(1) || '—'}</div>
           <div className="text-stone-500 mono text-sm">lbs</div>
           {latest?.bf && <div className="text-stone-400 mono text-sm ml-2">· {latest.bf}% BF</div>}
         </div>
         <div className="mt-4">
-          <div className="flex justify-between text-[10px] uppercase tracking-wider mono text-stone-500 mb-1.5">
+          <div className="flex justify-between text-[11px] uppercase tracking-wider mono text-stone-500 mb-1.5">
             <span>{baseline} lb · baseline</span>
             <span>{target} lb · target</span>
           </div>
@@ -19641,7 +19638,7 @@ function MeasurementsView() {
 
       {/* Milestones */}
       <div className="mb-5">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-2">Milestones</div>
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-2">Milestones</div>
         {MILESTONES.map((m) => {
           const past = new Date(m.date) < new Date();
           const hit = latest && latest.weight <= m.weight;
@@ -19654,7 +19651,7 @@ function MeasurementsView() {
                   <div className="text-xs text-stone-500">{m.weight} lb · ~{m.bf}% BF</div>
                 </div>
               </div>
-              {hit && <span className="text-[10px] mono text-emerald-400">HIT</span>}
+              {hit && <span className="text-[11px] mono text-emerald-400">Hit</span>}
             </div>
           );
         })}
@@ -19665,12 +19662,12 @@ function MeasurementsView() {
 
       {/* Entries list */}
       <div className="flex items-center justify-between mb-2 mt-5">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">Log</div>
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">Log</div>
         <button
           onClick={() => setShowAdd(!showAdd)}
           className="text-xs mono text-amber-400 flex items-center gap-1 hover:text-amber-300"
         >
-          <Plus size={12} /> ENTRY
+          <Plus size={12} /> Entry
         </button>
       </div>
 
@@ -19688,7 +19685,7 @@ function MeasurementsView() {
             <LabeledInput label="Thigh" type="number" value={form.thigh} onChange={(v) => setForm({ ...form, thigh: v })} />
           </div>
           <button onClick={addEntry} className="w-full bg-amber-400 text-stone-950 font-semibold mono text-xs py-2 rounded mt-2 hover:bg-amber-300">
-            SAVE
+            Save
           </button>
         </div>
       )}
@@ -19699,11 +19696,11 @@ function MeasurementsView() {
           return (
             <div
               key={e.date}
-              className={`rounded ${isEditing ? 'bg-stone-900 border border-stone-800' : 'bg-stone-900/40 border border-stone-900'}`}
+              className={`rounded ${isEditing ? 'bg-stone-900 border border-stone-800' : 'bg-stone-900 border border-stone-900'}`}
             >
               <button
                 onClick={() => (isEditing ? cancelEdit() : startEdit(e))}
-                className="w-full flex items-center justify-between py-2 px-3 hover:bg-stone-900/60 text-left"
+                className="w-full flex items-center justify-between py-2 px-3 hover:bg-stone-900 text-left"
               >
                 <div className="text-xs mono text-stone-400">{fmtDate(e.date)}</div>
                 <div className="flex items-center gap-3 text-xs mono tabular">
@@ -19735,13 +19732,13 @@ function MeasurementsView() {
                       onClick={saveEdit}
                       className="flex-1 bg-amber-400 text-stone-950 font-semibold mono text-xs py-2 rounded hover:bg-amber-300"
                     >
-                      SAVE
+                      Save
                     </button>
                     <button
                       onClick={cancelEdit}
                       className="px-3 bg-stone-800 text-stone-300 mono text-xs py-2 rounded hover:bg-stone-700"
                     >
-                      CANCEL
+                      Cancel
                     </button>
                     <button
                       onClick={deleteEntry}
@@ -19751,7 +19748,7 @@ function MeasurementsView() {
                           : 'bg-stone-800 text-rose-400 hover:bg-stone-700'
                       }`}
                     >
-                      {confirmDelete ? 'TAP TO CONFIRM' : <Trash2 size={12} />}
+                      {confirmDelete ? 'Tap to confirm' : <Trash2 size={12} />}
                     </button>
                   </div>
                 </div>
@@ -19767,7 +19764,7 @@ function MeasurementsView() {
 function LabeledInput({ label, type = 'text', value, onChange, placeholder }) {
   return (
     <div className="min-w-0">
-      <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1">{label}</div>
+      <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1">{label}</div>
       <input
         type={type}
         value={value}
@@ -19801,14 +19798,14 @@ function WeightChart({ data }) {
 
   return (
     <div className="bg-stone-900 border border-stone-800 rounded-lg p-4 mb-5">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-3">Weight Trend · 7-day avg</div>
+      <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-3">Weight Trend · 7-day avg</div>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
         <polyline points={trendPoints} fill="none" stroke="#fbbf24" strokeWidth="1.5" />
         {points.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r="2" fill="#78716c" />
+          <circle key={i} cx={p.x} cy={p.y} r="2" fill="#8E8E93" />
         ))}
       </svg>
-      <div className="flex justify-between text-[10px] mono text-stone-600 mt-1 tabular">
+      <div className="flex justify-between text-[11px] mono text-stone-600 mt-1 tabular">
         <span>{max.toFixed(0)} lb</span>
         <span>{min.toFixed(0)} lb</span>
       </div>
@@ -20222,8 +20219,8 @@ IMPORTANT:
         return (
           <div className="bg-gradient-to-br from-amber-400/10 via-stone-900 to-stone-900 border border-stone-800 rounded-xl p-5 mb-4">
             <div className="flex items-center justify-between mb-3">
-              <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">Latest Metrics</div>
-              <div className="text-[10px] mono text-stone-400">{fmtDateLong(latest.date)}</div>
+              <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">Latest Metrics</div>
+              <div className="text-[11px] mono text-stone-400">{fmtDateLong(latest.date)}</div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <ScanMetric label="Weight" value={latest.weight} unit="lb"
@@ -20275,12 +20272,12 @@ IMPORTANT:
 
       {/* Add button */}
       <div className="flex items-center justify-between mb-2 mt-5">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">All Scans · {scans.length}</div>
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">All Scans · {scans.length}</div>
         <button
           onClick={() => { resetForm(); setShowAdd(true); }}
           className="text-xs mono text-amber-400 flex items-center gap-1 hover:text-amber-300"
         >
-          <Plus size={12} /> NEW SCAN
+          <Plus size={12} /> New scan
         </button>
       </div>
 
@@ -20299,14 +20296,14 @@ IMPORTANT:
               <div className="relative">
                 <img src={form.photoDataUrl} className="w-full max-h-64 object-contain rounded bg-stone-950" />
                 <div className="absolute inset-0 bg-stone-950/0 hover:bg-stone-950/40 transition-colors rounded flex items-center justify-center opacity-0 hover:opacity-100">
-                  <div className="text-xs mono text-stone-200">TAP TO CHANGE</div>
+                  <div className="text-xs mono text-stone-200">Tap to change</div>
                 </div>
               </div>
             ) : (
               <div className="bg-stone-950 border border-dashed border-stone-700 rounded-lg p-5 text-center cursor-pointer hover:border-amber-400 transition-colors">
                 <FileImage size={22} className="mx-auto text-stone-600 mb-2" />
-                <div className="text-xs mono text-stone-400">UPLOAD SCAN PHOTO</div>
-                <div className="text-[10px] mono text-stone-600 mt-1">Auto-extracts scan date and all metrics</div>
+                <div className="text-xs mono text-stone-400">Upload scan photo</div>
+                <div className="text-[11px] mono text-stone-600 mt-1">Auto-extracts scan date and all metrics</div>
               </div>
             )}
           </label>
@@ -20327,7 +20324,7 @@ IMPORTANT:
           <div className="mb-3">
             <div className="flex items-end gap-2">
               <div className="flex-1">
-                <label className="text-[10px] uppercase tracking-[0.2em] text-amber-400 mono mb-1 block">Scan Date</label>
+                <label className="text-[11px] uppercase tracking-wider text-amber-400 mono mb-1 block">Scan Date</label>
                 <input
                   type="date"
                   value={form.date}
@@ -20337,7 +20334,7 @@ IMPORTANT:
               </div>
             </div>
             {form.date === today() && !editingScan && (
-              <div className="mt-1.5 text-[10px] mono text-amber-400/80 flex items-start gap-1.5">
+              <div className="mt-1.5 text-[11px] mono text-amber-400/80 flex items-start gap-1.5">
                 <Info size={11} className="flex-shrink-0 mt-0.5" />
                 <span>This defaults to today. If the scan is from a different day, set the actual date above so it sorts correctly.</span>
               </div>
@@ -20354,7 +20351,7 @@ IMPORTANT:
           <button
             type="button"
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="w-full text-[10px] mono uppercase tracking-wider text-stone-400 hover:text-amber-400 py-2 flex items-center justify-center gap-1.5"
+            className="w-full text-[11px] mono text-stone-400 hover:text-amber-400 py-2 flex items-center justify-center gap-1.5"
           >
             <ChevronRight size={11} className={`transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
             {showAdvanced ? 'Hide' : 'Show'} all InBody fields
@@ -20363,7 +20360,7 @@ IMPORTANT:
           {showAdvanced && (
             <>
               {/* Body composition */}
-              <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1.5 mt-1">Body Composition (lb)</div>
+              <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1.5 mt-1">Body Composition (lb)</div>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <LabeledInput label="Intracellular Water" type="number" value={form.intracellularWater} onChange={(v) => setForm({ ...form, intracellularWater: v })} />
                 <LabeledInput label="Extracellular Water" type="number" value={form.extracellularWater} onChange={(v) => setForm({ ...form, extracellularWater: v })} />
@@ -20374,7 +20371,7 @@ IMPORTANT:
               </div>
 
               {/* Segmental lean */}
-              <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1.5">Segmental Lean (lb)</div>
+              <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1.5">Segmental Lean (lb)</div>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <LabeledInput label="L Arm" type="number" value={form.leanLeftArm} onChange={(v) => setForm({ ...form, leanLeftArm: v })} />
                 <LabeledInput label="R Arm" type="number" value={form.leanRightArm} onChange={(v) => setForm({ ...form, leanRightArm: v })} />
@@ -20385,7 +20382,7 @@ IMPORTANT:
               </div>
 
               {/* Segmental fat */}
-              <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1.5">Segmental Fat (lb)</div>
+              <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1.5">Segmental Fat (lb)</div>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <LabeledInput label="L Arm" type="number" value={form.fatLeftArm} onChange={(v) => setForm({ ...form, fatLeftArm: v })} />
                 <LabeledInput label="R Arm" type="number" value={form.fatRightArm} onChange={(v) => setForm({ ...form, fatRightArm: v })} />
@@ -20396,7 +20393,7 @@ IMPORTANT:
               </div>
 
               {/* Indices & research */}
-              <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1.5">Indices</div>
+              <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1.5">Indices</div>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <LabeledInput label="InBody Score" type="number" value={form.inbodyScore} onChange={(v) => setForm({ ...form, inbodyScore: v })} />
                 <LabeledInput label="SMI (kg/m²)" type="number" value={form.smi} onChange={(v) => setForm({ ...form, smi: v })} />
@@ -20411,7 +20408,7 @@ IMPORTANT:
             </>
           )}
           <div className="mb-2">
-            <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1">Notes (optional)</div>
+            <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1">Notes (optional)</div>
             <input
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
@@ -20420,17 +20417,17 @@ IMPORTANT:
             />
           </div>
           {saveError && (
-            <div className="bg-rose-400/10 border border-rose-400/30 rounded px-3 py-2 text-[11px] text-rose-300 mt-2">
+            <div className="bg-rose-400/10 border border-rose-400/30 rounded px-3 py-2 text-[12px] text-rose-300 mt-2">
               {saveError}
             </div>
           )}
           {saveSuccess && (
-            <div className="bg-emerald-400/10 border border-emerald-400/30 rounded px-3 py-2 text-[11px] text-emerald-300 mt-2 flex items-center gap-1.5">
+            <div className="bg-emerald-400/10 border border-emerald-400/30 rounded px-3 py-2 text-[12px] text-emerald-300 mt-2 flex items-center gap-1.5">
               <Check size={12} /> Scan saved.
             </div>
           )}
           <button onClick={saveScan} className="w-full bg-amber-400 text-stone-950 font-semibold mono text-xs py-2 rounded mt-2 hover:bg-amber-300">
-            {editingScan ? 'UPDATE' : 'SAVE SCAN'}
+            {editingScan ? 'Update' : 'Save scan'}
           </button>
         </div>
       )}
@@ -20441,7 +20438,7 @@ IMPORTANT:
           const isBaseline = s.id === scans[0]?.id;
           const isLatest = s.id === scans[scans.length - 1]?.id && scans.length > 1;
           return (
-          <div key={s.key} className="bg-stone-900/40 border border-stone-900 rounded-lg overflow-hidden">
+          <div key={s.key} className="bg-stone-900 border border-stone-900 rounded-lg overflow-hidden">
             <div className="flex">
               {s.photoDataUrl && (
                 <button onClick={() => setViewingPhoto(s)} className="flex-shrink-0">
@@ -20452,8 +20449,8 @@ IMPORTANT:
                 <div className="flex items-start justify-between mb-1">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <div className="text-xs mono text-stone-300">{fmtDateLong(s.date)}</div>
-                    {isLatest && <span className="text-[8px] mono text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded">LATEST</span>}
-                    {isBaseline && scans.length > 1 && <span className="text-[8px] mono text-stone-400 bg-stone-800 px-1 py-0.5 rounded">BASELINE</span>}
+                    {isLatest && <span className="text-[8px] mono text-amber-400 bg-amber-400/10 px-1 py-0.5 rounded">Latest</span>}
+                    {isBaseline && scans.length > 1 && <span className="text-[8px] mono text-stone-400 bg-stone-800 px-1 py-0.5 rounded">Baseline</span>}
                   </div>
                   <div className="flex gap-1">
                     <button onClick={() => editScan(s)} className="text-stone-600 hover:text-amber-400 p-0.5">
@@ -20464,13 +20461,13 @@ IMPORTANT:
                     </button>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] mono tabular">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[12px] mono tabular">
                   <span className="text-stone-500">Weight: <span className="text-stone-300">{s.weight} lb</span></span>
                   {s.smm && <span className="text-stone-500">SMM: <span className="text-stone-300">{s.smm} lb</span></span>}
                   {s.bf && <span className="text-stone-500">BF: <span className="text-stone-300">{s.bf}%</span></span>}
                   {s.visceralFat && <span className="text-stone-500">VF: <span className="text-stone-300">{s.visceralFat}</span></span>}
                 </div>
-                {s.notes && <div className="text-[10px] text-stone-500 mt-1 truncate">{s.notes}</div>}
+                {s.notes && <div className="text-[11px] text-stone-500 mt-1 truncate">{s.notes}</div>}
               </div>
             </div>
           </div>
@@ -20481,7 +20478,7 @@ IMPORTANT:
       {/* Photo viewer modal */}
       {viewingPhoto && (
         <div
-          className="fixed inset-0 bg-stone-950/95 z-50 flex items-center justify-center p-4"
+          className="ios-backdrop fixed inset-0 bg-stone-950/95 z-50 flex items-center justify-center p-4"
           onClick={() => setViewingPhoto(null)}
         >
           <button className="absolute top-4 right-4 text-stone-300 z-10">
@@ -20496,27 +20493,27 @@ IMPORTANT:
 
 function ScanMetric({ label, value, unit, delta, positiveIsGood, staleDate }) {
   if (value == null) return (
-    <div className="bg-stone-900/40 rounded-lg p-3">
-      <div className="text-[10px] uppercase tracking-wider mono text-stone-500">{label}</div>
+    <div className="bg-stone-900 rounded-lg p-3">
+      <div className="text-[11px] uppercase tracking-wider mono text-stone-500">{label}</div>
       <div className="text-stone-600 mono">—</div>
     </div>
   );
   const isGood = delta != null && ((delta > 0 && positiveIsGood) || (delta < 0 && !positiveIsGood));
   const deltaColor = delta == null || delta === 0 ? 'text-stone-500' : isGood ? 'text-emerald-400' : 'text-rose-400';
   return (
-    <div className="bg-stone-900/40 rounded-lg p-3">
+    <div className="bg-stone-900 rounded-lg p-3">
       <div className="flex items-baseline justify-between gap-1 mb-1">
-        <div className="text-[10px] uppercase tracking-wider mono text-stone-500">{label}</div>
+        <div className="text-[11px] uppercase tracking-wider mono text-stone-500">{label}</div>
         {staleDate && (
-          <div className="text-[9px] mono text-stone-600 tabular">{fmtDate(staleDate)}</div>
+          <div className="text-[11px] mono text-stone-600 tabular">{fmtDate(staleDate)}</div>
         )}
       </div>
       <div className="flex items-baseline gap-1.5">
         <div className={`display text-2xl font-semibold tabular ${staleDate ? 'text-stone-400' : ''}`}>{value}</div>
-        <div className="text-[10px] mono text-stone-500">{unit}</div>
+        <div className="text-[11px] mono text-stone-500">{unit}</div>
       </div>
       {delta != null && delta !== 0 && (
-        <div className={`text-[10px] mono tabular mt-0.5 ${deltaColor} flex items-center gap-0.5`}>
+        <div className={`text-[11px] mono tabular mt-0.5 ${deltaColor} flex items-center gap-0.5`}>
           {delta > 0 ? <ArrowUp size={9} /> : <ArrowDown size={9} />}
           {Math.abs(delta).toFixed(1)}{unit}
         </div>
@@ -20604,10 +20601,10 @@ function ScanScrubber({ scans, selectedIndex, onChange }) {
   return (
     <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-4">
       <div className="flex items-center justify-between mb-3">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">Timeline</div>
-        <div className="text-[10px] mono text-stone-400 tabular">
-          {isBaseline && <span className="text-stone-500">BASELINE · </span>}
-          {isLatest && !isBaseline && <span className="text-amber-400">LATEST · </span>}
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">Timeline</div>
+        <div className="text-[11px] mono text-stone-400 tabular">
+          {isBaseline && <span className="text-stone-500">Baseline · </span>}
+          {isLatest && !isBaseline && <span className="text-amber-400">Latest · </span>}
           {fmtDateLong(sel.date)}
         </div>
       </div>
@@ -20625,14 +20622,14 @@ function ScanScrubber({ scans, selectedIndex, onChange }) {
         {/* Tick labels */}
         <div className="flex justify-between mt-2">
           {scans.map((s, i) => (
-            <div key={s.id} className={`text-[9px] mono tabular ${i === selectedIndex ? 'text-amber-400' : 'text-stone-600'}`}>
+            <div key={s.id} className={`text-[11px] mono tabular ${i === selectedIndex ? 'text-amber-400' : 'text-stone-600'}`}>
               {fmtDate(s.date)}
             </div>
           ))}
         </div>
       </div>
       {selectedIndex > 0 && (
-        <div className="mt-3 pt-3 border-t border-stone-800 grid grid-cols-4 gap-2 text-[10px] mono">
+        <div className="mt-3 pt-3 border-t border-stone-800 grid grid-cols-4 gap-2 text-[11px] mono">
           {(() => {
             const prev = scans[selectedIndex - 1];
             const deltas = [
@@ -20645,7 +20642,7 @@ function ScanScrubber({ scans, selectedIndex, onChange }) {
               if (cur == null || prev == null) {
                 return (
                   <div key={label} className="text-center">
-                    <div className="text-stone-600 text-[9px]">{label}</div>
+                    <div className="text-stone-600 text-[11px]">{label}</div>
                     <div className="text-stone-700">—</div>
                   </div>
                 );
@@ -20655,7 +20652,7 @@ function ScanScrubber({ scans, selectedIndex, onChange }) {
               const color = d === 0 ? 'text-stone-500' : isGood ? 'text-emerald-400' : 'text-rose-400';
               return (
                 <div key={label} className="text-center">
-                  <div className="text-stone-600 text-[9px]">{label}</div>
+                  <div className="text-stone-600 text-[11px]">{label}</div>
                   <div className={`${color} tabular`}>{d > 0 ? '+' : ''}{d.toFixed(1)}{unit}</div>
                 </div>
               );
@@ -20692,7 +20689,7 @@ function BodyCompositionDonut({ scan }) {
 
   return (
     <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-4">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-3 flex items-center justify-between">
+      <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-3 flex items-center justify-between">
         <span>Body Composition</span>
         <span className="text-stone-600 normal-case tracking-normal">{fmtDate(scan.date)}</span>
       </div>
@@ -20712,8 +20709,8 @@ function BodyCompositionDonut({ scan }) {
           <CompRow color="#0ea5e9" label="Total Body Water" value={water} pct={waterPct} />
           <CompRow color="#34d399" label="Dry Lean Mass" value={dryLean} pct={dryLeanPct} />
           <CompRow color="#fb7185" label="Body Fat Mass" value={fat} pct={fatPct} />
-          <div className="pt-2 border-t border-stone-800 flex justify-between text-[11px] mono">
-            <span className="text-stone-500">FAT-FREE MASS</span>
+          <div className="pt-2 border-t border-stone-800 flex justify-between text-[12px] mono">
+            <span className="text-stone-500">Fat-free mass</span>
             <span className="text-emerald-400 tabular">{(water + dryLean).toFixed(1)} lb</span>
           </div>
         </div>
@@ -20727,7 +20724,7 @@ function CompRow({ color, label, value, pct }) {
     <div className="flex items-center gap-2">
       <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
       <div className="flex-1 min-w-0">
-        <div className="text-[10px] mono uppercase tracking-wider text-stone-500 truncate">{label}</div>
+        <div className="text-[11px] mono uppercase tracking-wider text-stone-500 truncate">{label}</div>
         <div className="text-xs mono tabular text-stone-200">
           {value.toFixed(1)} lb <span className="text-stone-500">· {pct.toFixed(1)}%</span>
         </div>
@@ -20746,7 +20743,7 @@ function SegmentalBodyDiagram({ scan }) {
 
   return (
     <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-4">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-3 flex items-center justify-between">
+      <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-3 flex items-center justify-between">
         <span>Segmental Distribution</span>
         <span className="text-stone-600 normal-case tracking-normal">{fmtDate(scan.date)}</span>
       </div>
@@ -20803,19 +20800,19 @@ function BodySilhouette({ title, leftArm, rightArm, trunk, leftLeg, rightLeg, co
   // Body silhouette as SVG paths (simplified human form)
   return (
     <div className="bg-stone-950/50 rounded-lg p-3">
-      <div className="text-[10px] mono uppercase tracking-wider text-stone-400 text-center mb-2">{title}</div>
+      <div className="text-[11px] mono uppercase tracking-wider text-stone-400 text-center mb-2">{title}</div>
       <svg viewBox="0 0 120 180" className="w-full h-auto" style={{ maxHeight: '200px' }}>
         {/* Head */}
-        <circle cx="60" cy="18" r="11" fill="#44403c" stroke="#57534e" strokeWidth="0.5" />
+        <circle cx="60" cy="18" r="11" fill="#3A3A3C" stroke="#636366" strokeWidth="0.5" />
 
         {/* Trunk */}
         <path
           d="M 45 32 Q 45 30 48 30 L 72 30 Q 75 30 75 32 L 78 80 Q 78 88 70 88 L 50 88 Q 42 88 42 80 Z"
           fill={getColor(trunk)}
-          stroke="#57534e"
+          stroke="#636366"
           strokeWidth="0.5"
         />
-        <text x="60" y="62" textAnchor="middle" fill="#fafaf9" fontSize="9" fontFamily="monospace" fontWeight="600">
+        <text x="60" y="62" textAnchor="middle" fill="#FFFFFF" fontSize="9" fontFamily="-apple-system, system-ui, sans-serif" fontWeight="600">
           {trunk.toFixed(1)}
         </text>
 
@@ -20823,10 +20820,10 @@ function BodySilhouette({ title, leftArm, rightArm, trunk, leftLeg, rightLeg, co
         <path
           d="M 42 34 Q 32 38 28 50 L 26 78 Q 25 86 30 86 L 34 86 Q 38 84 38 78 L 40 50 Q 42 40 42 34 Z"
           fill={getColor(leftArm)}
-          stroke="#57534e"
+          stroke="#636366"
           strokeWidth="0.5"
         />
-        <text x="32" y="62" textAnchor="middle" fill="#fafaf9" fontSize="7" fontFamily="monospace" fontWeight="600">
+        <text x="32" y="62" textAnchor="middle" fill="#FFFFFF" fontSize="7" fontFamily="-apple-system, system-ui, sans-serif" fontWeight="600">
           {leftArm.toFixed(1)}
         </text>
 
@@ -20834,10 +20831,10 @@ function BodySilhouette({ title, leftArm, rightArm, trunk, leftLeg, rightLeg, co
         <path
           d="M 78 34 Q 88 38 92 50 L 94 78 Q 95 86 90 86 L 86 86 Q 82 84 82 78 L 80 50 Q 78 40 78 34 Z"
           fill={getColor(rightArm)}
-          stroke="#57534e"
+          stroke="#636366"
           strokeWidth="0.5"
         />
-        <text x="88" y="62" textAnchor="middle" fill="#fafaf9" fontSize="7" fontFamily="monospace" fontWeight="600">
+        <text x="88" y="62" textAnchor="middle" fill="#FFFFFF" fontSize="7" fontFamily="-apple-system, system-ui, sans-serif" fontWeight="600">
           {rightArm.toFixed(1)}
         </text>
 
@@ -20845,10 +20842,10 @@ function BodySilhouette({ title, leftArm, rightArm, trunk, leftLeg, rightLeg, co
         <path
           d="M 50 88 L 46 88 Q 42 90 42 96 L 44 165 Q 44 172 50 172 L 56 172 Q 60 170 60 165 L 60 96 Q 60 90 56 88 Z"
           fill={getColor(leftLeg)}
-          stroke="#57534e"
+          stroke="#636366"
           strokeWidth="0.5"
         />
-        <text x="51" y="135" textAnchor="middle" fill="#fafaf9" fontSize="8" fontFamily="monospace" fontWeight="600">
+        <text x="51" y="135" textAnchor="middle" fill="#FFFFFF" fontSize="8" fontFamily="-apple-system, system-ui, sans-serif" fontWeight="600">
           {leftLeg.toFixed(1)}
         </text>
 
@@ -20856,14 +20853,14 @@ function BodySilhouette({ title, leftArm, rightArm, trunk, leftLeg, rightLeg, co
         <path
           d="M 70 88 L 64 88 Q 60 90 60 96 L 60 165 Q 60 170 64 172 L 70 172 Q 76 172 76 165 L 78 96 Q 78 90 74 88 Z"
           fill={getColor(rightLeg)}
-          stroke="#57534e"
+          stroke="#636366"
           strokeWidth="0.5"
         />
-        <text x="69" y="135" textAnchor="middle" fill="#fafaf9" fontSize="8" fontFamily="monospace" fontWeight="600">
+        <text x="69" y="135" textAnchor="middle" fill="#FFFFFF" fontSize="8" fontFamily="-apple-system, system-ui, sans-serif" fontWeight="600">
           {rightLeg.toFixed(1)}
         </text>
       </svg>
-      <div className="text-[9px] mono text-stone-600 text-center mt-1 tabular">
+      <div className="text-[11px] mono text-stone-600 text-center mt-1 tabular">
         {unit} · L/R from your perspective
       </div>
     </div>
@@ -20907,7 +20904,7 @@ function SymmetryCallouts({ scan }) {
 
   return (
     <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-4">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-3 flex items-center justify-between">
+      <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-3 flex items-center justify-between">
         <span>Symmetry Check</span>
         <span className="text-stone-600 normal-case tracking-normal">{fmtDate(scan.date)}</span>
       </div>
@@ -20918,11 +20915,11 @@ function SymmetryCallouts({ scan }) {
             <div key={c.label} className="bg-stone-950/50 rounded-lg p-3">
               <div className="flex items-center justify-between mb-1">
                 <div className="text-xs text-stone-300">{c.label}</div>
-                <div className={`text-[10px] mono font-semibold ${flag ? 'text-amber-400' : 'text-emerald-400'}`}>
+                <div className={`text-[11px] mono font-semibold ${flag ? 'text-amber-400' : 'text-emerald-400'}`}>
                   {flag ? '⚠ ASYMMETRIC' : '✓ BALANCED'}
                 </div>
               </div>
-              <div className="text-[11px] mono text-stone-500 tabular mb-1.5">{c.values}</div>
+              <div className="text-[12px] mono text-stone-500 tabular mb-1.5">{c.values}</div>
               <div className="relative h-1.5 bg-stone-800 rounded-full overflow-hidden">
                 <div
                   className={`absolute top-0 h-full ${flag ? 'bg-amber-400' : 'bg-emerald-400'}`}
@@ -20934,7 +20931,7 @@ function SymmetryCallouts({ scan }) {
                 />
                 <div className="absolute top-0 left-1/2 w-px h-full bg-stone-600" />
               </div>
-              <div className="flex justify-between text-[9px] mono text-stone-600 mt-1">
+              <div className="flex justify-between text-[11px] mono text-stone-600 mt-1">
                 <span>L</span>
                 <span className="text-stone-400">{c.pct.toFixed(1)}% off · {c.stronger} stronger</span>
                 <span>R</span>
@@ -20943,7 +20940,7 @@ function SymmetryCallouts({ scan }) {
           );
         })}
       </div>
-      <div className="text-[10px] mono text-stone-500 mt-2 leading-relaxed">
+      <div className="text-[11px] mono text-stone-500 mt-2 leading-relaxed">
         Threshold: 5%. Differences below this are within normal variation. Above suggests addressing with unilateral work.
       </div>
     </div>
@@ -20979,40 +20976,40 @@ function VisceralFatGauge({ scan }) {
 
   return (
     <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-4">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-3 flex items-center justify-between">
+      <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-3 flex items-center justify-between">
         <span>Visceral Fat Level</span>
         <span className="text-stone-600 normal-case tracking-normal">{fmtDate(scan.date)}</span>
       </div>
       <div className="relative">
         <svg viewBox="0 0 200 130" className="w-full h-auto">
           {/* Zones: 1-9 emerald, 10-14 amber, 15-20 rose */}
-          {arc(180, 180 + (9 / 20) * 180, '#1c1917')}
+          {arc(180, 180 + (9 / 20) * 180, '#1C1C1E')}
           {arc(180, 180 + (9 / 20) * 180, '#10b981')}
-          {arc(180 + (9 / 20) * 180, 180 + (14 / 20) * 180, '#1c1917')}
+          {arc(180 + (9 / 20) * 180, 180 + (14 / 20) * 180, '#1C1C1E')}
           {arc(180 + (9 / 20) * 180, 180 + (14 / 20) * 180, '#f59e0b')}
-          {arc(180 + (14 / 20) * 180, 360, '#1c1917')}
+          {arc(180 + (14 / 20) * 180, 360, '#1C1C1E')}
           {arc(180 + (14 / 20) * 180, 360, '#f43f5e')}
           {/* Needle */}
           {(() => {
             const p = polarToCartesian(valueAngle);
             return (
               <g>
-                <line x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="#fafaf9" strokeWidth="2" strokeLinecap="round" />
-                <circle cx={cx} cy={cy} r="4" fill="#fafaf9" />
+                <line x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
+                <circle cx={cx} cy={cy} r="4" fill="#FFFFFF" />
               </g>
             );
           })()}
           {/* Labels */}
-          <text x="30" y="118" fontSize="9" fontFamily="monospace" fill="#78716c" textAnchor="middle">1</text>
-          <text x="100" y="118" fontSize="9" fontFamily="monospace" fill="#78716c" textAnchor="middle">10</text>
-          <text x="170" y="118" fontSize="9" fontFamily="monospace" fill="#78716c" textAnchor="middle">20</text>
+          <text x="30" y="118" fontSize="9" fontFamily="-apple-system, system-ui, sans-serif" fill="#8E8E93" textAnchor="middle">1</text>
+          <text x="100" y="118" fontSize="9" fontFamily="-apple-system, system-ui, sans-serif" fill="#8E8E93" textAnchor="middle">10</text>
+          <text x="170" y="118" fontSize="9" fontFamily="-apple-system, system-ui, sans-serif" fill="#8E8E93" textAnchor="middle">20</text>
         </svg>
         <div className="absolute inset-x-0 bottom-3 text-center">
           <div className="display text-4xl font-semibold tabular text-stone-100">{val}</div>
-          <div className={`text-[10px] mono uppercase tracking-wider ${zoneColor}`}>{zone}</div>
+          <div className={`text-[11px] mono uppercase tracking-wider ${zoneColor}`}>{zone}</div>
         </div>
       </div>
-      <div className="text-[10px] mono text-stone-500 mt-2 leading-relaxed text-center">
+      <div className="text-[11px] mono text-stone-500 mt-2 leading-relaxed text-center">
         Healthy: 1-9 · Borderline: 10-14 · High: 15-20 · Target: ≤9
       </div>
     </div>
@@ -21034,7 +21031,7 @@ function BMIDial({ scan }) {
 
   return (
     <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-4">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-3 flex items-center justify-between">
+      <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-3 flex items-center justify-between">
         <span>BMI & Body Fat Zones</span>
         <span className="text-stone-600 normal-case tracking-normal">{fmtDate(scan.date)}</span>
       </div>
@@ -21082,12 +21079,12 @@ function ZoneBar({ label, value, unit, zones, rangeMin, rangeMax, zoneLabel, zon
   const valuePct = Math.max(0, Math.min(100, ((value - rangeMin) / range) * 100));
   return (
     <div className="bg-stone-950/50 rounded-lg p-3">
-      <div className="text-[10px] mono uppercase tracking-wider text-stone-500">{label}</div>
+      <div className="text-[11px] mono uppercase tracking-wider text-stone-500">{label}</div>
       <div className="flex items-baseline gap-1.5 mb-2">
         <div className="display text-2xl font-semibold tabular text-stone-100">{value.toFixed(1)}</div>
-        <div className="text-[10px] mono text-stone-500">{unit}</div>
+        <div className="text-[11px] mono text-stone-500">{unit}</div>
       </div>
-      <div className={`text-[10px] mono uppercase tracking-wider font-semibold mb-2 ${zoneColor}`}>{zoneLabel}</div>
+      <div className={`text-[11px] mono uppercase tracking-wider font-semibold mb-2 ${zoneColor}`}>{zoneLabel}</div>
       <div className="relative h-2 bg-stone-800 rounded-full overflow-hidden mb-1">
         <div className="absolute inset-0 flex">
           {zones.map((z, i) => {
@@ -21102,7 +21099,7 @@ function ZoneBar({ label, value, unit, zones, rangeMin, rangeMax, zoneLabel, zon
         <span>{rangeMin}</span>
         <span>{rangeMax}</span>
       </div>
-      <div className="text-[10px] mono text-stone-500 mt-1.5 leading-tight">{note}</div>
+      <div className="text-[11px] mono text-stone-500 mt-1.5 leading-tight">{note}</div>
     </div>
   );
 }
@@ -21138,8 +21135,8 @@ function RecompTrendChart({ scans }) {
   return (
     <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-4">
       <div className="flex items-center justify-between mb-3">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">Recomp Trend</div>
-        <div className="text-[10px] mono">
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">Recomp Trend</div>
+        <div className="text-[11px] mono">
           <span className={recompScore > 0 ? 'text-emerald-400' : 'text-rose-400'}>
             {recompScore > 0 ? '▲ RECOMP' : '▼ LOSING LEAN'}
           </span>
@@ -21155,7 +21152,7 @@ function RecompTrendChart({ scans }) {
       </svg>
       <div className="grid grid-cols-2 gap-2 mt-2">
         <div className="bg-stone-950/50 rounded p-2">
-          <div className="flex items-center gap-1.5 text-[10px] mono text-stone-500 uppercase">
+          <div className="flex items-center gap-1.5 text-[11px] mono text-stone-500 uppercase">
             <span className="w-2 h-2 rounded-full bg-emerald-400" />
             Lean (SMM)
           </div>
@@ -21167,7 +21164,7 @@ function RecompTrendChart({ scans }) {
           </div>
         </div>
         <div className="bg-stone-950/50 rounded p-2">
-          <div className="flex items-center gap-1.5 text-[10px] mono text-stone-500 uppercase">
+          <div className="flex items-center gap-1.5 text-[11px] mono text-stone-500 uppercase">
             <span className="w-2 h-2 rounded-full bg-rose-400" />
             Fat Mass
           </div>
@@ -21179,7 +21176,7 @@ function RecompTrendChart({ scans }) {
           </div>
         </div>
       </div>
-      <div className="text-[10px] mono text-stone-500 mt-2 leading-relaxed">
+      <div className="text-[11px] mono text-stone-500 mt-2 leading-relaxed">
         The key recomp metric: lean up + fat down = success. Crossing lines = the dream.
       </div>
     </div>
@@ -21196,13 +21193,13 @@ function ScanMetricsChart({ scans }) {
 
   return (
     <div className="bg-stone-900 border border-stone-800 rounded-lg p-4 mb-3">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-3">Scan Trends</div>
+      <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-3">Scan Trends</div>
       <div className="grid grid-cols-2 gap-3">
         {metrics.map((m) => {
           const data = scans.filter((s) => s[m.key] != null).map((s) => ({ date: s.date, value: s[m.key] }));
           if (data.length < 2) return (
             <div key={m.key} className="bg-stone-950/50 rounded p-2">
-              <div className="text-[10px] uppercase tracking-wider mono text-stone-500">{m.label}</div>
+              <div className="text-[11px] uppercase tracking-wider mono text-stone-500">{m.label}</div>
               <div className="text-stone-700 text-xs mono mt-2">Need 2+ scans</div>
             </div>
           );
@@ -21231,11 +21228,11 @@ function MiniChart({ data, label, unit, color }) {
   return (
     <div className="bg-stone-950/50 rounded p-2">
       <div className="flex items-baseline justify-between mb-1">
-        <div className="text-[10px] uppercase tracking-wider mono text-stone-500">{label}</div>
+        <div className="text-[11px] uppercase tracking-wider mono text-stone-500">{label}</div>
       </div>
       <div className="flex items-baseline gap-1">
         <span className="text-sm mono font-semibold tabular" style={{ color }}>{latest}{unit}</span>
-        <span className={`text-[10px] mono tabular ${delta > 0 ? 'text-stone-400' : 'text-stone-400'}`}>
+        <span className={`text-[11px] mono tabular ${delta > 0 ? 'text-stone-400' : 'text-stone-400'}`}>
           {delta > 0 ? '+' : ''}{delta.toFixed(1)}
         </span>
       </div>
@@ -21269,9 +21266,9 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
       onClick={() => setOpen((v) => !v)}
       className="w-full flex items-center justify-between px-3 py-2.5"
     >
-      <span className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">{title}</span>
+      <span className="text-[11px] uppercase tracking-wider text-stone-500 mono">{title}</span>
       <span className="flex items-center gap-2">
-        <span className="mono text-[9px] uppercase tracking-wider text-stone-600">{label}</span>
+        <span className="mono text-[11px] uppercase tracking-wider text-stone-600">{label}</span>
         <ChevronDown size={13} className={`text-stone-500 transition-transform ${open ? 'rotate-180' : ''}`} />
       </span>
     </button>
@@ -21283,7 +21280,7 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
   // entries carry macros only.
   if (!any) {
     return (
-      <div className={`${className} bg-stone-900/40 border border-stone-900 rounded-lg overflow-hidden`}>
+      <div className={`${className} bg-stone-900 border border-stone-900 rounded-lg overflow-hidden`}>
         {header('none yet')}
         {open && (
           <div className="px-3 pb-3 border-t border-stone-900">
@@ -21292,7 +21289,7 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
                 <div className="text-xs text-stone-400 leading-relaxed mt-2">
                   No micronutrient data for today yet. It gets attached when you log via Search, a barcode scan, an AI text/photo estimate, a recipe, or a saved food that has micronutrients.
                 </div>
-                <div className="mono text-[10px] text-stone-600 leading-snug mt-1.5">
+                <div className="mono text-[11px] text-stone-600 leading-snug mt-1.5">
                   Saved foods without them: Add → Saved → "Fill micronutrients". Hand-typed macros carry none.
                 </div>
               </>
@@ -21304,14 +21301,14 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
   }
 
   return (
-    <div className={`${className} bg-stone-900/40 border border-stone-900 rounded-lg overflow-hidden`}>
+    <div className={`${className} bg-stone-900 border border-stone-900 rounded-lg overflow-hidden`}>
       {header(`${trackedCount} tracked`)}
       {open && (
         <div className="border-t border-stone-900">
           <div className="flex justify-end px-3 pt-2">
             <button
               onClick={() => setHideEmpty((v) => !v)}
-              className="text-[9px] mono text-stone-500 hover:text-stone-300 uppercase tracking-wider"
+              className="text-[11px] mono text-stone-500 hover:text-stone-300"
             >
               {hideEmpty ? 'show all' : 'hide empty'}
             </button>
@@ -21329,7 +21326,7 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
                 onClick={() => setOpenGroups((g) => ({ ...g, [grp.id]: !g[grp.id] }))}
                 className="w-full flex items-center justify-between px-3 py-2.5"
               >
-                <span className="text-[11px] mono uppercase tracking-wider text-stone-300">
+                <span className="text-[12px] mono uppercase tracking-wider text-stone-300">
                   {grp.label} <span className="text-stone-600">{groupTracked}/{items.length}</span>
                 </span>
                 <ChevronDown size={13} className={`text-stone-500 transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -21344,8 +21341,8 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
                       // No standard target — show amount only, no bar
                       return (
                         <div key={m.key} className={`flex items-baseline justify-between ${hasData ? '' : 'opacity-40'}`}>
-                          <span className="text-[11px] text-stone-300">{m.label}</span>
-                          <span className="mono tabular text-[10px] text-stone-400">{hasData ? display : '—'} {m.unit}</span>
+                          <span className="text-[12px] text-stone-300">{m.label}</span>
+                          <span className="mono tabular text-[11px] text-stone-400">{hasData ? display : '—'} {m.unit}</span>
                         </div>
                       );
                     }
@@ -21356,11 +21353,11 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
                     return (
                       <div key={m.key} className={hasData ? '' : 'opacity-40'}>
                         <div className="flex items-baseline justify-between mb-0.5">
-                          <span className="text-[11px] text-stone-300">
+                          <span className="text-[12px] text-stone-300">
                             {m.label}
-                            {m.type === 'limit' && <span className="text-stone-600 ml-1 text-[9px] mono uppercase">limit</span>}
+                            {m.type === 'limit' && <span className="text-stone-600 ml-1 text-[11px] mono uppercase">limit</span>}
                           </span>
-                          <span className="mono tabular text-[10px] text-stone-400">
+                          <span className="mono tabular text-[11px] text-stone-400">
                             {hasData ? display : '—'}<span className="text-stone-600"> / {m.rdv} {m.unit}</span>
                             {over && <span className="text-rose-300 ml-1">over</span>}
                             {hit && <span className="text-emerald-300 ml-1">✓</span>}
@@ -21377,7 +21374,7 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
             </div>
           );
         })}
-            <div className="text-[9px] mono text-stone-600 px-3 py-2 leading-snug">
+            <div className="text-[11px] mono text-stone-600 px-3 py-2 leading-snug">
               {footer || 'Deep data (vitamins, minerals, amino acids) comes from USDA whole-food entries; branded items carry label nutrients; AI-estimated foods and recipes cover vitamins, minerals and fats but not amino acids, and are approximate.'} Reference values are general adult guidance, not medical advice.
             </div>
           </div>
@@ -21815,7 +21812,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
           </button>
           <div className="flex-1 bg-stone-900 border border-stone-800 rounded-md px-3 py-1.5 flex items-center justify-center gap-2">
             <CalendarDays size={13} className="text-stone-500" />
-            <span className="text-xs mono text-stone-200">{isToday ? 'TODAY' : fmtDateLong(dateForKey).toUpperCase()}</span>
+            <span className="text-xs mono text-stone-200">{isToday ? 'Today' : fmtDateLong(dateForKey)}</span>
           </div>
           <button
             onClick={() => setActiveDate(addDays(dateForKey, 1))}
@@ -21828,7 +21825,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
           {!isToday && (
             <button
               onClick={() => setActiveDate(today())}
-              className="bg-stone-900 border border-stone-800 rounded-md px-2.5 py-1.5 text-[10px] mono uppercase tracking-wider text-amber-400 hover:border-amber-400/50"
+              className="bg-stone-900 border border-stone-800 rounded-md px-2.5 py-1.5 text-[11px] mono text-amber-400 hover:border-amber-400/50"
             >
               Today
             </button>
@@ -21837,7 +21834,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
       )}
 
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-5 mb-5">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-3">
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-3">
           {isToday ? 'Today' : fmtDate(dateForKey)} · {session.type === 'lift' ? 'Lift Day' : session.type === 'cardio' ? 'Cardio Day' : 'Rest Day'}
         </div>
         <div className="grid grid-cols-4 gap-3">
@@ -21846,7 +21843,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
           <MacroRing label="Carbs" current={totals.carbs} target={targets.carbs} color="#60a5fa" unit="g" />
           <MacroRing label="Fat" current={totals.fat} target={targets.fat} color="#fb7185" unit="g" />
         </div>
-        <div className="mt-4 pt-4 border-t border-stone-800 flex items-center justify-between text-[11px] mono text-stone-500">
+        <div className="mt-4 pt-4 border-t border-stone-800 flex items-center justify-between text-[12px] mono text-stone-500">
           <span>FLOOR: 2,126 KCAL (BMR)</span>
           <span className={totals.cal > 0 && totals.cal < 2126 ? 'text-rose-400' : 'text-stone-500'}>
             {totals.cal < 2126 && totals.cal > 0 ? '⚠ BELOW BMR' : '✓ ABOVE'}
@@ -21855,9 +21852,9 @@ function NutritionView({ day, activeDate, setActiveDate }) {
       </div>
 
       {/* Meal protein guide */}
-      <div className="bg-stone-900/40 border border-stone-800/60 rounded-lg p-3 mb-5">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-2">Meal Targets · 42g+ per meal</div>
-        <div className="grid grid-cols-5 gap-2 text-[10px] mono text-stone-400">
+      <div className="bg-stone-900 border border-stone-800 rounded-lg p-3 mb-5">
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-2">Meal Targets · 42g+ per meal</div>
+        <div className="grid grid-cols-5 gap-2 text-[11px] mono text-stone-400">
           <div className="text-center"><div className="text-stone-500">B'fast</div><div>45-55g</div></div>
           <div className="text-center"><div className="text-stone-500">Lunch</div><div>40-50g</div></div>
           <div className="text-center"><div className="text-stone-500">Post-WO</div><div>30-40g</div></div>
@@ -21870,7 +21867,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
       {!addOpen && (
         <button
           onClick={() => { setAddOpen(true); setAddTab('saved'); }}
-          className="w-full flex items-center justify-center gap-2 py-3 mb-4 rounded-lg bg-amber-400 text-stone-950 font-semibold mono text-xs uppercase tracking-wider hover:bg-amber-300"
+          className="w-full flex items-center justify-center gap-2 py-3 mb-4 rounded-lg bg-amber-400 text-stone-950 font-semibold mono text-xs hover:bg-amber-300"
         >
           <Plus size={16} /> Add food
         </button>
@@ -21879,7 +21876,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
       {addOpen && (
         <div className="bg-stone-900 border border-stone-800 rounded-xl mb-4 overflow-hidden">
           {/* Sheet header: mode tabs + close */}
-          <div className="flex items-center gap-1 p-1.5 border-b border-stone-800 bg-stone-900/80">
+          <div className="flex items-center gap-1 p-1.5 border-b border-stone-800 bg-stone-900">
             <div className="flex gap-1 flex-1 bg-stone-950/60 border border-stone-800 rounded-lg p-1">
               {[
                 { id: 'saved',  label: `Saved · ${savedItems.length}` },
@@ -21889,7 +21886,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                 <button
                   key={t.id}
                   onClick={() => { setAddTab(t.id); setExpandedItem(null); }}
-                  className={`flex-1 mono text-[10px] uppercase tracking-wider py-1.5 rounded-md transition-colors ${
+                  className={`flex-1 mono text-[11px] py-1.5 rounded-md transition-colors ${
                     addTab === t.id ? 'bg-stone-800 text-amber-400' : 'text-stone-500 hover:text-stone-300'
                   }`}
                 >
@@ -21915,7 +21912,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                 />
                 {(missingMicros.length > 0 || savedMicro) && (
                   <div className="flex items-center justify-between gap-2 mb-2 bg-stone-950/60 border border-stone-800 rounded px-2.5 py-1.5">
-                    <span className="mono text-[10px] text-stone-400 leading-snug">
+                    <span className="mono text-[11px] text-stone-400 leading-snug">
                       {savedMicro?.total
                         ? `Estimating micronutrients… ${savedMicro.done}/${savedMicro.total}`
                         : savedMicro?.error
@@ -21923,7 +21920,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                           : `${missingMicros.length} saved ${missingMicros.length === 1 ? 'item has' : 'items have'} no micronutrients`}
                     </span>
                     {!savedMicro?.total && missingMicros.length > 0 && (
-                      <button onClick={fillSavedMicros} className="shrink-0 flex items-center gap-1 text-[10px] mono uppercase tracking-wider text-amber-400 hover:text-amber-300">
+                      <button onClick={fillSavedMicros} className="shrink-0 flex items-center gap-1 text-[11px] mono text-amber-400 hover:text-amber-300">
                         <RefreshCw size={11} /> Fill micronutrients
                       </button>
                     )}
@@ -22009,12 +22006,12 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                                     </span>
                                     {item.name}
                                     {item.mode === 'prepped' && item.servingsRemaining > 0 && (
-                                      <span className="text-[9px] mono uppercase tracking-wider px-1.5 py-0.5 rounded border border-amber-400/40 text-amber-400 bg-amber-400/10 shrink-0">
+                                      <span className="text-[11px] mono uppercase tracking-wider px-1.5 py-0.5 rounded border border-amber-400/40 text-amber-400 bg-amber-400/10 shrink-0">
                                         {item.servingsRemaining}/{item.totalServings} left
                                       </span>
                                     )}
                                   </div>
-                                  <div className="text-[11px] mono text-stone-500 tabular mt-0.5">
+                                  <div className="text-[12px] mono text-stone-500 tabular mt-0.5">
                                     {item.cal} cal · {item.protein}p · {item.carbs}c · {item.fat}f
                                     {item.serving && <span className="ml-2 text-stone-600">· {item.serving}</span>}
                                     {item.mode === 'prepped' && item.costPerServing > 0 && (
@@ -22032,13 +22029,13 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                               className={`px-2.5 flex items-center justify-center border-l border-stone-800 transition-colors ${
                                 confirmDeleteId === item.id
                                   ? 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30'
-                                  : 'text-stone-600 hover:text-rose-400 hover:bg-stone-900/60'
+                                  : 'text-stone-600 hover:text-rose-400 hover:bg-stone-900'
                               }`}
                               aria-label={confirmDeleteId === item.id ? 'Tap again to confirm delete' : 'Delete'}
                               title={confirmDeleteId === item.id ? 'Tap again to confirm delete' : `Delete this ${isFood ? 'food' : 'meal'}`}
                             >
                               {confirmDeleteId === item.id ? (
-                                <span className="text-[10px] mono uppercase tracking-wider font-semibold">Sure?</span>
+                                <span className="text-[11px] mono uppercase tracking-wider font-semibold">Sure?</span>
                               ) : (
                                 <Trash2 size={13} />
                               )}
@@ -22048,7 +22045,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                             <div className="border-t border-stone-800 px-3 py-3 bg-stone-950/80">
                               {availableUnits.length > 1 && (
                                 <>
-                                  <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1.5">Measure by</div>
+                                  <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1.5">Measure by</div>
                                   <div className="flex gap-1.5 mb-3">
                                     {availableUnits.map((u) => (
                                       <button
@@ -22061,7 +22058,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                                             : '1';
                                           setAmountInput((prev) => ({ ...prev, [item.id]: nextAmt }));
                                         }}
-                                        className={`flex-1 py-1.5 rounded text-[10px] mono uppercase tracking-wider border ${
+                                        className={`flex-1 py-1.5 rounded text-[11px] mono border ${
                                           currentUnit === u.key
                                             ? 'bg-amber-400/10 border-amber-400 text-amber-400'
                                             : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-stone-700'
@@ -22074,7 +22071,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                                 </>
                               )}
 
-                              <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1.5">
+                              <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1.5">
                                 {currentUnit === 'serving' ? 'Servings' : currentUnit === 'g' ? 'Grams' : currentUnit === 'oz' ? 'Ounces' : `${currentUnit.charAt(0).toUpperCase()}${currentUnit.slice(1)}s`}
                               </div>
                               <div className="flex items-center gap-1.5 mb-3">
@@ -22102,7 +22099,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                               </div>
 
                               {mult > 0 && (
-                                <div className="text-[11px] mono text-stone-400 tabular mb-3 px-1">
+                                <div className="text-[12px] mono text-stone-400 tabular mb-3 px-1">
                                   ={' '}
                                   <span className="text-stone-200">{Math.round((item.cal || 0) * mult)} cal</span>
                                   {' · '}
@@ -22118,7 +22115,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                                 disabled={mult <= 0}
                                 className="w-full bg-amber-400 text-stone-950 font-semibold mono text-xs py-2 rounded hover:bg-amber-300 disabled:bg-stone-700 disabled:text-stone-500"
                               >
-                                ADD TO LOG
+                                Add to log
                               </button>
                             </div>
                           )}
@@ -22136,18 +22133,18 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                 <div className="flex gap-2">
                   <button
                     onClick={() => { setAddOpen(false); setShowFuelSearch(true); }}
-                    className="flex-1 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 rounded px-3 py-2.5 flex items-center justify-center gap-1.5 mono text-[11px] uppercase tracking-wider"
+                    className="flex-1 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 rounded px-3 py-2.5 flex items-center justify-center gap-1.5 mono text-[12px]"
                   >
                     <Search size={13} className="text-emerald-400" /> Search
                   </button>
                   <button
                     onClick={() => { setAddOpen(false); setShowFuelScan(true); }}
-                    className="flex-1 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 rounded px-3 py-2.5 flex items-center justify-center gap-1.5 mono text-[11px] uppercase tracking-wider"
+                    className="flex-1 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 rounded px-3 py-2.5 flex items-center justify-center gap-1.5 mono text-[12px]"
                   >
                     <Camera size={13} className="text-amber-400" /> Scan barcode
                   </button>
                 </div>
-                <div className="mono text-[10px] text-stone-600 mt-2 leading-snug">
+                <div className="mono text-[11px] text-stone-600 mt-2 leading-snug">
                   Finds it (USDA / Open Food Facts), logs it to today, and saves it to your Library for next time.
                 </div>
               </div>
@@ -22164,7 +22161,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                   onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; handleMealPhoto(f); }}
                 />
                 <div className="bg-stone-950/60 border border-stone-800 rounded-lg p-2.5 mb-3">
-                  <div className="text-[9px] uppercase tracking-wider mono text-stone-500 mb-2">Estimate with AI</div>
+                  <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-2">Estimate with AI</div>
                   {estimateMode === 'working' ? (
                     <div className="flex items-center gap-2 py-1.5 text-stone-400">
                       <Loader2 size={14} className="animate-spin text-amber-400" />
@@ -22183,7 +22180,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                       <div className="flex gap-2">
                         <button
                           onClick={() => { setEstimateMode(null); setPendingPhoto(null); setPhotoContext(''); }}
-                          className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded py-1.5 mono text-[10px] uppercase tracking-wider"
+                          className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded py-1.5 mono text-[11px]"
                         >
                           Cancel
                         </button>
@@ -22193,7 +22190,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                             setPendingPhoto(null); setPhotoContext('');
                             runMealEstimate({ base64: ph.base64, mimeType: 'image/jpeg', ...(ctx ? { text: ctx } : {}) });
                           }}
-                          className="flex-[2] bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded py-1.5 mono text-[10px] uppercase tracking-wider"
+                          className="flex-[2] bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded py-1.5 mono text-[11px]"
                         >
                           Estimate
                         </button>
@@ -22212,14 +22209,14 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                       <div className="flex gap-2">
                         <button
                           onClick={() => { setEstimateMode(null); setEstimateText(''); }}
-                          className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded py-1.5 mono text-[10px] uppercase tracking-wider"
+                          className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded py-1.5 mono text-[11px]"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={() => runMealEstimate({ text: estimateText.trim() })}
                           disabled={!estimateText.trim()}
-                          className="flex-[2] bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 font-semibold rounded py-1.5 mono text-[10px] uppercase tracking-wider"
+                          className="flex-[2] bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 font-semibold rounded py-1.5 mono text-[11px]"
                         >
                           Estimate
                         </button>
@@ -22229,13 +22226,13 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                     <div className="flex gap-2">
                       <button
                         onClick={() => { setEstimateMode('text'); setEstimateError(null); }}
-                        className="flex-1 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 rounded px-3 py-2 flex items-center justify-center gap-1.5 mono text-[11px] uppercase tracking-wider"
+                        className="flex-1 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 rounded px-3 py-2 flex items-center justify-center gap-1.5 mono text-[12px]"
                       >
                         <Edit3 size={13} className="text-rose-400" /> Paste text
                       </button>
                       <button
                         onClick={() => { setEstimateError(null); mealPhotoRef.current?.click(); }}
-                        className="flex-1 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 rounded px-3 py-2 flex items-center justify-center gap-1.5 mono text-[11px] uppercase tracking-wider"
+                        className="flex-1 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 rounded px-3 py-2 flex items-center justify-center gap-1.5 mono text-[12px]"
                       >
                         <ImageIcon size={13} className="text-sky-400" /> Screenshot
                       </button>
@@ -22243,10 +22240,10 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                   )}
                   {estimateMode === 'error' && (
                     <div className="mt-2">
-                      <div className="mono text-[10px] text-rose-300 leading-snug mb-1.5">{estimateError}</div>
+                      <div className="mono text-[11px] text-rose-300 leading-snug mb-1.5">{estimateError}</div>
                       <button
                         onClick={() => setEstimateMode(null)}
-                        className="text-[10px] mono uppercase tracking-wider text-stone-500 hover:text-stone-300"
+                        className="text-[11px] mono text-stone-500 hover:text-stone-300"
                       >
                         Dismiss
                       </button>
@@ -22254,7 +22251,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                   )}
                 </div>
                 {estimateNote && (
-                  <div className="mono text-[10px] text-amber-400/80 leading-snug mb-2 flex items-start gap-1.5">
+                  <div className="mono text-[11px] text-amber-400/80 leading-snug mb-2 flex items-start gap-1.5">
                     <Sparkles size={10} className="shrink-0 mt-0.5" />
                     <span>{estimateNote} — confirm or tweak below.</span>
                   </div>
@@ -22266,11 +22263,11 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                 {estimateItems.length > 0 && (
                   <div className="bg-stone-950/60 border border-stone-800 rounded-lg overflow-hidden mb-3">
                     <div className="flex items-center justify-between px-2.5 py-2 border-b border-stone-800">
-                      <span className="mono text-[9px] uppercase tracking-wider text-stone-500">
+                      <span className="mono text-[11px] uppercase tracking-wider text-stone-500">
                         Breakdown · {estimateItems.length} item{estimateItems.length !== 1 ? 's' : ''}
                       </span>
                       {estimateConfidence && (
-                        <span className={`mono text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+                        <span className={`mono text-[11px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${
                           estimateConfidence === 'high' ? 'border-emerald-400/40 text-emerald-400 bg-emerald-400/10'
                           : estimateConfidence === 'low' ? 'border-rose-400/40 text-rose-300 bg-rose-400/10'
                           : 'border-amber-400/40 text-amber-400 bg-amber-400/10'
@@ -22284,23 +22281,23 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                         <div key={i} className="px-2.5 py-1.5">
                           <div className="flex items-baseline justify-between gap-2">
                             <span className="text-[12px] text-stone-200 truncate">{it.name}</span>
-                            <span className="mono text-[11px] tabular text-stone-400 shrink-0">
+                            <span className="mono text-[12px] tabular text-stone-400 shrink-0">
                               {it.grams > 0 ? `${it.grams} g` : (it.portion || '')}
                             </span>
                           </div>
-                          <div className="mono text-[10px] tabular text-stone-500 mt-0.5">
+                          <div className="mono text-[11px] tabular text-stone-500 mt-0.5">
                             {it.cal} cal · <span className="text-amber-400/70">{it.protein}p</span> · {it.carbs}c · {it.fat}f
                             {it.grams > 0 && it.portion && <span className="text-stone-600 ml-1.5">· {it.portion}</span>}
                           </div>
                           {it.basis && (
-                            <div className="text-[10px] text-stone-600 leading-snug mt-0.5">{it.basis}</div>
+                            <div className="text-[11px] text-stone-600 leading-snug mt-0.5">{it.basis}</div>
                           )}
                         </div>
                       ))}
                     </div>
-                    <div className="flex items-baseline justify-between px-2.5 py-2 border-t border-stone-800 bg-stone-900/40">
-                      <span className="mono text-[9px] uppercase tracking-wider text-stone-500">Total</span>
-                      <span className="mono text-[11px] tabular text-stone-200">
+                    <div className="flex items-baseline justify-between px-2.5 py-2 border-t border-stone-800 bg-stone-900">
+                      <span className="mono text-[11px] uppercase tracking-wider text-stone-500">Total</span>
+                      <span className="mono text-[12px] tabular text-stone-200">
                         {estimateItems.reduce((a, i) => a + (i.cal || 0), 0)} cal ·{' '}
                         <span className="text-amber-400">{estimateItems.reduce((a, i) => a + (i.protein || 0), 0)}p</span> ·{' '}
                         {estimateItems.reduce((a, i) => a + (i.carbs || 0), 0)}c ·{' '}
@@ -22312,16 +22309,16 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                         that gets logged is still the midpoint (the total above). */}
                     {estimateRange && (
                       <div className="px-2.5 py-2 border-t border-stone-800/70 bg-stone-950/40">
-                        <div className="mono text-[9px] uppercase tracking-wider text-stone-500 mb-1">
+                        <div className="mono text-[11px] uppercase tracking-wider text-stone-500 mb-1">
                           Likely range
                         </div>
-                        <div className="mono text-[10px] tabular text-stone-400 leading-relaxed">
+                        <div className="mono text-[11px] tabular text-stone-400 leading-relaxed">
                           {estimateRange.cal[0]}–{estimateRange.cal[1]} cal ·{' '}
                           <span className="text-amber-400/70">{estimateRange.protein[0]}–{estimateRange.protein[1]}p</span> ·{' '}
                           {estimateRange.carbs[0]}–{estimateRange.carbs[1]}c ·{' '}
                           {estimateRange.fat[0]}–{estimateRange.fat[1]}f
                         </div>
-                        <div className="mono text-[9px] text-stone-600 leading-snug mt-1">
+                        <div className="mono text-[11px] text-stone-600 leading-snug mt-1">
                           Logs the midpoint. Adjust the numbers below if you know better.
                         </div>
                       </div>
@@ -22345,7 +22342,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                   disabled={!meal.name}
                   className="w-full bg-amber-400 text-stone-950 font-semibold mono text-xs py-2 rounded mt-3 hover:bg-amber-300 disabled:bg-stone-700 disabled:text-stone-500"
                 >
-                  ADD TO LOG
+                  Add to log
                 </button>
               </div>
             )}
@@ -22370,9 +22367,9 @@ function NutritionView({ day, activeDate, setActiveDate }) {
       {/* Meal list */}
       {entries.length > 0 && (
         <div className="flex items-baseline justify-between mb-2">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">Today's Log</div>
+          <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">Today's Log</div>
           {totals.cost > 0 && (
-            <div className="text-[10px] mono text-emerald-400/80 tabular flex items-center gap-1.5">
+            <div className="text-[11px] mono text-emerald-400/80 tabular flex items-center gap-1.5">
               <span className="text-stone-600 uppercase tracking-wider">Food cost:</span>
               <span className="font-semibold text-emerald-400">{fmtMoney(totals.cost)}</span>
               {entries.length > trackedCostEntries && (
@@ -22388,7 +22385,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
         const hasBreakdown = Array.isArray(m.breakdown) && m.breakdown.length > 0;
         const isOpen = expandedEntry === m.id;
         return (
-          <div key={m.id} className="bg-stone-900/40 border border-stone-900 rounded mb-1.5 overflow-hidden">
+          <div key={m.id} className="bg-stone-900 border border-stone-900 rounded mb-1.5 overflow-hidden">
             <div className="px-3 py-2 flex items-center justify-between">
               <button
                 onClick={() => hasBreakdown && setExpandedEntry(isOpen ? null : m.id)}
@@ -22401,7 +22398,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                     <ChevronDown size={12} className={`text-stone-600 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                   )}
                 </div>
-                <div className="text-[11px] mono text-stone-500 tabular">
+                <div className="text-[12px] mono text-stone-500 tabular">
                   {m.cal} cal · {m.protein}p · {m.carbs}c · {m.fat}f
                   {typeof m.cost === 'number' && m.cost > 0 && (
                     <span className="ml-2 text-emerald-400/70">· {fmtMoney(m.cost)}</span>
@@ -22418,30 +22415,30 @@ function NutritionView({ day, activeDate, setActiveDate }) {
             {isOpen && hasBreakdown && (
               <div className="border-t border-stone-800 bg-stone-950/50">
                 {m.estimateNote && (
-                  <div className="px-3 pt-2 text-[10px] mono text-amber-400/70 leading-snug">{m.estimateNote}</div>
+                  <div className="px-3 pt-2 text-[11px] mono text-amber-400/70 leading-snug">{m.estimateNote}</div>
                 )}
                 <div className="divide-y divide-stone-800/60">
                   {m.breakdown.map((it, i) => (
                     <div key={i} className="px-3 py-1.5">
                       <div className="flex items-baseline justify-between gap-2">
                         <span className="text-[12px] text-stone-300 truncate">{it.name}</span>
-                        <span className="mono text-[11px] tabular text-stone-500 shrink-0">
+                        <span className="mono text-[12px] tabular text-stone-500 shrink-0">
                           {it.grams > 0 ? `${it.grams} g` : (it.portion || '')}
                         </span>
                       </div>
-                      <div className="mono text-[10px] tabular text-stone-500 mt-0.5">
+                      <div className="mono text-[11px] tabular text-stone-500 mt-0.5">
                         {it.cal} cal · <span className="text-amber-400/70">{it.protein}p</span> · {it.carbs}c · {it.fat}f
                       </div>
                     </div>
                   ))}
                 </div>
                 {m.confidence && (
-                  <div className="px-3 py-1.5 border-t border-stone-800/60">
-                    <div className="text-[9px] mono uppercase tracking-wider text-stone-600">
+                  <div className="px-3 py-1.5 border-t border-stone-800">
+                    <div className="text-[11px] mono uppercase tracking-wider text-stone-600">
                       AI estimate · {m.confidence} confidence
                     </div>
                     {m.range && (
-                      <div className="mono text-[9px] tabular text-stone-600 mt-0.5">
+                      <div className="mono text-[11px] tabular text-stone-600 mt-0.5">
                         range: {m.range.cal[0]}–{m.range.cal[1]} cal · logged midpoint {m.cal}
                       </div>
                     )}
@@ -22457,13 +22454,13 @@ function NutritionView({ day, activeDate, setActiveDate }) {
           by default. Populated from USDA/OFF data on logged foods. */}
       <MicronutrientPanel entries={entries} />
 
-      <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mt-6 mb-2">Phase Targets</div>
+      <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mt-6 mb-2">Phase Targets</div>
       <div className="space-y-1.5">
         {PHASES.map((p) => (
-          <div key={p.name} className="bg-stone-900/40 border border-stone-900 rounded px-3 py-2 flex items-center justify-between">
+          <div key={p.name} className="bg-stone-900 border border-stone-900 rounded px-3 py-2 flex items-center justify-between">
             <div>
               <div className="text-sm mono">{p.name}</div>
-              <div className="text-[11px] text-stone-500">{p.range}</div>
+              <div className="text-[12px] text-stone-500">{p.range}</div>
             </div>
             <div className="text-xs mono text-stone-400 tabular">{p.cal}</div>
           </div>
@@ -22492,7 +22489,7 @@ function LibraryView() {
   return (
     <div>
       {/* One combined intro for the whole catalog */}
-      <div className="bg-stone-900/40 border border-stone-800/60 rounded-lg p-3 mb-3">
+      <div className="bg-stone-900 border border-stone-800 rounded-lg p-3 mb-3">
         <div className="text-xs text-stone-400 leading-relaxed">
           Your saved catalog — <span className="text-amber-400">meals</span> for one-tap logging and individual <span className="text-sky-400">foods</span> to log or compose meals from. Search across everything below; add either kind from its section. For full recipes with ingredients + steps, use <span className="text-stone-300">Spend → Recipes</span>.
         </div>
@@ -22519,7 +22516,7 @@ function LibraryView() {
       </div>
 
       {/* Type filter */}
-      <div className="flex gap-1 mb-4 bg-stone-900/60 border border-stone-800 rounded-lg p-1">
+      <div className="flex gap-1 mb-4 bg-stone-900 border border-stone-800 rounded-lg p-1">
         {[
           { id: 'all', label: 'All' },
           { id: 'meals', label: 'Meals' },
@@ -22528,7 +22525,7 @@ function LibraryView() {
           <button
             key={s.id}
             onClick={() => setTypeFilter(s.id)}
-            className={`flex-1 mono text-[10px] uppercase tracking-wider py-2 rounded-md transition-colors ${
+            className={`flex-1 mono text-[11px] py-2 rounded-md transition-colors ${
               typeFilter === s.id ? 'bg-stone-800 text-amber-400' : 'text-stone-500 hover:text-stone-300'
             }`}
           >
@@ -22660,11 +22657,11 @@ function FoodsLibrary({ externalQuery = '', compact = false } = {}) {
       {/* Saved confirmation toast */}
       {justSaved && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-stone-950 text-xs mono font-semibold px-4 py-2 rounded-full flex items-center gap-1.5 z-50 shadow-lg">
-          <Check size={13} /> SAVED · {justSaved.length > 32 ? justSaved.slice(0, 30) + '…' : justSaved}
+          <Check size={13} /> Saved · {justSaved.length > 32 ? justSaved.slice(0, 30) + '…' : justSaved}
         </div>
       )}
       {!compact && (
-        <div className="bg-stone-900/40 border border-stone-800/60 rounded-lg p-3 mb-4">
+        <div className="bg-stone-900 border border-stone-800 rounded-lg p-3 mb-4">
           <div className="text-xs text-stone-400 leading-relaxed">
             Save individual foods (e.g., <span className="text-stone-300">"Fairlife 2% milk"</span>, <span className="text-stone-300">"chicken breast"</span>) for quick logging or to compose meals from. Tap SEARCH to look up any food, brand, or restaurant item.
           </div>
@@ -22672,25 +22669,25 @@ function FoodsLibrary({ externalQuery = '', compact = false } = {}) {
       )}
 
       <div className="flex items-center justify-between mb-3">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">Foods · {shownFoods.length}</div>
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">Foods · {shownFoods.length}</div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => { reset(); setShowScan(true); }}
             className="text-xs mono text-emerald-400 flex items-center gap-1 hover:text-emerald-300"
           >
-            <Camera size={12} /> SCAN
+            <Camera size={12} /> Scan
           </button>
           <button
             onClick={() => { reset(); setShowSearch(true); }}
             className="text-xs mono text-sky-400 flex items-center gap-1 hover:text-sky-300"
           >
-            <Search size={12} /> SEARCH
+            <Search size={12} /> Search
           </button>
           <button
             onClick={() => { reset(); setShowAdd(true); }}
             className="text-xs mono text-amber-400 flex items-center gap-1 hover:text-amber-300"
           >
-            <Plus size={12} /> NEW
+            <Plus size={12} /> New
           </button>
         </div>
       </div>
@@ -22742,10 +22739,10 @@ function FoodsLibrary({ externalQuery = '', compact = false } = {}) {
               divides your most recent receipt price for this item. Manual wins
               if both are set. Both optional. */}
           <div className="mb-3 border border-stone-800 rounded-lg p-3 bg-stone-900/30">
-            <div className="text-[10px] mono uppercase tracking-wider text-stone-400 mb-2">Cost tracking — optional</div>
+            <div className="text-[11px] mono uppercase tracking-wider text-stone-400 mb-2">Cost tracking — optional</div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <div className="text-[9px] mono uppercase tracking-wider text-stone-600 mb-1">Cost / serving ($)</div>
+                <div className="text-[11px] mono uppercase tracking-wider text-stone-600 mb-1">Cost / serving ($)</div>
                 <input
                   type="number"
                   step="0.01"
@@ -22757,7 +22754,7 @@ function FoodsLibrary({ externalQuery = '', compact = false } = {}) {
                 />
               </div>
               <div>
-                <div className="text-[9px] mono uppercase tracking-wider text-stone-600 mb-1">Servings / package</div>
+                <div className="text-[11px] mono uppercase tracking-wider text-stone-600 mb-1">Servings / package</div>
                 <input
                   type="number"
                   step="1"
@@ -22769,7 +22766,7 @@ function FoodsLibrary({ externalQuery = '', compact = false } = {}) {
                 />
               </div>
             </div>
-            <div className="text-[10px] mono text-stone-600 mt-2 leading-snug">
+            <div className="text-[11px] mono text-stone-600 mt-2 leading-snug">
               Set <span className="text-stone-400">servings/package</span> and the app divides your latest receipt price for this item to get cost/serving — auto-updating as prices change. Or set <span className="text-stone-400">cost/serving</span> directly to override.
             </div>
           </div>
@@ -22781,7 +22778,7 @@ function FoodsLibrary({ externalQuery = '', compact = false } = {}) {
               onClick={() => setShowMicros((v) => !v)}
               className="w-full flex items-center justify-between px-3 py-2.5"
             >
-              <span className="text-[10px] mono uppercase tracking-wider text-stone-400">
+              <span className="text-[11px] mono uppercase tracking-wider text-stone-400">
                 Micronutrients — optional
                 {cleanMicros(form.micros) && <span className="text-emerald-400/80 ml-2 normal-case tracking-normal">{Object.keys(cleanMicros(form.micros)).length} set</span>}
               </span>
@@ -22793,11 +22790,11 @@ function FoodsLibrary({ externalQuery = '', compact = false } = {}) {
                   const items = MICRONUTRIENTS.filter((m) => m.group === grp.id);
                   return (
                     <div key={grp.id}>
-                      <div className="text-[9px] mono uppercase tracking-wider text-stone-500 mb-1.5">{grp.label}</div>
+                      <div className="text-[11px] mono uppercase tracking-wider text-stone-500 mb-1.5">{grp.label}</div>
                       <div className="grid grid-cols-2 gap-2">
                         {items.map((m) => (
                           <div key={m.key}>
-                            <div className="text-[9px] mono uppercase tracking-wider text-stone-600 mb-0.5">{m.label} ({m.unit})</div>
+                            <div className="text-[11px] mono uppercase tracking-wider text-stone-600 mb-0.5">{m.label} ({m.unit})</div>
                             <input
                               type="number"
                               step="0.01"
@@ -22813,14 +22810,14 @@ function FoodsLibrary({ externalQuery = '', compact = false } = {}) {
                     </div>
                   );
                 })}
-                <div className="text-[10px] mono text-stone-600 leading-snug">
+                <div className="text-[11px] mono text-stone-600 leading-snug">
                   Per serving. Foods added via Search fill these in automatically from USDA FoodData Central (whole foods carry the deep panel; branded items carry label nutrients).
                 </div>
               </div>
             )}
           </div>
           <button onClick={saveFood} className="w-full bg-amber-400 text-stone-950 font-semibold mono text-xs py-2 rounded hover:bg-amber-300">
-            {editing ? 'UPDATE' : 'SAVE'}
+            {editing ? 'Update' : 'Save'}
           </button>
         </div>
       )}
@@ -22834,10 +22831,10 @@ function FoodsLibrary({ externalQuery = '', compact = false } = {}) {
       ) : (
         <div className="space-y-1.5">
           {shownFoods.map((f) => (
-            <div key={f.id} className="bg-stone-900/40 border border-stone-900 rounded px-3 py-2.5 flex items-center justify-between">
+            <div key={f.id} className="bg-stone-900 border border-stone-900 rounded px-3 py-2.5 flex items-center justify-between">
               <div className="min-w-0 flex-1">
                 <div className="text-sm text-stone-200 truncate">{f.name}</div>
-                <div className="text-[11px] mono text-stone-500 tabular">
+                <div className="text-[12px] mono text-stone-500 tabular">
                   {f.cal} cal · {f.protein}p · {f.carbs}c · {f.fat}f
                   {(() => {
                     const cps = effectiveCostPerServing(f, receipts);
@@ -22952,26 +22949,26 @@ function FoodSearchPanel({ onClose, onPick }) {
       </div>
 
       {results.length > 0 && (
-        <div className="text-[10px] mono text-stone-500 mb-2 leading-relaxed">
+        <div className="text-[11px] mono text-stone-500 mb-2 leading-relaxed">
           Tap any result to save it to your foods library.
         </div>
       )}
 
       {!loading && !hasSearched && (
-        <div className="bg-stone-800/60 border border-stone-700 rounded px-3 py-2 text-[11px] text-stone-400 flex items-start gap-2 mb-3">
+        <div className="bg-stone-800/60 border border-stone-700 rounded px-3 py-2 text-[12px] text-stone-400 flex items-start gap-2 mb-3">
           <Search size={12} className="flex-shrink-0 mt-0.5 text-sky-400" />
           <span>Searches the curated database first. If you don't see what you want, expand to Open Food Facts (millions of products).</span>
         </div>
       )}
 
       {error && error !== 'NO_RESULTS' && (
-        <div className="bg-rose-400/10 border border-rose-400/30 rounded px-3 py-2 text-[11px] text-rose-300 mb-3 break-all">
+        <div className="bg-rose-400/10 border border-rose-400/30 rounded px-3 py-2 text-[12px] text-rose-300 mb-3 break-all">
           Search failed: {error}
         </div>
       )}
       {error === 'NO_RESULTS' && (
-        <div className="bg-stone-800/60 border border-stone-700 rounded px-3 py-2 text-[11px] text-stone-400 mb-3">
-          No matches in the curated database. Try the Open Food Facts search below, or tap <span className="text-amber-400 mono">NEW</span> to add manually.
+        <div className="bg-stone-800/60 border border-stone-700 rounded px-3 py-2 text-[12px] text-stone-400 mb-3">
+          No matches in the curated database. Try the Open Food Facts search below, or tap <span className="text-amber-400 mono">New</span> to add manually.
         </div>
       )}
 
@@ -22990,7 +22987,7 @@ function FoodSearchPanel({ onClose, onPick }) {
 
       {!loading && results.length > 0 && (
         <>
-          <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-2 flex items-center gap-1.5">
+          <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-2 flex items-center gap-1.5">
             <span>{results.length} {results.length === 1 ? 'result' : 'results'}</span>
             <span className="text-stone-700">·</span>
             <span className="text-emerald-400">{source}</span>
@@ -23006,10 +23003,10 @@ function FoodSearchPanel({ onClose, onPick }) {
                   <div className="text-sm text-stone-100 leading-tight">{r.name}</div>
                   <ChevronRight size={14} className="text-stone-600 flex-shrink-0 mt-0.5" />
                 </div>
-                <div className="text-[11px] mono text-stone-400 tabular mb-1">
+                <div className="text-[12px] mono text-stone-400 tabular mb-1">
                   {r.cal} cal · {r.protein}p · {r.carbs}c · {r.fat}f
                 </div>
-                <div className="flex items-center gap-2 text-[10px] mono text-stone-500">
+                <div className="flex items-center gap-2 text-[11px] mono text-stone-500">
                   <span>per {r.serving}</span>
                   <span className="text-stone-700">·</span>
                   <span className="text-emerald-400">curated</span>
@@ -23040,7 +23037,7 @@ function FoodSearchPanel({ onClose, onPick }) {
       )}
 
       {offError && !offLoading && (
-        <div className="mt-3 bg-rose-400/10 border border-rose-400/30 rounded px-3 py-2 text-[11px] text-rose-300 break-words">
+        <div className="mt-3 bg-rose-400/10 border border-rose-400/30 rounded px-3 py-2 text-[12px] text-rose-300 break-words">
           {offError === 'NO_RESULTS' || offError === 'NO_NUTRITION_DATA'
             ? 'No products found in Open Food Facts.'
             : `Open Food Facts search failed: ${offError}`}
@@ -23049,7 +23046,7 @@ function FoodSearchPanel({ onClose, onPick }) {
 
       {!offLoading && offResults.length > 0 && (
         <div className="mt-4 pt-3 border-t border-stone-800">
-          <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-2 flex items-center gap-1.5">
+          <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-2 flex items-center gap-1.5">
             <span>{offResults.length} more</span>
             <span className="text-stone-700">·</span>
             <span className="text-sky-400">Open Food Facts</span>
@@ -23065,10 +23062,10 @@ function FoodSearchPanel({ onClose, onPick }) {
                   <div className="text-sm text-stone-100 leading-tight">{r.name}</div>
                   <ChevronRight size={14} className="text-stone-600 flex-shrink-0 mt-0.5" />
                 </div>
-                <div className="text-[11px] mono text-stone-400 tabular mb-1">
+                <div className="text-[12px] mono text-stone-400 tabular mb-1">
                   {r.cal} cal · {r.protein}p · {r.carbs}c · {r.fat}f
                 </div>
-                <div className="flex items-center gap-2 text-[10px] mono text-stone-500">
+                <div className="flex items-center gap-2 text-[11px] mono text-stone-500">
                   <span>per {r.serving}</span>
                   <span className="text-stone-700">·</span>
                   <span className="text-sky-400">openfoodfacts</span>
@@ -23239,12 +23236,12 @@ function BarcodeScannerPanel({ onClose, onPick }) {
             <div className="text-xs mono">Starting camera…</div>
             <button
               onClick={startCamera}
-              className="mt-3 text-[10px] mono uppercase tracking-wider text-stone-500 hover:text-emerald-400"
+              className="mt-3 text-[11px] mono text-stone-500 hover:text-emerald-400"
             >
               Tap to start
             </button>
           </div>
-          <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1">Or enter barcode manually</div>
+          <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1">Or enter barcode manually</div>
           <div className="flex gap-2">
             <input
               type="text"
@@ -23259,7 +23256,7 @@ function BarcodeScannerPanel({ onClose, onPick }) {
               disabled={manualCode.length < 6}
               className="bg-emerald-400 text-stone-950 font-semibold mono text-xs px-4 rounded hover:bg-emerald-300 disabled:opacity-40"
             >
-              LOOK UP
+              Look up
             </button>
           </div>
         </div>
@@ -23275,10 +23272,10 @@ function BarcodeScannerPanel({ onClose, onPick }) {
               </div>
             </div>
           </div>
-          <div className="text-[10px] mono text-stone-500 text-center mb-3">
+          <div className="text-[11px] mono text-stone-500 text-center mb-3">
             Center the barcode in the frame · scanning automatically...
           </div>
-          <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1">Not catching it? Enter manually</div>
+          <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1">Not catching it? Enter manually</div>
           <div className="flex gap-2">
             <input
               type="text"
@@ -23293,7 +23290,7 @@ function BarcodeScannerPanel({ onClose, onPick }) {
               disabled={manualCode.length < 6}
               className="bg-emerald-400 text-stone-950 font-semibold mono text-xs px-4 rounded hover:bg-emerald-300 disabled:opacity-40"
             >
-              LOOK UP
+              Look up
             </button>
           </div>
         </div>
@@ -23303,11 +23300,11 @@ function BarcodeScannerPanel({ onClose, onPick }) {
         <div>
           <div className="bg-amber-400/10 border border-amber-400/30 rounded px-3 py-3 text-xs text-amber-200/90 mb-3">
             <div className="font-semibold mb-1">Camera scanning not supported here.</div>
-            <div className="text-[11px] text-amber-200/70">
+            <div className="text-[12px] text-amber-200/70">
               You can still type the barcode manually below.
             </div>
           </div>
-          <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1">Enter barcode manually</div>
+          <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1">Enter barcode manually</div>
           <div className="flex gap-2">
             <input
               type="text"
@@ -23322,7 +23319,7 @@ function BarcodeScannerPanel({ onClose, onPick }) {
               disabled={manualCode.length < 6}
               className="bg-emerald-400 text-stone-950 font-semibold mono text-xs px-4 rounded hover:bg-emerald-300 disabled:opacity-40"
             >
-              LOOK UP
+              Look up
             </button>
           </div>
         </div>
@@ -23337,7 +23334,7 @@ function BarcodeScannerPanel({ onClose, onPick }) {
 
       {status === 'error' && (
         <div>
-          <div className="bg-rose-400/10 border border-rose-400/30 rounded px-3 py-2 text-[11px] text-rose-300 mb-3 break-words">
+          <div className="bg-rose-400/10 border border-rose-400/30 rounded px-3 py-2 text-[12px] text-rose-300 mb-3 break-words">
             {errorMsg}
           </div>
           <div className="flex gap-2">
@@ -23361,29 +23358,29 @@ function BarcodeScannerPanel({ onClose, onPick }) {
         <div>
           <div className="bg-stone-950 border border-stone-800 rounded-lg p-3 mb-3">
             <div className="text-sm text-stone-100 font-medium mb-1">{product.name}</div>
-            <div className="text-[10px] mono text-stone-500 mb-2">Barcode {detectedCode} · {product.serving}</div>
+            <div className="text-[11px] mono text-stone-500 mb-2">Barcode {detectedCode} · {product.serving}</div>
             <div className="grid grid-cols-4 gap-2 text-center">
               <div>
                 <div className="text-lg display tabular text-stone-100">{Math.round(product.cal * (parseFloat(servingMultiplier) || 1))}</div>
-                <div className="text-[9px] mono text-stone-500 uppercase">Cal</div>
+                <div className="text-[11px] mono text-stone-500 uppercase">Cal</div>
               </div>
               <div>
                 <div className="text-lg display tabular text-amber-400">{(product.protein * (parseFloat(servingMultiplier) || 1)).toFixed(1)}</div>
-                <div className="text-[9px] mono text-stone-500 uppercase">P (g)</div>
+                <div className="text-[11px] mono text-stone-500 uppercase">P (g)</div>
               </div>
               <div>
                 <div className="text-lg display tabular text-stone-200">{(product.carbs * (parseFloat(servingMultiplier) || 1)).toFixed(1)}</div>
-                <div className="text-[9px] mono text-stone-500 uppercase">C (g)</div>
+                <div className="text-[11px] mono text-stone-500 uppercase">C (g)</div>
               </div>
               <div>
                 <div className="text-lg display tabular text-stone-200">{(product.fat * (parseFloat(servingMultiplier) || 1)).toFixed(1)}</div>
-                <div className="text-[9px] mono text-stone-500 uppercase">F (g)</div>
+                <div className="text-[11px] mono text-stone-500 uppercase">F (g)</div>
               </div>
             </div>
           </div>
 
           <div className="mb-3">
-            <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1.5">Servings to save</div>
+            <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1.5">Servings to save</div>
             <div className="flex items-center gap-1.5">
               {[0.5, 1, 1.5, 2].map((v) => (
                 <button
@@ -23420,13 +23417,13 @@ function BarcodeScannerPanel({ onClose, onPick }) {
               onClick={handleSave}
               className="flex-[2] bg-emerald-400 text-stone-950 font-semibold mono text-xs py-2 rounded hover:bg-emerald-300"
             >
-              SAVE TO LIBRARY
+              Save to library
             </button>
           </div>
         </div>
       )}
 
-      <div className="text-[9px] mono text-stone-600 mt-3 text-center">
+      <div className="text-[11px] mono text-stone-600 mt-3 text-center">
         Data from Open Food Facts · openfoodfacts.org
       </div>
     </div>
@@ -23590,23 +23587,23 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
   return (
     <div>
       {!compact && (
-        <div className="bg-stone-900/40 border border-stone-800/60 rounded-lg p-3 mb-4">
+        <div className="bg-stone-900 border border-stone-800 rounded-lg p-3 mb-4">
           <div className="text-xs text-stone-300 leading-relaxed mb-2">
             <span className="text-amber-400 font-medium">Saved Meals</span> are macro-only entries for one-tap logging — things like protein shakes, restaurant meals, or pre-packaged foods you eat regularly. Compose them from Foods or enter macros directly.
           </div>
-          <div className="mono text-[10px] text-stone-600 leading-relaxed">
+          <div className="mono text-[11px] text-stone-600 leading-relaxed">
             Want a full cooking recipe with ingredients + instructions? Use <span className="text-stone-400">Spend → Recipes</span> instead.
           </div>
         </div>
       )}
 
       <div className="flex items-center justify-between mb-3">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">Saved Meals · {shownMeals.length}</div>
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">Saved Meals · {shownMeals.length}</div>
         <button
           onClick={() => { reset(); setShowAdd(true); }}
           className="text-xs mono text-amber-400 flex items-center gap-1 hover:text-amber-300"
         >
-          <Plus size={12} /> NEW MEAL
+          <Plus size={12} /> New meal
         </button>
       </div>
 
@@ -23629,7 +23626,7 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
           <div className="flex gap-1 mb-3 bg-stone-950 border border-stone-800 rounded-lg p-1">
             <button
               onClick={() => setForm({ ...form, mode: 'composed' })}
-              className={`flex-1 mono text-[10px] uppercase tracking-wider py-2 rounded transition-colors ${
+              className={`flex-1 mono text-[11px] py-2 rounded transition-colors ${
                 form.mode === 'composed' ? 'bg-stone-800 text-amber-400' : 'text-stone-500'
               }`}
             >
@@ -23637,7 +23634,7 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
             </button>
             <button
               onClick={() => setForm({ ...form, mode: 'manual' })}
-              className={`flex-1 mono text-[10px] uppercase tracking-wider py-2 rounded transition-colors ${
+              className={`flex-1 mono text-[11px] py-2 rounded transition-colors ${
                 form.mode === 'manual' ? 'bg-stone-800 text-amber-400' : 'text-stone-500'
               }`}
             >
@@ -23658,11 +23655,11 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
                       <div className="flex items-start gap-2 mb-2">
                         <div className="flex-1 min-w-0">
                           <div className="text-xs text-stone-200 truncate">{c.name}</div>
-                          <div className="text-[10px] mono text-stone-500 tabular mt-0.5">
+                          <div className="text-[11px] mono text-stone-500 tabular mt-0.5">
                             {Math.round((c.cal || 0) * c.servings)} cal · {Math.round((c.protein || 0) * c.servings * 10) / 10}p
                           </div>
                           {c.serving && (
-                            <div className="text-[10px] mono text-amber-400/60 mt-0.5">
+                            <div className="text-[11px] mono text-amber-400/60 mt-0.5">
                               standard: {c.serving}
                             </div>
                           )}
@@ -23690,7 +23687,7 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
                             <button
                               key={preset.label}
                               onClick={() => updateServings(c.uid, preset.value)}
-                              className={`mono text-[11px] tabular w-9 py-1 rounded border transition-colors ${
+                              className={`mono text-[12px] tabular w-9 py-1 rounded border transition-colors ${
                                 isActive
                                   ? 'bg-amber-400 text-stone-950 border-amber-400 font-semibold'
                                   : 'bg-stone-950 text-stone-400 border-stone-800 hover:border-stone-700'
@@ -23702,7 +23699,7 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
                         })}
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="text-[9px] mono uppercase tracking-wider text-stone-600">Custom:</div>
+                        <div className="text-[11px] mono uppercase tracking-wider text-stone-600">Custom:</div>
                         <input
                           type="number"
                           step="0.01"
@@ -23710,7 +23707,7 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
                           onChange={(e) => updateServings(c.uid, e.target.value)}
                           className="bg-stone-950 border border-stone-800 rounded px-2 py-1 text-xs mono tabular w-20 focus:border-amber-400 focus:outline-none"
                         />
-                        <span className="text-[10px] mono text-stone-500">× serving</span>
+                        <span className="text-[11px] mono text-stone-500">× serving</span>
                       </div>
                     </div>
                   ))}
@@ -23721,7 +23718,7 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
                 onClick={() => setFoodPickerOpen(!foodPickerOpen)}
                 className="w-full bg-stone-950 border border-dashed border-stone-700 rounded px-3 py-2 text-xs mono text-stone-400 hover:border-amber-400 mb-3 flex items-center justify-center gap-1"
               >
-                <Plus size={12} /> ADD FOOD
+                <Plus size={12} /> Add food
               </button>
 
               {foodPickerOpen && (
@@ -23747,7 +23744,7 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
 
               {/* Totals preview */}
               <div className="bg-stone-950/60 border border-stone-800 rounded p-3 mb-3">
-                <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mb-1">Meal Total</div>
+                <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-1">Meal Total</div>
                 <div className="grid grid-cols-4 gap-2 text-xs mono tabular">
                   <div><span className="text-stone-500">cal</span> <span className="text-amber-400">{Math.round(composedTotals.cal)}</span></div>
                   <div><span className="text-stone-500">p</span> <span className="text-emerald-400">{Math.round(composedTotals.protein * 10) / 10}</span></div>
@@ -23766,7 +23763,7 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
           )}
 
           <button onClick={saveMeal} className="w-full bg-amber-400 text-stone-950 font-semibold mono text-xs py-2 rounded hover:bg-amber-300">
-            {editing ? 'UPDATE' : 'SAVE MEAL'}
+            {editing ? 'Update' : 'Save meal'}
           </button>
         </div>
       )}
@@ -23787,7 +23784,7 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
             return (
               <div
                 key={m.id}
-                className={`bg-stone-900/40 border rounded ${
+                className={`bg-stone-900 border rounded ${
                   isAdjusting ? 'border-amber-400/40' : isArchived ? 'border-stone-900 opacity-50' : 'border-stone-900'
                 }`}
               >
@@ -23807,7 +23804,7 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
                               setAdjustCost(m.costPerServing != null ? String(m.costPerServing) : '');
                             }
                           }}
-                          className="text-[9px] mono uppercase tracking-wider px-1.5 py-0.5 rounded border border-amber-400/40 text-amber-400 bg-amber-400/10 hover:bg-amber-400/20 transition-colors"
+                          className="text-[11px] mono px-1.5 py-0.5 rounded border border-amber-400/40 text-amber-400 bg-amber-400/10 hover:bg-amber-400/20 transition-colors"
                           title="Adjust servings + cost"
                         >
                           {m.servingsRemaining}/{m.totalServings} left
@@ -23825,26 +23822,26 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
                               setAdjustCost(m.costPerServing != null ? String(m.costPerServing) : '');
                             }
                           }}
-                          className="text-[9px] mono uppercase tracking-wider px-1.5 py-0.5 rounded border border-stone-700 text-stone-500 hover:text-amber-400 hover:border-amber-400/40 transition-colors"
+                          className="text-[11px] mono px-1.5 py-0.5 rounded border border-stone-700 text-stone-500 hover:text-amber-400 hover:border-amber-400/40 transition-colors"
                           title="Re-stock this meal"
                         >
                           out of stock
                         </button>
                       )}
                       {m.mode === 'composed' && m.components?.length > 0 && (
-                        <span className="text-[9px] mono text-stone-600 uppercase tracking-wider">
+                        <span className="text-[11px] mono text-stone-600 uppercase tracking-wider">
                           {m.components.length} item{m.components.length !== 1 ? 's' : ''}
                         </span>
                       )}
                     </div>
-                    <div className="text-[11px] mono text-stone-500 tabular">
+                    <div className="text-[12px] mono text-stone-500 tabular">
                       {m.cal} cal · {m.protein}p · {m.carbs}c · {m.fat}f
                       {isPrepped && m.costPerServing > 0 && (
                         <span className="ml-2 text-emerald-400/70">· {fmtMoney(m.costPerServing)}/ea</span>
                       )}
                     </div>
                     {isPrepped && m.cookDate && (
-                      <div className="text-[10px] mono text-stone-600 mt-0.5">
+                      <div className="text-[11px] mono text-stone-600 mt-0.5">
                         cooked {fmtDate(m.cookDate)}
                       </div>
                     )}
@@ -23868,11 +23865,11 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
                     the badge above expands this section. +/- step by 1, and
                     direct number entry allows fractional partial servings. */}
                 {isAdjusting && (
-                  <div className="px-3 pb-3 pt-1 border-t border-stone-800/60">
-                    <div className="text-[10px] mono uppercase tracking-wider text-stone-500 mb-2">Adjust inventory</div>
+                  <div className="px-3 pb-3 pt-1 border-t border-stone-800">
+                    <div className="text-[11px] mono uppercase tracking-wider text-stone-500 mb-2">Adjust inventory</div>
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       <div>
-                        <div className="text-[9px] mono uppercase tracking-wider text-stone-600 mb-1">Servings left</div>
+                        <div className="text-[11px] mono uppercase tracking-wider text-stone-600 mb-1">Servings left</div>
                         <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => setAdjustRemaining((v) => String(Math.max(0, +(parseFloat(v || '0') - 1).toFixed(2))))}
@@ -23893,7 +23890,7 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
                         </div>
                       </div>
                       <div>
-                        <div className="text-[9px] mono uppercase tracking-wider text-stone-600 mb-1">Total prepped</div>
+                        <div className="text-[11px] mono uppercase tracking-wider text-stone-600 mb-1">Total prepped</div>
                         <input
                           type="number"
                           step="1"
@@ -23907,7 +23904,7 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
                     {/* Cost-per-serving — escape hatch when the original cook
                         flow had bad pantry data (e.g., over-deduction bug). */}
                     <div className="mb-3">
-                      <div className="text-[9px] mono uppercase tracking-wider text-stone-600 mb-1 flex items-center justify-between">
+                      <div className="text-[11px] mono uppercase tracking-wider text-stone-600 mb-1 flex items-center justify-between">
                         <span>Cost per serving ($)</span>
                         <span className="text-stone-700 normal-case tracking-normal">leave blank to keep current</span>
                       </div>
@@ -23921,19 +23918,19 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
                         className="w-full bg-stone-950 border border-stone-800 rounded px-2 py-1.5 text-xs mono tabular focus:border-amber-400 focus:outline-none"
                       />
                     </div>
-                    <div className="text-[10px] mono text-stone-600 mb-3 leading-snug">
+                    <div className="text-[11px] mono text-stone-600 mb-3 leading-snug">
                       Setting servings left to 0 archives this meal · cost flows to Today's Log when you log a portion
                     </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => adjustPreppedMeal(m.id)}
-                        className="flex-1 bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold mono text-[11px] py-1.5 rounded uppercase tracking-wider"
+                        className="flex-1 bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold mono text-[12px] py-1.5 rounded"
                       >
                         Save
                       </button>
                       <button
                         onClick={() => setAdjustingMealId(null)}
-                        className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 mono text-[11px] py-1.5 rounded uppercase tracking-wider"
+                        className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 mono text-[12px] py-1.5 rounded"
                       >
                         Cancel
                       </button>
@@ -23955,7 +23952,7 @@ function MacroRing({ label, current, target, color, unit = '' }) {
   return (
     <div className="flex flex-col items-center">
       <svg width="58" height="58" className="-rotate-90">
-        <circle cx="29" cy="29" r="22" fill="none" stroke="#292524" strokeWidth="4" />
+        <circle cx="29" cy="29" r="22" fill="none" stroke="#2C2C2E" strokeWidth="4" />
         <circle
           cx="29" cy="29" r="22"
           fill="none"
@@ -23968,8 +23965,8 @@ function MacroRing({ label, current, target, color, unit = '' }) {
         />
       </svg>
       <div className="text-sm font-semibold mono tabular -mt-9">{Math.round(current)}{unit}</div>
-      <div className="text-[10px] mono text-stone-500 mt-7 tabular">/{target}{unit}</div>
-      <div className="text-[10px] uppercase tracking-wider mono text-stone-500 mt-0.5">{label}</div>
+      <div className="text-[11px] mono text-stone-500 mt-7 tabular">/{target}{unit}</div>
+      <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mt-0.5">{label}</div>
     </div>
   );
 }
@@ -24024,13 +24021,13 @@ function PhotosView() {
   return (
     <div>
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-5 mb-4">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-3">Capture</div>
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-3">Capture</div>
         <div className="flex gap-2 mb-3">
           {['front', 'side', 'back'].map((a) => (
             <button
               key={a}
               onClick={() => setAngle(a)}
-              className={`flex-1 mono text-[10px] uppercase tracking-wider py-2 rounded border transition-colors ${
+              className={`flex-1 mono text-[11px] py-2 rounded border transition-colors ${
                 angle === a
                   ? 'bg-amber-400 text-stone-950 border-amber-400 font-semibold'
                   : 'bg-stone-950 text-stone-400 border-stone-800'
@@ -24044,7 +24041,7 @@ function PhotosView() {
           <input type="file" accept="image/*" capture="environment" onChange={handleUpload} className="hidden" />
           <div className="bg-stone-950 border border-dashed border-stone-700 rounded-lg p-6 text-center cursor-pointer hover:border-amber-400 transition-colors">
             <ImageIcon size={24} className="mx-auto text-stone-600 mb-2" />
-            <div className="text-xs mono text-stone-400">TAP TO UPLOAD · {angle.toUpperCase()}</div>
+            <div className="text-xs mono text-stone-400">Tap to upload · {angle.toUpperCase()}</div>
           </div>
         </label>
       </div>
@@ -24052,7 +24049,7 @@ function PhotosView() {
       {/* Compare */}
       {photos.length >= 2 && (
         <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-4">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-3">Side-by-Side</div>
+          <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-3">Side-by-Side</div>
           <div className="grid grid-cols-2 gap-2 mb-2">
             <PhotoPicker photos={photos} selected={compare.a} onSelect={(p) => setCompare({ ...compare, a: p })} label="A" />
             <PhotoPicker photos={photos} selected={compare.b} onSelect={(p) => setCompare({ ...compare, b: p })} label="B" />
@@ -24061,11 +24058,11 @@ function PhotosView() {
             <div className="grid grid-cols-2 gap-2 mt-3">
               <div>
                 <img src={compare.a.dataUrl} className="w-full rounded" />
-                <div className="text-[10px] mono text-stone-500 mt-1 tabular">{fmtDate(compare.a.date)} · {compare.a.angle}</div>
+                <div className="text-[11px] mono text-stone-500 mt-1 tabular">{fmtDate(compare.a.date)} · {compare.a.angle}</div>
               </div>
               <div>
                 <img src={compare.b.dataUrl} className="w-full rounded" />
-                <div className="text-[10px] mono text-stone-500 mt-1 tabular">{fmtDate(compare.b.date)} · {compare.b.angle}</div>
+                <div className="text-[11px] mono text-stone-500 mt-1 tabular">{fmtDate(compare.b.date)} · {compare.b.angle}</div>
               </div>
             </div>
           )}
@@ -24073,13 +24070,13 @@ function PhotosView() {
       )}
 
       {/* Gallery */}
-      <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-2">Gallery · {photos.length} photos</div>
+      <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-2">Gallery · {photos.length} photos</div>
       <div className="grid grid-cols-3 gap-2">
         {photos.map((p) => (
           <div key={p.key} className="relative group">
             <img src={p.dataUrl} className="w-full aspect-[3/4] object-cover rounded" />
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-1.5 rounded-b">
-              <div className="text-[9px] mono text-stone-200 tabular">{fmtDate(p.date)}</div>
+              <div className="text-[11px] mono text-stone-200 tabular">{fmtDate(p.date)}</div>
               <div className="text-[8px] mono text-stone-400 uppercase">{p.angle}</div>
             </div>
             <button
@@ -24257,18 +24254,18 @@ function CalendarView({ onPickDate, activeDate }) {
       {/* Top stats */}
       <div className="grid grid-cols-3 gap-2 mb-4">
         <div className="bg-stone-900 border border-stone-800 rounded-lg p-3">
-          <div className="text-[10px] uppercase tracking-wider mono text-stone-500">Streak</div>
+          <div className="text-[11px] uppercase tracking-wider mono text-stone-500">Streak</div>
           <div className="display text-2xl font-semibold tabular flex items-baseline gap-1 mt-0.5">
             {streak}
             <Flame size={14} className="text-amber-400" />
           </div>
         </div>
         <div className="bg-stone-900 border border-stone-800 rounded-lg p-3">
-          <div className="text-[10px] uppercase tracking-wider mono text-stone-500">This Month</div>
+          <div className="text-[11px] uppercase tracking-wider mono text-stone-500">This Month</div>
           <div className="display text-2xl font-semibold tabular mt-0.5">{monthStats.logged}</div>
         </div>
         <div className="bg-stone-900 border border-stone-800 rounded-lg p-3">
-          <div className="text-[10px] uppercase tracking-wider mono text-stone-500">L · C</div>
+          <div className="text-[11px] uppercase tracking-wider mono text-stone-500">L · C</div>
           <div className="display text-2xl font-semibold tabular mt-0.5">
             <span className="text-amber-400">{monthStats.lifts}</span>
             <span className="text-stone-700 mx-1">·</span>
@@ -24283,7 +24280,7 @@ function CalendarView({ onPickDate, activeDate }) {
           <ChevronLeft size={16} />
         </button>
         <button onClick={goToday} className="flex-1 bg-stone-900 border border-stone-800 rounded-md py-1.5 hover:border-stone-700">
-          <span className="text-xs mono text-stone-200">{monthName.toUpperCase()}</span>
+          <span className="text-xs mono text-stone-200">{monthName}</span>
         </button>
         <button onClick={goNextMonth} className="bg-stone-900 border border-stone-800 rounded-md p-1.5 text-stone-400 hover:border-stone-700">
           <ChevronRight size={16} />
@@ -24294,7 +24291,7 @@ function CalendarView({ onPickDate, activeDate }) {
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-3 mb-4">
         <div className="grid grid-cols-7 gap-1 mb-2">
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
-            <div key={i} className="text-center text-[10px] mono text-stone-600 uppercase py-1">{d}</div>
+            <div key={i} className="text-center text-[11px] mono text-stone-600 uppercase py-1">{d}</div>
           ))}
         </div>
         <div className="grid grid-cols-7 gap-1">
@@ -24380,23 +24377,23 @@ function CalendarView({ onPickDate, activeDate }) {
         </div>
 
         {/* Legend */}
-        <div className="flex items-center justify-center gap-3 mt-3 pt-3 border-t border-stone-800 text-[10px] mono text-stone-500 flex-wrap">
+        <div className="flex items-center justify-center gap-3 mt-3 pt-3 border-t border-stone-800 text-[11px] mono text-stone-500 flex-wrap">
           <span className="flex items-center gap-1">
             <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-emerald-400">
               <Check size={7} strokeWidth={3.5} className="text-stone-950" />
             </span>
-            DONE
+            Done
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-3 rounded-full border-2 border-amber-400" style={{ backgroundImage: 'conic-gradient(from 270deg, #fbbf24 0deg 180deg, transparent 180deg 360deg)' }} />
-            PARTIAL
+            Partial
           </span>
-          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full border border-stone-600" />MISSED</span>
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full border border-stone-600" />Missed</span>
         </div>
       </div>
 
       {/* Recent logged sessions */}
-      <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-2">Recent Sessions</div>
+      <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-2">Recent Sessions</div>
       <div className="space-y-1.5">
         {Object.keys(workoutMap)
           .filter((d) => workoutMap[d].hasLog)
@@ -24410,14 +24407,14 @@ function CalendarView({ onPickDate, activeDate }) {
               <button
                 key={d}
                 onClick={() => onPickDate(d)}
-                className="w-full text-left bg-stone-900/40 border border-stone-900 rounded px-3 py-2.5 flex items-center justify-between hover:border-stone-800"
+                className="w-full text-left bg-stone-900 border border-stone-900 rounded px-3 py-2.5 flex items-center justify-between hover:border-stone-800"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className={`mono text-[10px] uppercase tracking-wider ${typeColor}`}>D{sd}</span>
+                    <span className={`mono text-[11px] uppercase tracking-wider ${typeColor}`}>D{sd}</span>
                     <span className="text-sm text-stone-200 truncate">{session.name}</span>
                   </div>
-                  <div className="text-[11px] mono text-stone-500 mt-0.5">
+                  <div className="text-[12px] mono text-stone-500 mt-0.5">
                     {fmtDateLong(d)} · {workoutMap[d].exerciseCount} exercises
                   </div>
                 </div>
@@ -24431,8 +24428,8 @@ function CalendarView({ onPickDate, activeDate }) {
       </div>
 
       {/* Schedule reference */}
-      <div className="mt-6 bg-stone-900/40 border border-stone-800/60 rounded-lg p-4">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-2">Schedule Reference</div>
+      <div className="mt-6 bg-stone-900 border border-stone-800 rounded-lg p-4">
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-2">Schedule Reference</div>
         <div className="space-y-1.5">
           {[1, 2, 3, 4, 5, 6, 7].map((d) => {
             const s = SCHEDULE[d];
@@ -24441,7 +24438,7 @@ function CalendarView({ onPickDate, activeDate }) {
               <div key={d} className="flex items-center gap-3 text-xs">
                 <span className={`mono uppercase tracking-wider ${typeColor} w-6`}>D{d}</span>
                 <span className="text-stone-200 flex-1">{s.name}</span>
-                <span className="mono text-[10px] text-stone-600">{s.type}</span>
+                <span className="mono text-[11px] text-stone-600">{s.type}</span>
               </div>
             );
           })}
@@ -24449,8 +24446,8 @@ function CalendarView({ onPickDate, activeDate }) {
       </div>
 
       {/* Non-negotiables */}
-      <div className="mt-4 bg-stone-900/40 border border-stone-800/60 rounded-lg p-4">
-        <div className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono mb-2">Every Day · Non-Negotiable</div>
+      <div className="mt-4 bg-stone-900 border border-stone-800 rounded-lg p-4">
+        <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-2">Every Day · Non-Negotiable</div>
         <ul className="space-y-1.5 text-xs text-stone-400">
           <li className="flex gap-2"><span className="text-amber-400">▸</span> Morning sunlight · 10 min within 30 min of waking</li>
           <li className="flex gap-2"><span className="text-amber-400">▸</span> No phone first 30 min</li>
