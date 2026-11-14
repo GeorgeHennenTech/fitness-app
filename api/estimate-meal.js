@@ -5,7 +5,15 @@
 //   { text: "Cava bowl with white rice, double chicken, hummus, ..." }
 //   { base64, mimeType }  — a screenshot (restaurant app order, menu, a
 //                           nutrition panel) or a photo of the meal
-// Returns: { name, cal, protein, carbs, fat, note, confidence, items[] }
+// Returns: { name, cal, protein, carbs, fat, note, confidence, items[], micros }
+//
+// SECOND MODE — micronutrient backfill (no new function; we're at Vercel's
+// 12-function cap):
+//   { mode: 'micros', foods: [{ id, name, serving?, servings?, cal?, protein?,
+//                               carbs?, fat?, ingredients?: [{qty,unit,name}] }] }
+//   → { results: { [id]: { fiber: 4.2, vitaminC: 31, ... } } }
+//   Values are for ONE serving of each food (for a recipe: the whole ingredient
+//   list divided by `servings`).
 //
 // items[] is the per-ingredient breakdown: each component with its estimated
 // weight and its own macros. Totals are RECOMPUTED server-side as the sum of
@@ -17,6 +25,47 @@ export const config = {
     bodyParser: { sizeLimit: '10mb' },
   },
 };
+
+// Micronutrients the AI is asked to estimate. Keys/units MUST match the app's
+// MICRONUTRIENTS table. Amino acids and carotenoids are deliberately left out:
+// a model's guesses there are too loose to be worth showing as numbers.
+const AI_MICROS = [
+  ['fiber','g'],['sugar','g'],['addedSugar','g'],['cholesterol','mg'],['caffeine','mg'],['choline','mg'],
+  ['vitaminA','mcg RAE'],['vitaminC','mg'],['vitaminD','mcg'],['vitaminE','mg'],['vitaminK','mcg'],
+  ['thiamin','mg'],['riboflavin','mg'],['niacin','mg'],['pantothenic','mg'],['vitaminB6','mg'],['folate','mcg DFE'],['vitaminB12','mcg'],
+  ['calcium','mg'],['iron','mg'],['magnesium','mg'],['phosphorus','mg'],['potassium','mg'],['sodium','mg'],
+  ['zinc','mg'],['copper','mg'],['manganese','mg'],['selenium','mcg'],
+  ['satFat','g'],['monoFat','g'],['polyFat','g'],['transFat','g'],['omega3ALA','g'],['omega3EPA','g'],['omega3DHA','g'],
+];
+const MICRO_KEY_LIST = AI_MICROS.map(([k, u]) => `${k} (${u})`).join(', ');
+
+function cleanMicros(obj) {
+  if (!obj || typeof obj !== 'object') return null;
+  const out = {};
+  for (const [k] of AI_MICROS) {
+    const v = parseFloat(obj[k]);
+    if (isFinite(v) && v > 0) out[k] = +v.toFixed(3);
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+const MICROS_PROMPT = `You estimate micronutrients for foods, meals and recipes, using standard food-composition data (USDA FoodData Central-style values) for each ingredient and summing them.
+
+For EACH food you're given, return the amount in ONE serving:
+- If it has an ingredient list, sum the micronutrients of every ingredient at the stated quantities, then divide by "servings" (default 1).
+- Otherwise use the name, serving size and macros to identify the food and estimate a typical serving.
+
+Keys and units (use exactly these keys; amounts in these units):
+${MICRO_KEY_LIST}
+
+Rules:
+- Numbers only. Omit a key (or use 0) when the food genuinely has none of it — e.g. no vitamin B12 in plant foods, no cholesterol in oils, caffeine only in coffee/tea/energy drinks/chocolate.
+- Be realistic: sodium includes salt added in the recipe; account for cooking oils and sauces.
+- Keep satFat + monoFat + polyFat + transFat at or below the food's total fat if fat is given.
+
+Return STRICT JSON only, no markdown:
+{ "results": { "<id>": { "<key>": number, ... }, ... } }
+Include every id you were given.`;
 
 const SYSTEM_PROMPT = `You estimate the nutrition of ONE meal/serving so it can be logged in a fitness tracker. Input is either a text description, a screenshot of a restaurant order / menu / nutrition panel, or a photo of food.
 
@@ -42,7 +91,8 @@ Return STRICT JSON only — no markdown, no commentary — in this exact shape:
   "carbs": number,
   "fat": number,
   "confidence": "high" | "medium" | "low",
-  "note": "one short sentence on assumptions, or empty string"
+  "note": "one short sentence on assumptions, or empty string",
+  "micros": { "<key>": number }
 }
 
 Rules for items:
@@ -59,13 +109,17 @@ Other rules:
 - "name": concise, e.g. "Cava chicken bowl" — don't dump the whole description.
 - Round all macros to whole numbers.
 - "confidence": "high" only for nutrition panels or precisely stated portions. "medium" for a clear photo of a recognizable dish. "low" when portions are ambiguous, food is obscured, or a sauce/oil quantity is a guess.
+- If the person supplied context with specific amounts, base those items on it and let confidence reflect it.
 - "note": briefly flag the biggest assumption ("assumed 1 tbsp oil in the pan"). Keep under 12 words. Empty string if genuinely confident.
+- "micros": your estimate for the WHOLE meal (all items summed), using standard food-composition values per component. Keys and units: ${MICRO_KEY_LIST}. Omit keys that are essentially zero. If a nutrition panel is visible, use its stated values (sodium, fiber, sugar, etc.) where given.
 - If the input clearly isn't food, return {"name":"","items":[],"cal":0,"protein":0,"carbs":0,"fat":0,"confidence":"low","note":"not a meal"}.`;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  if (req.body?.mode === 'micros') return handleMicros(req, res);
 
   const { text, base64, mimeType } = req.body || {};
   if (!text && !base64) {
@@ -87,11 +141,14 @@ export default async function handler(req, res) {
       },
     });
   }
+  const ctx = text ? String(text).slice(0, 4000) : '';
   content.push({
     type: 'text',
-    text: text
-      ? `Estimate the macros for this meal, broken down by component:\n\n${String(text).slice(0, 4000)}`
-      : 'Estimate the macros for the meal shown in this image, broken down by component. Identify each food you can see, estimate its weight, and give its macros.',
+    text: base64 && ctx
+      ? `Estimate the macros for the meal shown in this image, broken down by component. The person added this context about it — treat it as authoritative where it states portions, ingredients, cooking fats, or how much was eaten, and use the image for everything it doesn't cover:\n\n${ctx}`
+      : ctx
+        ? `Estimate the macros for this meal, broken down by component:\n\n${ctx}`
+        : 'Estimate the macros for the meal shown in this image, broken down by component. Identify each food you can see, estimate its weight, and give its macros.',
   });
 
   try {
@@ -104,7 +161,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-opus-4-8',
-        max_tokens: 2000,
+        max_tokens: 3500,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content }],
       }),
@@ -191,8 +248,64 @@ export default async function handler(req, res) {
       range, // null when high-confidence; otherwise [low, high] per macro
       note: String(parsed.note || '').trim(),
       items,
+      micros: cleanMicros(parsed.micros), // whole-meal estimate, or null
     });
   } catch (e) {
     return res.status(502).json({ error: e?.message || 'Estimate failed' });
+  }
+}
+
+// ── Micronutrient backfill ──────────────────────────────────────────────────
+async function handleMicros(req, res) {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
+  }
+  const foods = Array.isArray(req.body.foods) ? req.body.foods.slice(0, 6) : [];
+  if (!foods.length) return res.status(400).json({ error: 'foods[] required' });
+
+  const payload = foods.map((f) => ({
+    id: String(f.id),
+    name: String(f.name || '').slice(0, 200),
+    ...(f.serving ? { serving: String(f.serving).slice(0, 80) } : {}),
+    ...(f.servings ? { servings: +f.servings || 1 } : {}),
+    ...(f.cal != null ? { cal: +f.cal || 0, protein: +f.protein || 0, carbs: +f.carbs || 0, fat: +f.fat || 0 } : {}),
+    ...(Array.isArray(f.ingredients) && f.ingredients.length
+      ? { ingredients: f.ingredients.slice(0, 60).map((i) => `${i.qty ?? ''} ${i.unit ?? ''} ${i.name ?? ''}`.replace(/\s+/g, ' ').trim()) }
+      : {}),
+  }));
+
+  try {
+    const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-8',
+        max_tokens: 1200 * payload.length + 500,
+        system: MICROS_PROMPT,
+        messages: [{ role: 'user', content: `Foods:\n${JSON.stringify(payload)}\n\nReturn the JSON.` }],
+      }),
+    });
+    if (!aiRes.ok) {
+      const errText = await aiRes.text();
+      return res.status(aiRes.status).json({ error: `Anthropic API: ${errText.slice(0, 300)}` });
+    }
+    const aiData = await aiRes.json();
+    const out = aiData.content?.[0]?.text || '';
+    const cleaned = out.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+    let parsed;
+    try { parsed = JSON.parse(cleaned); }
+    catch { return res.status(500).json({ error: `Could not parse response. First 200 chars: ${cleaned.slice(0, 200)}` }); }
+    const results = {};
+    for (const f of payload) {
+      const m = cleanMicros(parsed?.results?.[f.id]);
+      if (m) results[f.id] = m;
+    }
+    return res.status(200).json({ results });
+  } catch (e) {
+    return res.status(502).json({ error: e?.message || 'Micronutrient estimate failed' });
   }
 }

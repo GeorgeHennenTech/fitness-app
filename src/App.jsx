@@ -2378,22 +2378,28 @@ NOW PARSE THIS SCHEDULE:
 
 <<<SCHEDULE_TEXT>>>`;
 
+// Generic AI passthrough: POST /api/parse with kind:'prompt'. The caller builds
+// the prompt and parses the reply. Returns the model's raw text.
+async function aiPrompt(prompt, imageBase64) {
+  const res = await fetch('/api/parse', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(imageBase64 ? { kind: 'prompt', prompt, imageBase64 } : { kind: 'prompt', prompt }),
+  });
+  const ct = res.headers.get('content-type') || '';
+  if (!ct.includes('json')) {
+    throw new Error(res.status === 504 ? 'The AI took too long to answer. Try again, or use a shorter document.' : `Server error (${res.status}). Try again.`);
+  }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `Server returned ${res.status}`);
+  if (data.truncated) throw new Error('The AI reply was cut off because the document is too long. Try importing it in smaller parts.');
+  return data.text || '';
+}
+
 async function parseScheduleWithAI(text, onStage) {
   const stage = (s) => { if (onStage) onStage(s); };
   stage('Asking Claude to parse…');
-  const response = await fetch('/api/parse-schedule', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      prompt: SCHEDULE_PARSE_PROMPT.replace('<<<SCHEDULE_TEXT>>>', text),
-    }),
-  });
-  if (!response.ok) {
-    const body = await response.text().catch(() => '');
-    throw new Error(`AI parse failed (${response.status}): ${body.slice(0, 200)}`);
-  }
-  const data = await response.json();
-  const textContent = data.text || data.content?.[0]?.text || '';
+  const textContent = await aiPrompt(SCHEDULE_PARSE_PROMPT.replace('<<<SCHEDULE_TEXT>>>', () => text));
   let cleaned = textContent.trim().replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
   const startIdx = cleaned.indexOf('{');
   const endIdx = cleaned.lastIndexOf('}');
@@ -2490,7 +2496,7 @@ function normalizeSchedule(parsed) {
 
 // --- Goals text parser ---------------------------------------------------
 // Heuristic-first: scan pasted text for weight goals + macro patterns.
-// Falls back to AI via /api/parse-goals if local extracts < 3 fields.
+// Falls back to AI via /api/parse (kind:'prompt') if local extracts < 3 fields.
 
 function parseGoalsTextLocal(text) {
   const out = {};
@@ -2641,14 +2647,7 @@ TEXT:
 <<<TEXT>>>`;
 
 async function parseGoalsWithAI(text) {
-  const response = await fetch('/api/parse-goals', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt: GOALS_PARSE_PROMPT.replace('<<<TEXT>>>', text) }),
-  });
-  if (!response.ok) throw new Error(`API ${response.status}`);
-  const data = await response.json();
-  const textContent = data.text || data.content?.[0]?.text || '';
+  const textContent = await aiPrompt(GOALS_PARSE_PROMPT.replace('<<<TEXT>>>', () => text));
   let cleaned = textContent.trim().replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
   const s = cleaned.indexOf('{'), e = cleaned.lastIndexOf('}');
   if (s !== -1 && e > s) cleaned = cleaned.slice(s, e + 1);
@@ -5100,6 +5099,91 @@ function scaleMicros(micros, mult) {
   return Object.keys(out).length ? out : undefined;
 }
 
+// ── AI micronutrient estimates ──────────────────────────────────────────────
+// Recipes, saved foods/meals and AI-logged meals get micros estimated by the
+// model (via /api/estimate-meal mode:'micros') when they don't already carry
+// real USDA / label data. Requests go in small batches so each call stays well
+// inside the function's time limit.
+const MICRO_BATCH_SIZE = 3;
+async function fetchMicrosBatch(foods) {
+  const res = await fetch('/api/estimate-meal', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mode: 'micros', foods }),
+  });
+  const ct = res.headers.get('content-type') || '';
+  if (!ct.includes('json')) throw new Error('/api/estimate-meal is not deployed (or is an old version).');
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `Server returned ${res.status}`);
+  return data.results || {};
+}
+// foods: [{ id, name, ... }]. Returns { results: {id: micros}, failed: n, error }.
+async function estimateMicrosFor(foods, onProgress) {
+  const results = {};
+  let failed = 0, error = null;
+  for (let i = 0; i < foods.length; i += MICRO_BATCH_SIZE) {
+    const chunk = foods.slice(i, i + MICRO_BATCH_SIZE);
+    try {
+      const r = await fetchMicrosBatch(chunk);
+      for (const f of chunk) {
+        const m = cleanMicros(r[f.id]);
+        if (m) results[f.id] = m; else failed++;
+      }
+    } catch (e) {
+      failed += chunk.length;
+      error = e.message || String(e);
+    }
+    onProgress?.(Math.min(foods.length, i + chunk.length), foods.length);
+  }
+  return { results, failed, error };
+}
+// Fingerprint of what a recipe's micros were computed from, so editing the
+// ingredients or servings marks them stale and they get recalculated.
+function microsSig(ingredients, servings) {
+  const str = JSON.stringify([servings || 1, (ingredients || []).map((i) => [i.name, i.qty, i.unit])]);
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+  return String(h >>> 0);
+}
+// Ingredient list a variant actually uses (replace-style or extras-style).
+function variantIngredients(base, v) {
+  if (Array.isArray(v?.ingredients) && v.ingredients.length > 0) return v.ingredients;
+  return [...(base.ingredients || []), ...(v?.extraIngredients || [])];
+}
+// Every (recipe, version) whose micros are missing or stale, as API jobs.
+// id format: "<recipeId>|base" or "<recipeId>|v<idx>".
+function recipeMicroJobs(recipe) {
+  const jobs = [];
+  const baseIngs = recipe.ingredients || [];
+  if (baseIngs.length && recipe.microsSig !== microsSig(baseIngs, recipe.servings)) {
+    jobs.push({ id: `${recipe.id}|base`, name: recipe.name, servings: recipe.servings || 1, ingredients: baseIngs });
+  }
+  (recipe.variants || []).forEach((v, idx) => {
+    const ings = variantIngredients(recipe, v);
+    if (ings.length && v.microsSig !== microsSig(ings, recipe.servings)) {
+      jobs.push({ id: `${recipe.id}|v${idx}`, name: `${recipe.name} — ${v.name}`, servings: recipe.servings || 1, ingredients: ings });
+    }
+  });
+  return jobs;
+}
+// Write estimated micros back onto a recipe object (returns a new object).
+function applyRecipeMicros(recipe, results) {
+  let next = recipe;
+  const base = results[`${recipe.id}|base`];
+  if (base) next = { ...next, micros: base, microsSig: microsSig(recipe.ingredients, recipe.servings), microsSource: 'ai' };
+  if (Array.isArray(recipe.variants)) {
+    let changed = false;
+    const variants = recipe.variants.map((v, idx) => {
+      const m = results[`${recipe.id}|v${idx}`];
+      if (!m) return v;
+      changed = true;
+      return { ...v, micros: m, microsSig: microsSig(variantIngredients(recipe, v), recipe.servings) };
+    });
+    if (changed) next = { ...next, variants };
+  }
+  return next;
+}
+
 // Round a countable quantity to a sensible whole number (min 1). Non-countable
 // units (g, oz, cup, tbsp, ml…) pass through unchanged.
 function roundCountableQty(qty, unit) {
@@ -6067,8 +6151,25 @@ function ReceiptServingsReview({ draft, onComplete, onBack }) {
   );
 }
 
+// ── Share-to-app inbox ──────────────────────────────────────────────────────
+// When the app is opened from the phone's share sheet (Android PWA share
+// target, or an iOS Shortcut that opens /?url=…), the shared link arrives as
+// query params. Grab it once at load, scrub the address bar, and let the
+// Recipes intake pick it up and import it automatically.
+let SHARE_INBOX = (() => {
+  try {
+    const q = new URLSearchParams(window.location.search);
+    const raw = [q.get('url'), q.get('text'), q.get('title')].filter(Boolean).join(' ');
+    const m = raw.match(/https?:\/\/[^\s<>"']+/i);
+    if (!m) return null;
+    window.history.replaceState({}, '', window.location.pathname);
+    return m[0].replace(/[).,;]+$/, '');
+  } catch { return null; }
+})();
+const consumeShareInbox = () => { const u = SHARE_INBOX; SHARE_INBOX = null; return u; };
+
 function ReceiptsView() {
-  const [mainTab, setMainTab] = useState('receipts'); // 'receipts' | 'pantry'
+  const [mainTab, setMainTab] = useState(SHARE_INBOX ? 'recipes' : 'receipts'); // 'receipts' | 'pantry'
   const [view, setView] = useState('list');           // 'list' | 'intake' | 'confirm' | 'detail'
   const [receipts, setReceipts] = useState([]);
   const [loaded, setLoaded] = useState(false);
@@ -8728,7 +8829,7 @@ function PlannedMealsCard({ targetDate, label, plan, recipes, onPickRecipe, onDe
 // RecipeIntake — choose source: camera, photo library, PDF, URL, manual, OR
 // AI-generated from what's in your pantry right now.
 // ─────────────────────────────────────────────────────────────────────────────
-function RecipeIntake({ pantryItems = [], onParsed, onSaveDirect, onManual, onCancel }) {
+function RecipeIntake({ autoUrl = null, pantryItems = [], onParsed, onSaveDirect, onManual, onCancel }) {
   const [stage, setStage] = useState('pick'); // 'pick' | 'parsing' | 'error' | 'url' | 'text' | 'video' | 'generating' | 'generated'
   const [error, setError] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -8809,6 +8910,16 @@ function RecipeIntake({ pantryItems = [], onParsed, onSaveDirect, onManual, onCa
     setPreview(null);
     await sendToParser({ url });
   };
+
+  // Opened via the share sheet: import the shared link straight away.
+  const autoRan = useRef(false);
+  useEffect(() => {
+    if (!autoUrl || autoRan.current) return;
+    autoRan.current = true;
+    const u = consumeShareInbox();
+    if (u) { setUrlInput(u); sendToParser({ url: u }); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleText = async () => {
     const trimmed = textInput.trim();
@@ -9912,13 +10023,15 @@ function tagChipStyle(tag, overrides, strong = false) {
 }
 
 function RecipesView() {
-  const [view, setView] = useState('list'); // 'list' | 'detail' | 'intake' | 'form'
+  const [view, setView] = useState(SHARE_INBOX ? 'intake' : 'list'); // 'list' | 'detail' | 'intake' | 'form'
   const [activeRecipe, setActiveRecipe] = useState(null);
   const [draftRecipe, setDraftRecipe] = useState(null);
   const [pantryItems, setPantryItems] = useState([]);
   const [favorites, setFavorites] = useState(new Set());
   const [filter, setFilter] = useState('all');
   const [maxTime, setMaxTime] = useState(null); // minutes cap for the time filter, or null for off
+  const [recipeQuery, setRecipeQuery] = useState(''); // search box text
+  const [microBulk, setMicroBulk] = useState(null); // null | { done, total } | { error }
   const [loaded, setLoaded] = useState(false);
   const [todayPlan, setTodayPlan] = useState(null);
   const [tomorrowPlan, setTomorrowPlan] = useState(null);
@@ -10064,6 +10177,48 @@ function RecipesView() {
     });
   }, [enriched, browseMode, activeTag, activeFolderId, filter, maxTime]);
 
+  // Search across name, tags, ingredients and notes. Every word typed must hit
+  // somewhere in the recipe; name matches rank first. Ignores folder/tag scope
+  // on purpose so a search always looks through everything.
+  const searchResults = useMemo(() => {
+    const words = recipeQuery.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length) return [];
+    const scored = [];
+    for (const r of enriched) {
+      const name = (r.name || '').toLowerCase();
+      const rest = [
+        (r.tags || []).join(' '),
+        (r.ingredients || []).map((i) => i.name || '').join(' '),
+        r.notes || '', r.description || '',
+        (r.mealType || []).join(' '),
+      ].join(' ').toLowerCase();
+      let score = 0, ok = true;
+      for (const w of words) {
+        if (name.includes(w)) score += 3;
+        else if (rest.includes(w)) score += 1;
+        else { ok = false; break; }
+      }
+      if (ok) scored.push({ r, score });
+    }
+    return scored.sort((a, b) => b.score - a.score || a.r.name.localeCompare(b.r.name)).map((x) => x.r);
+  }, [enriched, recipeQuery]);
+  const searching = recipeQuery.trim().length > 0;
+
+  // Recipes (or versions) still missing micronutrients / with stale ones.
+  const microJobs = useMemo(() => recipes.flatMap((r) => recipeMicroJobs(r)), [recipes]);
+  const runBulkMicros = async () => {
+    const jobs = microJobs;
+    if (!jobs.length) return;
+    setMicroBulk({ done: 0, total: jobs.length });
+    const { results, failed, error } = await estimateMicrosFor(jobs, (done, total) => setMicroBulk({ done, total }));
+    for (const r of recipes) {
+      const updated = applyRecipeMicros(r, results);
+      if (updated !== r) await storage.set(`recipe:${r.id}`, updated);
+    }
+    await reload();
+    setMicroBulk(failed ? { error: `${failed} couldn't be estimated${error ? ` — ${error}` : ''}. Tap again to retry.` } : null);
+  };
+
   const fullyCovered = enriched.filter((r) => r.coverage.fullyCovered);
   const inStock = pantryItems.filter((p) => p.status === 'in-stock').length;
   const expiringSoon = pantryItems.filter((p) => {
@@ -10193,6 +10348,7 @@ function RecipesView() {
     await storage.delete(`recipe:${id}`);
     await storage.delete(`recipeFav:${id}`);
     await storage.delete(`recipeCook:${id}`);
+    await recipePhotoDB.remove(id);
     setActiveRecipe(null);
     setView('list');
     await reload();
@@ -10201,6 +10357,7 @@ function RecipesView() {
   if (view === 'intake') {
     return (
       <RecipeIntake
+        autoUrl={SHARE_INBOX}
         pantryItems={pantryItems}
         onParsed={(draft) => { setDraftRecipe(draft); setView('form'); }}
         onSaveDirect={async (draft) => {
@@ -10345,6 +10502,64 @@ function RecipesView() {
         </div>
       ) : (
         <>
+          {/* ── Search ── */}
+          <div className="relative mb-3">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" />
+            <input
+              type="search"
+              value={recipeQuery}
+              onChange={(e) => setRecipeQuery(e.target.value)}
+              placeholder="Search recipes, ingredients, tags…"
+              className="w-full bg-stone-900 border border-stone-800 focus:border-amber-400 focus:outline-none rounded-lg pl-9 pr-9 py-2.5 text-sm text-stone-100 placeholder:text-stone-600"
+            />
+            {searching && (
+              <button onClick={() => setRecipeQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-200" aria-label="Clear search">
+                <X size={14} />
+              </button>
+            )}
+          </div>
+          {(microJobs.length > 0 || microBulk) && (
+            <div className="flex items-center justify-between gap-2 mb-3 bg-stone-900/40 border border-stone-800 rounded-lg px-3 py-2">
+              <span className="mono text-[10px] text-stone-400 leading-snug">
+                {microBulk?.total
+                  ? `Estimating micronutrients… ${microBulk.done}/${microBulk.total}`
+                  : microBulk?.error
+                    ? <span className="text-rose-300">{microBulk.error}</span>
+                    : `${microJobs.length} recipe${microJobs.length === 1 ? '' : ' versions'} without micronutrients`}
+              </span>
+              {!microBulk?.total && microJobs.length > 0 && (
+                <button onClick={runBulkMicros} className="shrink-0 flex items-center gap-1 text-[10px] mono uppercase tracking-wider text-amber-400 hover:text-amber-300">
+                  <RefreshCw size={11} /> Calculate
+                </button>
+              )}
+              {microBulk?.total > 0 && <Loader2 size={13} className="animate-spin text-amber-400 shrink-0" />}
+            </div>
+          )}
+          {searching && (
+            <div className="mb-3">
+              <div className="mono text-[10px] uppercase tracking-wider text-stone-500 mb-2">
+                {searchResults.length} {searchResults.length === 1 ? 'result' : 'results'}
+              </div>
+              {searchResults.length === 0 ? (
+                <div className="bg-stone-900/40 border border-dashed border-stone-700 rounded-xl p-6 text-center text-xs text-stone-500">
+                  Nothing matches "{recipeQuery.trim()}".
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {searchResults.map((r) => (
+                    <RecipeCard
+                      tagColors={tagColors}
+                      key={r.id}
+                      recipe={r}
+                      onPick={() => { setActiveRecipe(r); setView('detail'); }}
+                      onToggleFavorite={() => toggleFavorite(r.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          <div className={searching ? 'hidden' : ''}>
           {/* ── Tag bar (always on top) ─────────────────────────────────────
               Tapping a tag switches to tag-filter mode and hides the folders. */}
           {allTags.length > 0 && (
@@ -10566,6 +10781,7 @@ function RecipesView() {
               )}
             </>
           )}
+          </div>
         </>
       )}
 
@@ -10686,6 +10902,161 @@ function RecipeCard({ recipe, onPick, onToggleFavorite, tagColors = {} }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // RecipeDetail — full recipe view with servings adjuster + log to Fuel
 // ─────────────────────────────────────────────────────────────────────────────
+// ── Recipe cook photos ──────────────────────────────────────────────────────
+// Photos of dishes you've actually made. Stored in IndexedDB, NOT localStorage:
+// localStorage caps out around 5 MB total and the rest of the app already lives
+// there, so a gallery of photos would crowd out real data. IndexedDB has no
+// such ceiling in practice. One record per recipe: an array of
+// { id, dataUrl, date, note }.
+const recipePhotoDB = (() => {
+  let dbp = null;
+  const open = () => {
+    if (dbp) return dbp;
+    dbp = new Promise((resolve, reject) => {
+      try {
+        const req = indexedDB.open('sft-recipe-photos', 1);
+        req.onupgradeneeded = () => req.result.createObjectStore('photos');
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      } catch (e) { reject(e); }
+    });
+    return dbp;
+  };
+  const tx = async (mode, fn) => {
+    const db = await open();
+    return new Promise((resolve, reject) => {
+      const t = db.transaction('photos', mode);
+      const r = fn(t.objectStore('photos'));
+      t.oncomplete = () => resolve(r && r.result);
+      t.onerror = () => reject(t.error);
+      t.onabort = () => reject(t.error);
+    });
+  };
+  return {
+    async get(recipeId) { try { return (await tx('readonly', (st) => st.get(recipeId))) || []; } catch { return []; } },
+    async set(recipeId, list) { await tx('readwrite', (st) => st.put(list, recipeId)); },
+    async remove(recipeId) { try { await tx('readwrite', (st) => st.delete(recipeId)); } catch {} },
+  };
+})();
+
+function RecipeCookPhotos({ recipeId }) {
+  const [photos, setPhotos] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+  const [viewer, setViewer] = useState(null); // photo being viewed full-size
+  const [confirmDel, setConfirmDel] = useState(false);
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const fileRef = useRef(null);
+
+  useEffect(() => {
+    let alive = true;
+    setLoaded(false);
+    recipePhotoDB.get(recipeId).then((l) => { if (alive) { setPhotos(l); setLoaded(true); } });
+    return () => { alive = false; };
+  }, [recipeId]);
+
+  const persist = async (next) => {
+    setPhotos(next);
+    try { await recipePhotoDB.set(recipeId, next); setError(null); }
+    catch (e) { setError('Could not save the photo — your browser may be out of storage.'); }
+  };
+
+  const addFiles = async (fileList) => {
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+    setBusy(true);
+    try {
+      const added = [];
+      for (const f of files) {
+        const dataUrl = await compressImageFile(f, { maxDim: 1200, quality: 0.78 });
+        added.push({ id: `p_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, dataUrl, date: today(), note: '' });
+      }
+      await persist([...added, ...photos]); // newest first
+    } catch (e) {
+      setError(e.message || 'Could not read that photo');
+    } finally { setBusy(false); }
+  };
+
+  const updateNote = (id, note) => persist(photos.map((p) => (p.id === id ? { ...p, note } : p)));
+  const removePhoto = async (id) => {
+    await persist(photos.filter((p) => p.id !== id));
+    setViewer(null); setConfirmDel(false);
+  };
+
+  const viewing = viewer ? photos.find((p) => p.id === viewer) : null;
+
+  return (
+    <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-[10px] uppercase tracking-[0.2em] mono text-stone-500">
+          How it turned out{photos.length > 0 ? ` · ${photos.length}` : ''}
+        </div>
+        <button
+          onClick={() => fileRef.current?.click()}
+          disabled={busy}
+          className="text-[10px] mono uppercase tracking-wider rounded px-2.5 py-1.5 border border-stone-700 text-stone-400 hover:text-amber-400 hover:border-amber-400/50 flex items-center gap-1.5 transition-colors disabled:opacity-50"
+        >
+          {busy ? <Loader2 size={11} className="animate-spin" /> : <Camera size={11} />} Add photo
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => { const f = e.target.files; addFiles(f); e.target.value = ''; }}
+        />
+      </div>
+
+      {error && <div className="mono text-[10px] text-rose-300 mb-2">{error}</div>}
+
+      {!loaded ? null : photos.length === 0 ? (
+        <button
+          onClick={() => fileRef.current?.click()}
+          className="w-full border border-dashed border-stone-700 hover:border-amber-400/50 rounded-lg py-6 text-center text-xs text-stone-500 hover:text-amber-400 transition-colors"
+        >
+          Snap what you made so you can see how it looked next time.
+        </button>
+      ) : (
+        <div className="grid grid-cols-3 gap-1.5">
+          {photos.map((p) => (
+            <button key={p.id} onClick={() => { setViewer(p.id); setConfirmDel(false); }} className="relative aspect-square overflow-hidden rounded-lg border border-stone-800">
+              <img src={p.dataUrl} alt={p.note || 'Cooked dish'} className="w-full h-full object-cover" loading="lazy" />
+              <span className="absolute bottom-0 inset-x-0 bg-stone-950/70 text-[9px] mono text-stone-300 px-1 py-0.5 text-left">{p.date}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {viewing && (
+        <div className="fixed inset-0 z-[60] bg-stone-950/95 flex flex-col" onClick={() => { setViewer(null); setConfirmDel(false); }}>
+          <div className="flex items-center justify-between p-3" onClick={(e) => e.stopPropagation()}>
+            <span className="mono text-[11px] text-stone-400">{viewing.date}</span>
+            <button onClick={() => { setViewer(null); setConfirmDel(false); }} className="text-stone-300 p-1" aria-label="Close"><X size={20} /></button>
+          </div>
+          <div className="flex-1 flex items-center justify-center px-3 min-h-0">
+            <img src={viewing.dataUrl} alt={viewing.note || 'Cooked dish'} className="max-w-full max-h-full object-contain rounded-lg" />
+          </div>
+          <div className="p-3 space-y-2" onClick={(e) => e.stopPropagation()}>
+            <input
+              defaultValue={viewing.note}
+              onBlur={(e) => { if (e.target.value !== viewing.note) updateNote(viewing.id, e.target.value); }}
+              placeholder="Add a note — e.g. used less sauce, needed more salt"
+              className="w-full bg-stone-900 border border-stone-800 focus:border-amber-400 focus:outline-none rounded-md px-3 py-2 text-sm text-stone-100"
+            />
+            <button
+              onClick={() => (confirmDel ? removePhoto(viewing.id) : setConfirmDel(true))}
+              className={`w-full rounded-md py-2 mono text-[11px] uppercase tracking-wider ${confirmDel ? 'bg-rose-500 text-white' : 'bg-stone-800 text-stone-400'}`}
+            >
+              {confirmDel ? 'Tap again to delete' : 'Delete photo'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavorite, folders = [], onMoveToFolder, onBack, onToggleFavorite, onLogged, onEdit, onDelete, onUpdateRecipe, tagColors = {}, priceBook = {}, onPricesChanged }) {
   // Lean/cut version generator — asks the model to substitute its way to a
   // leaner take, then stores the result as another version of this recipe.
@@ -10701,7 +11072,10 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
   const [variantIdx, setVariantIdx] = useState(-1); // -1 = original recipe; 0+ = a saved version
   const activeVariant = hasVariants && variantIdx >= 0 ? baseRecipe.variants[Math.min(variantIdx, baseRecipe.variants.length - 1)] : null;
   const recipe = useMemo(() => {
-    if (!activeVariant) return baseRecipe;
+    if (!activeVariant) {
+      const fresh = baseRecipe.micros && baseRecipe.microsSig === microsSig(baseRecipe.ingredients, baseRecipe.servings);
+      return fresh ? baseRecipe : { ...baseRecipe, micros: undefined };
+    }
     // A variant either REPLACES the ingredient list (substitution-style, e.g. a
     // lean version) or ADDS to it (extras-style, e.g. a different sauce).
     const overrides = Array.isArray(activeVariant.ingredients) && activeVariant.ingredients.length > 0;
@@ -10716,6 +11090,8 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
       name: `${baseRecipe.name} — ${activeVariant.name}`,
       macros: activeVariant.macros && activeVariant.macros.cal != null ? activeVariant.macros : baseRecipe.macros,
       ingredients,
+      micros: activeVariant.micros && activeVariant.microsSig === microsSig(variantIngredients(baseRecipe, activeVariant), baseRecipe.servings)
+        ? activeVariant.micros : undefined,
     };
   }, [baseRecipe, activeVariant]);
 
@@ -10846,6 +11222,31 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
   const cov = computeRecipeCoverage(recipe, pantryItems);
   const cost = useMemo(() => computeRecipeCost(recipe, receipts, priceBook), [recipe, receipts, priceBook]);
 
+  // Micronutrients: estimated once per ingredient list and saved on the recipe
+  // (and each version). Runs automatically the first time a recipe without
+  // them is opened, and again after its ingredients/servings are edited.
+  const [microState, setMicroState] = useState('idle'); // idle | working | error
+  const [microError, setMicroError] = useState(null);
+  const microAttempted = useRef(new Set());
+  const runRecipeMicros = async (force = false) => {
+    const jobs = recipeMicroJobs(force ? { ...baseRecipe, microsSig: null, variants: (baseRecipe.variants || []).map((v) => ({ ...v, microsSig: null })) } : baseRecipe);
+    if (!jobs.length || !onUpdateRecipe) return;
+    setMicroState('working'); setMicroError(null);
+    const { results, error } = await estimateMicrosFor(jobs);
+    if (Object.keys(results).length) await onUpdateRecipe(applyRecipeMicros(baseRecipe, results));
+    if (error && !Object.keys(results).length) { setMicroError(error); setMicroState('error'); }
+    else setMicroState('idle');
+  };
+  useEffect(() => {
+    const jobs = recipeMicroJobs(baseRecipe);
+    if (!jobs.length) return;
+    const k = jobs.map((j) => j.id).join(',') + ':' + microsSig(baseRecipe.ingredients, baseRecipe.servings);
+    if (microAttempted.current.has(k)) return;
+    microAttempted.current.add(k);
+    runRecipeMicros();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [baseRecipe]);
+
   // Scale macros + ingredient amounts by serving multiplier
   const mult = servings / baseServings;
   const scaledMacros = {
@@ -10881,6 +11282,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
         source: 'recipe',
         recipeId: recipe.id,
         cost: entryCost > 0 ? entryCost : 0,
+        ...(scaleMicros(recipe.micros, servings) ? { micros: scaleMicros(recipe.micros, servings) } : {}),
       };
       await storage.set(dateKey, [...existing, entry]);
       onLogged?.();
@@ -11541,6 +11943,40 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
           <div className="text-sm text-stone-300 leading-relaxed whitespace-pre-wrap">{recipe.notes}</div>
         </div>
       )}
+
+      {/* Micronutrients for the selected servings / version */}
+      <div className="mb-3">
+        <MicronutrientPanel
+          className=""
+          entries={recipe.micros ? [{ micros: scaleMicros(recipe.micros, servings) }] : []}
+          title={`Micronutrients · ${servings} ${servings === 1 ? 'serving' : 'servings'}`}
+          footer="AI estimate from this recipe's ingredients — approximate, recalculated when the ingredients change."
+          emptyText={
+            <div className="mt-2">
+              {microState === 'working' ? (
+                <div className="flex items-center gap-2 text-stone-400 text-xs"><Loader2 size={13} className="animate-spin text-amber-400" /> Estimating micronutrients…</div>
+              ) : (
+                <>
+                  {microError && <div className="mono text-[10px] text-rose-300 leading-snug mb-1.5">{microError}</div>}
+                  <button onClick={() => runRecipeMicros()} className="text-[10px] mono uppercase tracking-wider text-amber-400 hover:text-amber-300">Calculate micronutrients</button>
+                </>
+              )}
+            </div>
+          }
+        />
+        {recipe.micros && (
+          <button
+            onClick={() => runRecipeMicros(true)}
+            disabled={microState === 'working'}
+            className="mt-1 text-[9px] mono uppercase tracking-wider text-stone-600 hover:text-stone-400 flex items-center gap-1 disabled:opacity-50"
+          >
+            <RefreshCw size={10} className={microState === 'working' ? 'animate-spin' : ''} /> Recalculate micronutrients
+          </button>
+        )}
+      </div>
+
+      {/* Photos of the finished dish — kept in IndexedDB, shared across versions */}
+      <RecipeCookPhotos recipeId={baseRecipe.id} />
 
       {/* Meal Prep — cook a batch, deduct pantry, create a Saved Meal with inventory */}
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
@@ -13201,6 +13637,7 @@ async function cookRecipe(recipe, servingsToCook, receipts) {
     sourceRecipeId: recipe.id,
     consumedIngredients: consumedSnapshot,
     status: 'active',
+    ...(recipe.micros ? { micros: recipe.micros, microsSource: 'ai' } : {}),
   };
   await storage.set(`meal:${mealId}`, meal);
 
@@ -13303,7 +13740,7 @@ function ShoppingItemRow({ item, onToggle, onRemove, onQty, isCommon = false, on
 }
 
 export default function FitnessTracker() {
-  const [tab, setTab] = useState('today');
+  const [tab, setTab] = useState(SHARE_INBOX ? 'receipts' : 'today');
   const [activeDate, setActiveDate] = useState(today());
   const [currentDay, setCurrentDay] = useState(getDayOfWeek());
   const [showSettings, setShowSettings] = useState(false);
@@ -19381,21 +19818,7 @@ IMPORTANT:
 - If you see weight units in kg, convert to lb (multiply by 2.20462).
 - Return ONLY the JSON object, nothing else.`;
 
-      const response = await fetch('/api/parse-scan-photo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          imageBase64: base64,
-          prompt,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`API returned ${response.status}`);
-      }
-
-      const data = await response.json();
-      const text = (data.text || data.content?.map((c) => c.text || '').join('') || '').trim();
+      const text = (await aiPrompt(prompt, base64)).trim();
       if (!text) throw new Error('Empty response from vision API');
 
       // Strip any markdown code fences just in case
@@ -20692,12 +21115,12 @@ function MiniChart({ data, label, unit, color }) {
 // etc. Nutrients with a reference value get a progress bar (target fills green,
 // limit warns red); those without (amino acids, individual fats) show the raw
 // amount. "Hide empty" is on by default so untracked nutrients don't clutter.
-function MicronutrientPanel({ entries }) {
+function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt-6', emptyText = null, footer = null, defaultOpen = false }) {
   const { totals, any } = useMemo(() => sumMicros(entries), [entries]);
   const [hideEmpty, setHideEmpty] = useState(true);
   const [openGroups, setOpenGroups] = useState({ general: true, vitamins: true, minerals: true });
   // Whole section collapses — it's long, and most days you just want the macros.
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
 
   const trackedCount = MICRONUTRIENTS.filter((m) => totals[m.key] > 0).length;
 
@@ -20706,7 +21129,7 @@ function MicronutrientPanel({ entries }) {
       onClick={() => setOpen((v) => !v)}
       className="w-full flex items-center justify-between px-3 py-2.5"
     >
-      <span className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">Micronutrients</span>
+      <span className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mono">{title}</span>
       <span className="flex items-center gap-2">
         <span className="mono text-[9px] uppercase tracking-wider text-stone-600">{label}</span>
         <ChevronDown size={13} className={`text-stone-500 transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -20720,16 +21143,20 @@ function MicronutrientPanel({ entries }) {
   // entries carry macros only.
   if (!any) {
     return (
-      <div className="mt-6 bg-stone-900/40 border border-stone-900 rounded-lg overflow-hidden">
+      <div className={`${className} bg-stone-900/40 border border-stone-900 rounded-lg overflow-hidden`}>
         {header('none yet')}
         {open && (
           <div className="px-3 pb-3 border-t border-stone-900">
-            <div className="text-xs text-stone-400 leading-relaxed mt-2">
-              No micronutrient data for today yet. Vitamins, minerals, amino acids and more get attached automatically when you log a food via <span className="text-stone-300">Add → Search</span> or a barcode scan.
-            </div>
-            <div className="mono text-[10px] text-stone-600 leading-snug mt-1.5">
-              Manual entries and AI photo estimates carry macros only, so they don't contribute here.
-            </div>
+            {emptyText || (
+              <>
+                <div className="text-xs text-stone-400 leading-relaxed mt-2">
+                  No micronutrient data for today yet. It gets attached when you log via Search, a barcode scan, an AI text/photo estimate, a recipe, or a saved food that has micronutrients.
+                </div>
+                <div className="mono text-[10px] text-stone-600 leading-snug mt-1.5">
+                  Saved foods without them: Add → Saved → "Fill micronutrients". Hand-typed macros carry none.
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -20737,7 +21164,7 @@ function MicronutrientPanel({ entries }) {
   }
 
   return (
-    <div className="mt-6 bg-stone-900/40 border border-stone-900 rounded-lg overflow-hidden">
+    <div className={`${className} bg-stone-900/40 border border-stone-900 rounded-lg overflow-hidden`}>
       {header(`${trackedCount} tracked`)}
       {open && (
         <div className="border-t border-stone-900">
@@ -20811,7 +21238,7 @@ function MicronutrientPanel({ entries }) {
           );
         })}
             <div className="text-[9px] mono text-stone-600 px-3 py-2 leading-snug">
-              Deep data (vitamins, minerals, amino acids) comes from USDA whole-food entries; branded/packaged items carry only label nutrients. Reference values are general adult guidance, not medical advice.
+              {footer || 'Deep data (vitamins, minerals, amino acids) comes from USDA whole-food entries; branded items carry label nutrients; AI-estimated foods and recipes cover vitamins, minerals and fats but not amino acids, and are approximate.'} Reference values are general adult guidance, not medical advice.
             </div>
           </div>
         </div>
@@ -20842,9 +21269,16 @@ function NutritionView({ day, activeDate, setActiveDate }) {
   const [estimateItems, setEstimateItems] = useState([]);
   const [estimateConfidence, setEstimateConfidence] = useState(null);
   const [estimateRange, setEstimateRange] = useState(null); // per-macro [lo,hi] on lower-confidence estimates
+  const [estimateMicros, setEstimateMicros] = useState(null); // whole-meal micros from the AI estimate
+  // Saved foods/meals micronutrient backfill progress.
+  const [savedMicro, setSavedMicro] = useState(null); // null | { done, total } | { error }
   // Which logged entry has its stored breakdown open in Today's Log.
   const [expandedEntry, setExpandedEntry] = useState(null);
   const mealPhotoRef = useRef(null);
+  // Photo staged for estimation: lets the user add context ("that's 2 tbsp
+  // olive oil", "half eaten", "restaurant portion") before the AI runs.
+  const [pendingPhoto, setPendingPhoto] = useState(null); // { dataUrl, base64 }
+  const [photoContext, setPhotoContext] = useState('');
   // Search/scan a food (e.g. a Quest protein bar) right here and log it to today
   // without a detour through Library → Foods.
   const [showFuelSearch, setShowFuelSearch] = useState(false);
@@ -20887,6 +21321,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
     setEstimateNote('');
     setEstimateItems([]);
     setEstimateRange(null);
+    setEstimateMicros(null);
     setEstimateConfidence(null);
     try {
       const res = await fetch('/api/estimate-meal', {
@@ -20923,6 +21358,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
       setEstimateItems(Array.isArray(data.items) ? data.items : []);
       setEstimateConfidence(data.confidence || null);
       setEstimateRange(data.range || null);
+      setEstimateMicros(cleanMicros(data.micros) || null);
       setEstimateMode(null);
       setEstimateText('');
     } catch (e) {
@@ -20936,7 +21372,10 @@ function NutritionView({ day, activeDate, setActiveDate }) {
     try {
       const dataUrl = await compressImageFile(file, { maxDim: 1600, quality: 0.85 });
       const base64 = dataUrl.split(',')[1];
-      await runMealEstimate({ base64, mimeType: 'image/jpeg' });
+      setPendingPhoto({ dataUrl, base64 });
+      setPhotoContext('');
+      setEstimateError(null);
+      setEstimateMode('photo');
     } catch (e) {
       setEstimateError(e.message || 'Could not read image');
       setEstimateMode('error');
@@ -21025,6 +21464,14 @@ function NutritionView({ day, activeDate, setActiveDate }) {
     // Attach the AI breakdown so the estimate stays auditable in the log later.
     // Only kept if the totals still match the estimate — if you edited the
     // macros by hand, the breakdown no longer explains them, so it's dropped.
+    // AI micros follow the portion: if you edited the calories (e.g. ate half),
+    // scale them by the same ratio. Dropped if calories were zeroed out.
+    if (estimateMicros) {
+      const estCal = estimateItems.reduce((a, i) => a + (i.cal || 0), 0);
+      const ratio = estCal > 0 ? entry.cal / estCal : 1;
+      const m = scaleMicros(estimateMicros, ratio);
+      if (m && entry.cal > 0) { entry.micros = m; entry.microsSource = 'ai'; }
+    }
     if (estimateItems.length > 0) {
       const sum = estimateItems.reduce((a, i) => a + (i.cal || 0), 0);
       if (sum === entry.cal) {
@@ -21040,6 +21487,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
     setEstimateNote('');
     setEstimateItems([]);
     setEstimateRange(null);
+    setEstimateMicros(null);
     setEstimateConfidence(null);
   };
 
@@ -21155,6 +21603,42 @@ function NutritionView({ day, activeDate, setActiveDate }) {
   // One merged catalog for the Add sheet's "Saved" tab — meals first, then
   // foods, each tagged so rows can label/delete themselves correctly. This is
   // what kills the two mirror lists: one search, one list.
+  // Fill in micronutrients for every saved food / meal that has none. Foods
+  // that already carry USDA or label data are left untouched.
+  const missingMicros = useMemo(
+    () => [...foods.map((f) => ({ ...f, _type: 'food' })), ...meals.map((m) => ({ ...m, _type: 'meal' }))].filter((x) => !cleanMicros(x.micros)),
+    [foods, meals]
+  );
+  const fillSavedMicros = async () => {
+    const items = missingMicros;
+    if (!items.length) return;
+    setSavedMicro({ done: 0, total: items.length });
+    const jobs = items.map((x) => ({
+      id: `${x._type}:${x.id}`,
+      name: x.name,
+      serving: x.serving || (x._type === 'meal' ? '1 serving' : ''),
+      cal: x.cal, protein: x.protein, carbs: x.carbs, fat: x.fat,
+      ...(x._type === 'meal' && Array.isArray(x.components) && x.components.length
+        ? { ingredients: x.components.map((c) => ({ qty: c.servings, unit: 'serving of', name: `${c.name}${c.serving ? ` (${c.serving})` : ''}` })) }
+        : {}),
+    }));
+    const { results, failed, error } = await estimateMicrosFor(jobs, (done, total) => setSavedMicro({ done, total }));
+    const nextFoods = [...foods], nextMeals = [...meals];
+    for (const x of items) {
+      const m = results[`${x._type}:${x.id}`];
+      if (!m) continue;
+      const stored = (await storage.get(`${x._type}:${x.id}`)) || x;
+      const { _type, ...clean } = { ...stored, micros: m, microsSource: 'ai' };
+      await storage.set(`${x._type}:${x.id}`, clean);
+      const list = x._type === 'food' ? nextFoods : nextMeals;
+      const i = list.findIndex((y) => y.id === x.id);
+      if (i >= 0) list[i] = clean;
+    }
+    setFoods(nextFoods);
+    setMeals(nextMeals);
+    setSavedMicro(failed ? { error: `${failed} couldn't be estimated${error ? ` — ${error}` : ''}. Tap again to retry.` } : null);
+  };
+
   const savedItems = useMemo(() => {
     const tagged = [
       ...meals.map((m) => ({ ...m, _type: 'meal' })),
@@ -21173,6 +21657,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
     setEstimateText('');
     setEstimateItems([]);
     setEstimateRange(null);
+    setEstimateMicros(null);
     setEstimateConfidence(null);
   };
 
@@ -21288,6 +21773,23 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                   className="bg-stone-950 border border-stone-800 rounded px-3 py-2 text-sm w-full mb-2 focus:border-amber-400 focus:outline-none"
                   autoFocus
                 />
+                {(missingMicros.length > 0 || savedMicro) && (
+                  <div className="flex items-center justify-between gap-2 mb-2 bg-stone-950/60 border border-stone-800 rounded px-2.5 py-1.5">
+                    <span className="mono text-[10px] text-stone-400 leading-snug">
+                      {savedMicro?.total
+                        ? `Estimating micronutrients… ${savedMicro.done}/${savedMicro.total}`
+                        : savedMicro?.error
+                          ? <span className="text-rose-300">{savedMicro.error}</span>
+                          : `${missingMicros.length} saved ${missingMicros.length === 1 ? 'item has' : 'items have'} no micronutrients`}
+                    </span>
+                    {!savedMicro?.total && missingMicros.length > 0 && (
+                      <button onClick={fillSavedMicros} className="shrink-0 flex items-center gap-1 text-[10px] mono uppercase tracking-wider text-amber-400 hover:text-amber-300">
+                        <RefreshCw size={11} /> Fill micronutrients
+                      </button>
+                    )}
+                    {savedMicro?.total > 0 && <Loader2 size={12} className="animate-spin text-amber-400 shrink-0" />}
+                  </div>
+                )}
                 <div className="max-h-72 overflow-y-auto space-y-1">
                   {filterItems(savedItems).length === 0 ? (
                     <div className="text-center text-xs mono text-stone-500 py-6">
@@ -21527,6 +22029,35 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                     <div className="flex items-center gap-2 py-1.5 text-stone-400">
                       <Loader2 size={14} className="animate-spin text-amber-400" />
                       <span className="mono text-xs">Estimating macros…</span>
+                    </div>
+                  ) : estimateMode === 'photo' && pendingPhoto ? (
+                    <div>
+                      <img src={pendingPhoto.dataUrl} alt="Meal to estimate" className="w-full max-h-48 object-cover rounded-md border border-stone-800 mb-2" />
+                      <textarea
+                        value={photoContext}
+                        onChange={(e) => setPhotoContext(e.target.value)}
+                        rows={3}
+                        placeholder="Add context (optional) — e.g. 'about 6 oz chicken, cooked in 1 tbsp olive oil' or 'only ate half'"
+                        className="w-full bg-stone-950 border border-stone-800 rounded px-2 py-1.5 text-xs text-stone-100 mb-2 focus:border-amber-400 focus:outline-none resize-none"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => { setEstimateMode(null); setPendingPhoto(null); setPhotoContext(''); }}
+                          className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded py-1.5 mono text-[10px] uppercase tracking-wider"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => {
+                            const ph = pendingPhoto, ctx = photoContext.trim();
+                            setPendingPhoto(null); setPhotoContext('');
+                            runMealEstimate({ base64: ph.base64, mimeType: 'image/jpeg', ...(ctx ? { text: ctx } : {}) });
+                          }}
+                          className="flex-[2] bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded py-1.5 mono text-[10px] uppercase tracking-wider"
+                        >
+                          Estimate
+                        </button>
+                      </div>
                     </div>
                   ) : estimateMode === 'text' ? (
                     <div>

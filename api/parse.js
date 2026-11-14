@@ -10,17 +10,21 @@
 // Vercel's 12-function Hobby cap.
 //
 // Accepts: { kind, ...payload }
-//   kind: "pantry" | "receipt" | "recipe"
+//   kind: "pantry" | "receipt" | "recipe" | "prompt"
 //   payload (varies by kind):
 //     pantry:  { base64, mimeType }
 //     receipt: { base64, mimeType, isPdf? }
 //     recipe:  { base64, mimeType, isPdf? } | { url } | { text }
+//     prompt:  { prompt, imageBase64? }  — generic passthrough. The client
+//              builds the whole prompt and parses the reply itself. Used by
+//              schedule import, goals import and InBody scan-photo import.
 //
 // Response shapes are UNCHANGED from the originals, so the client contract is
 // identical apart from the URL and the added `kind` field:
 //   pantry  → { items: [...] }
 //   receipt → { parsed: { store, date, total, items: [...] } }
 //   recipe  → { parsed: {...} }
+//   prompt  → { text }  (the model's raw reply, unparsed)
 
 export const config = {
   api: {
@@ -134,6 +138,63 @@ const KINDS = {
   recipe:  { prompt: RECIPE_PROMPT,  maxTokens: 4000, ask: 'Extract this recipe and return the JSON.' },
 };
 
+const MODEL = 'claude-opus-4-8';
+const PROMPT_MAX_CHARS = 60000;
+const IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+
+// Image type from the base64 magic bytes, so the client doesn't have to send it.
+function sniffImageType(b64) {
+  if (b64.startsWith('/9j/')) return 'image/jpeg';
+  if (b64.startsWith('iVBOR')) return 'image/png';
+  if (b64.startsWith('R0lG')) return 'image/gif';
+  if (b64.startsWith('UklG')) return 'image/webp';
+  return null;
+}
+
+async function handlePrompt(req, res) {
+  const { prompt, imageBase64 } = req.body || {};
+  if (typeof prompt !== 'string' || !prompt.trim()) {
+    return res.status(400).json({ error: 'kind "prompt" requires a non-empty prompt string' });
+  }
+  if (prompt.length > PROMPT_MAX_CHARS) {
+    return res.status(413).json({ error: `Text is too long (${prompt.length} characters; limit ${PROMPT_MAX_CHARS}). Try a shorter document.` });
+  }
+  const content = [];
+  if (imageBase64 != null) {
+    if (typeof imageBase64 !== 'string') return res.status(400).json({ error: 'imageBase64 must be a string' });
+    const b64 = imageBase64.replace(/^data:[^;,]+;base64,/, '');
+    if (b64.length * 0.75 > IMAGE_MAX_BYTES) {
+      return res.status(413).json({ error: 'Image is too large (limit 10 MB)' });
+    }
+    const mediaType = sniffImageType(b64);
+    if (!mediaType) return res.status(400).json({ error: 'Unsupported image type (use JPEG, PNG, GIF or WebP)' });
+    content.push({ type: 'image', source: { type: 'base64', media_type: mediaType, data: b64 } });
+  }
+  content.push({ type: 'text', text: prompt });
+
+  try {
+    const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({ model: MODEL, max_tokens: 8000, messages: [{ role: 'user', content }] }),
+    });
+    if (!aiRes.ok) {
+      const errText = await aiRes.text();
+      return res.status(aiRes.status).json({ error: `Anthropic API: ${errText.slice(0, 400)}` });
+    }
+    const aiData = await aiRes.json();
+    const text = (aiData.content || []).map((c) => c.text || '').join('').trim();
+    if (!text) return res.status(500).json({ error: 'Empty response from model' });
+    return res.status(200).json({ text, truncated: aiData.stop_reason === 'max_tokens' });
+  } catch (e) {
+    return res.status(502).json({ error: e?.message || 'Prompt failed' });
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -143,9 +204,10 @@ export default async function handler(req, res) {
   }
 
   const { kind, base64, mimeType, isPdf, url, text } = req.body || {};
+  if (kind === 'prompt') return handlePrompt(req, res);
   const cfg = KINDS[kind];
   if (!cfg) {
-    return res.status(400).json({ error: `Unknown kind "${kind}". Expected one of: ${Object.keys(KINDS).join(', ')}` });
+    return res.status(400).json({ error: `Unknown kind "${kind}". Expected one of: ${Object.keys(KINDS).join(', ')}, prompt` });
   }
 
   // ── Build the message content ─────────────────────────────────────────────
@@ -186,13 +248,30 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: `Could not fetch URL: ${fetchRes.status}` });
       }
       const html = await fetchRes.text();
+      // Best source: schema.org Recipe JSON-LD, which nearly every recipe site
+      // embeds. It's compact and exact, so use it when present and fall back to
+      // stripped page text otherwise. (Stripping <script> tags first would
+      // throw this away, so pull it out BEFORE cleaning.)
+      let ld = '';
+      const re = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+      let m;
+      while ((m = re.exec(html))) {
+        if (/"@type"\s*:\s*(\[[^\]]*)?"Recipe"/i.test(m[1])) { ld = m[1].trim(); break; }
+      }
       const stripped = html
         .replace(/<script[\s\S]*?<\/script>/gi, '')
         .replace(/<style[\s\S]*?<\/style>/gi, '')
+        .replace(/<nav[\s\S]*?<\/nav>/gi, '')
+        .replace(/<header[\s\S]*?<\/header>/gi, '')
+        .replace(/<footer[\s\S]*?<\/footer>/gi, '')
         .replace(/<!--[\s\S]*?-->/g, '')
+        .replace(/<[^>]+>/g, ' ')
         .replace(/\s+/g, ' ');
+      const body = ld
+        ? `STRUCTURED RECIPE DATA (schema.org JSON-LD):\n${ld.slice(0, 20000)}\n\nPAGE TEXT (for notes/tips the structured data may omit):\n${stripped.slice(0, 8000)}`
+        : `PAGE TEXT:\n${stripped.slice(0, 30000)}`;
       content = [
-        { type: 'text', text: `Extract the recipe from this webpage at ${url}. HTML content follows:\n\n${stripped.slice(0, 30000)}\n\nReturn the JSON.` },
+        { type: 'text', text: `Extract the recipe from this webpage at ${url}.\n\n${body}\n\nReturn the JSON.` },
       ];
     } catch (e) {
       return res.status(500).json({ error: `URL fetch failed: ${e.message}` });
@@ -213,7 +292,7 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-8',
+        model: MODEL,
         max_tokens: cfg.maxTokens,
         system: cfg.prompt,
         messages: [{ role: 'user', content }],
