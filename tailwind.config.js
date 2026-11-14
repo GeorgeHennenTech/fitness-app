@@ -43,11 +43,11 @@ export default {
       borderRadius: {
         sm: '6px',
         DEFAULT: '8px',
-        md: '10px',
-        lg: '12px',
-        xl: '16px',
-        '2xl': '20px',
-        '3xl': '26px',
+        md: '12px',
+        lg: '16px',
+        xl: '22px',
+        '2xl': '28px',
+        '3xl': '34px',
       },
       letterSpacing: {
         wide: '0.01em',

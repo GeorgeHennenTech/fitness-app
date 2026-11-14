@@ -179,3 +179,203 @@ select {
     transform: none;
   }
 }
+
+/* ==========================================================================
+   MATERIALS — glass, depth and light.
+   These rules come after Tailwind's utilities, so they restyle the app's
+   existing class combinations (cards, primary buttons, progress bars, fields)
+   without touching the markup. The accent colour comes from --accent, which
+   applyAccentTheme() keeps in sync with the chosen theme.
+   ========================================================================== */
+:root {
+  --accent: 251 191 36;
+  --accent-hi: 252 211 77;
+  --accent-lo: 245 158 11;
+}
+
+/* Soft coloured light behind everything, so glass has something to refract. */
+.app-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(95% 48% at 12% -6%, rgb(var(--accent) / 0.26), transparent 62%),
+    radial-gradient(75% 42% at 104% 4%, rgb(94 92 230 / 0.24), transparent 60%),
+    radial-gradient(90% 40% at 50% 108%, rgb(var(--accent) / 0.1), transparent 62%);
+}
+[data-light='1'] .app-ambient {
+  opacity: 0.55;
+}
+
+/* Glass: a translucent, blurred, light-edged surface (tab bar, chips). */
+.glass {
+  background-color: rgb(44 44 48 / 0.52);
+  -webkit-backdrop-filter: blur(30px) saturate(190%);
+  backdrop-filter: blur(30px) saturate(190%);
+  border: 0.5px solid rgb(255 255 255 / 0.16);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.2),
+    inset 0 -1px 0 rgb(0 0 0 / 0.25),
+    0 18px 44px -10px rgb(0 0 0 / 0.7),
+    0 2px 8px rgb(0 0 0 / 0.3);
+}
+[data-light='1'] .glass {
+  background-color: rgb(255 255 255 / 0.66);
+  border-color: rgb(0 0 0 / 0.06);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 14px 36px -12px rgb(0 0 0 / 0.28);
+}
+.glass-chip {
+  background-color: rgb(255 255 255 / 0.1);
+  border: 0.5px solid rgb(255 255 255 / 0.16);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.16);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+[data-light='1'] .glass-chip {
+  background-color: rgb(0 0 0 / 0.05);
+  border-color: rgb(0 0 0 / 0.06);
+  box-shadow: none;
+}
+.tab-active {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0.07));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 4px 14px -4px rgb(var(--accent) / 0.45);
+}
+[data-light='1'] .tab-active {
+  background: rgb(0 0 0 / 0.06);
+  box-shadow: none;
+}
+
+/* Bars: clearer glass, no hard edge. */
+.ios-bar {
+  -webkit-backdrop-filter: blur(30px) saturate(190%);
+  backdrop-filter: blur(30px) saturate(190%);
+}
+.ios-hairline-b {
+  box-shadow: inset 0 -0.5px 0 rgb(255 255 255 / 0.1);
+}
+
+/* Cards: every stone card becomes a lit, layered surface. */
+.bg-stone-900.border-stone-800,
+.bg-stone-900.border-stone-900 {
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.075), rgb(255 255 255 / 0.025));
+  border-width: 0.5px;
+  border-color: rgb(255 255 255 / 0.12);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    0 14px 34px -18px rgb(0 0 0 / 0.75);
+}
+[data-light='1'] .bg-stone-900.border-stone-800,
+[data-light='1'] .bg-stone-900.border-stone-900 {
+  background-image: none;
+  border-color: rgb(0 0 0 / 0.06);
+  box-shadow: 0 10px 26px -16px rgb(0 0 0 / 0.25);
+}
+/* Small controls made from the same classes shouldn't carry a big shadow. */
+button.bg-stone-900.border-stone-800 {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1);
+}
+
+/* Fields: recessed wells. */
+input.bg-stone-950,
+textarea.bg-stone-950,
+select.bg-stone-950 {
+  border-width: 0.5px;
+  border-color: rgb(255 255 255 / 0.12);
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.5);
+}
+[data-light='1'] input.bg-stone-950,
+[data-light='1'] textarea.bg-stone-950,
+[data-light='1'] select.bg-stone-950 {
+  border-color: rgb(0 0 0 / 0.1);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.06);
+}
+
+/* Primary actions: lit accent with a coloured glow. */
+.bg-amber-400.text-stone-950 {
+  background-image: linear-gradient(180deg, rgb(var(--accent-hi)), rgb(var(--accent)) 55%, rgb(var(--accent-lo)));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.45),
+    0 8px 22px -8px rgb(var(--accent) / 0.7);
+  font-weight: 600;
+}
+button.bg-amber-400.text-stone-950:disabled {
+  box-shadow: none;
+}
+.bg-emerald-400.text-stone-950,
+.check-done {
+  background-image: linear-gradient(180deg, #5ee07f, #30d158 60%, #28b14c);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.4),
+    0 6px 18px -6px rgb(48 209 88 / 0.7);
+}
+
+/* Progress bars: gradient fill that glows. */
+.rounded-full.overflow-hidden > .bg-amber-400,
+.h-1 > .bg-amber-400 {
+  background-image: linear-gradient(90deg, rgb(var(--accent-lo)), rgb(var(--accent-hi)));
+  box-shadow: 0 0 10px rgb(var(--accent) / 0.8);
+  border-radius: 999px;
+}
+.rounded-full.overflow-hidden > .bg-emerald-400,
+.h-1 > .bg-emerald-400 {
+  background-image: linear-gradient(90deg, #28b14c, #5ee07f);
+  box-shadow: 0 0 10px rgb(48 209 88 / 0.8);
+  border-radius: 999px;
+}
+
+/* Workout hero: accent light pouring across a glass card. */
+.hero-card {
+  background-image:
+    radial-gradient(120% 140% at 0% 0%, rgb(var(--accent) / 0.34), transparent 55%),
+    radial-gradient(90% 120% at 100% 100%, rgb(94 92 230 / 0.22), transparent 60%),
+    linear-gradient(180deg, rgb(255 255 255 / 0.08), rgb(255 255 255 / 0.02));
+  border: 0.5px solid rgb(var(--accent) / 0.4);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    0 24px 60px -22px rgb(var(--accent) / 0.55),
+    0 12px 30px -16px rgb(0 0 0 / 0.8);
+}
+.hero-card.hero-done {
+  background-image:
+    radial-gradient(120% 140% at 0% 0%, rgb(48 209 88 / 0.34), transparent 55%),
+    linear-gradient(180deg, rgb(255 255 255 / 0.08), rgb(255 255 255 / 0.02));
+  border-color: rgb(48 209 88 / 0.45);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    0 24px 60px -22px rgb(48 209 88 / 0.5),
+    0 12px 30px -16px rgb(0 0 0 / 0.8);
+}
+[data-light='1'] .hero-card {
+  box-shadow: 0 20px 44px -22px rgb(var(--accent) / 0.6);
+}
+
+/* Segmented controls sit on glass too. */
+.ios-seg {
+  background-color: rgb(255 255 255 / 0.08);
+  border: 0.5px solid rgb(255 255 255 / 0.1);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.35);
+  padding: 3px;
+  border-radius: 14px;
+}
+.ios-seg-item {
+  border-radius: 11px;
+  padding: 7px 4px;
+}
+.ios-seg-on {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.22), rgb(255 255 255 / 0.12));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25), 0 2px 8px rgb(0 0 0 / 0.4);
+}
+[data-light='1'] .ios-seg {
+  background-color: rgb(118 118 128 / 0.16);
+  border-color: transparent;
+  box-shadow: none;
+}
+[data-light='1'] .ios-seg-on {
+  background: #fff;
+}
+
+/* Titles carry more weight. */
+.display {
+  font-weight: 800;
+}

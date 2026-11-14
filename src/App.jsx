@@ -3199,6 +3199,11 @@ function applyAccentTheme(themeId) {
   }
   // Amber is the built-in default — no overrides needed, keeps things fast.
   el.textContent = theme.id === 'amber' ? '' : _accentCss(theme.rgb);
+  // The stylesheet's glows and gradients read the accent from these.
+  const root = document.documentElement.style;
+  root.setProperty('--accent', theme.rgb[400]);
+  root.setProperty('--accent-hi', theme.rgb[300]);
+  root.setProperty('--accent-lo', theme.rgb[500]);
 }
 
 function getSavedAccentTheme() {
@@ -4530,7 +4535,7 @@ function RestTimerBar() {
   const pct = Math.max(0, Math.min(100, ((timer.duration - remaining) / timer.duration) * 100));
 
   return (
-    <div className="fixed left-0 right-0 z-30 px-3 pointer-events-none" style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}>
+    <div className="fixed left-0 right-0 z-30 px-3 pointer-events-none" style={{ bottom: 'calc(84px + env(safe-area-inset-bottom, 0px))' }}>
       <div className={`mx-auto max-w-3xl rounded-lg border pointer-events-auto backdrop-blur-md shadow-2xl overflow-hidden ${completed ? 'bg-emerald-400/15 border-emerald-400' : 'bg-stone-900/95 border-stone-700'}`}>
         <div className="h-1 bg-stone-800">
           <div
@@ -4620,7 +4625,7 @@ function TDEEPanel() {
   const lossDisplay = `${lossSign}${Math.abs(data.weeklyChange).toFixed(2)}`;
 
   return (
-    <div className="bg-gradient-to-br from-stone-900 to-stone-900/40 border border-amber-400/25 rounded-lg p-4 mb-5">
+    <div className="bg-gradient-to-br from-stone-900 to-stone-900 border border-amber-400/25 rounded-lg p-4 mb-5">
       <div className="flex items-baseline justify-between mb-2">
         <div className="flex items-center gap-2">
           <Flame size={12} className="text-amber-400" />
@@ -5882,7 +5887,7 @@ function ReceiptsInsights({ receipts }) {
   return (
     <div className="space-y-3 mb-5">
       {/* Monthly hero w/ delta vs last month */}
-      <div className="bg-gradient-to-br from-stone-900 to-stone-900/40 border border-stone-800 rounded-xl p-5">
+      <div className="bg-gradient-to-br from-stone-900 to-stone-900 border border-stone-800 rounded-xl p-5">
         <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">This Month</div>
         <div className="flex items-baseline gap-2 mt-1">
           <div className="display text-3xl font-semibold text-amber-400 tabular">{fmtMoney(stats.thisMonth)}</div>
@@ -6537,7 +6542,7 @@ function ReceiptList({ receipts, loaded, onAddNew, onPick }) {
       {receipts.length >= 2 ? (
         <ReceiptsInsights receipts={receipts} />
       ) : receipts.length === 1 ? (
-        <div className="bg-gradient-to-br from-stone-900 to-stone-900/40 border border-stone-800 rounded-xl p-5 mb-5">
+        <div className="bg-gradient-to-br from-stone-900 to-stone-900 border border-stone-800 rounded-xl p-5 mb-5">
           <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">This Month</div>
           <div className="flex items-baseline gap-2 mt-1">
             <div className="display text-3xl font-semibold text-amber-400 tabular">{fmtMoney(monthTotal)}</div>
@@ -7177,7 +7182,7 @@ function ReceiptDetail({ receipt, onBack, onDelete, onUpdate }) {
       )}
 
       {/* Summary */}
-      <div className="bg-gradient-to-br from-stone-900 to-stone-900/40 border border-stone-800 rounded-xl p-5 mb-3">
+      <div className="bg-gradient-to-br from-stone-900 to-stone-900 border border-stone-800 rounded-xl p-5 mb-3">
         <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">{fmtDateLong(receipt.date)}</div>
         <div className="display text-xl font-semibold mt-0.5 text-stone-100">{receipt.store || 'Unknown store'}</div>
         <div className="flex items-baseline gap-2 mt-3">
@@ -7777,7 +7782,7 @@ function PantryView() {
   return (
     <div className="relative pb-16">
       {/* Summary card */}
-      <div className="bg-gradient-to-br from-stone-900 to-stone-900/40 border border-stone-800 rounded-xl p-5 mb-4">
+      <div className="bg-gradient-to-br from-stone-900 to-stone-900 border border-stone-800 rounded-xl p-5 mb-4">
         <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">In Your Kitchen</div>
         <div className="flex items-baseline gap-2 mt-1">
           <div className="display text-3xl font-semibold text-amber-400 tabular">{inStock.length}</div>
@@ -8815,7 +8820,7 @@ function MealPlanner({ pantryItems, recipes, targetDate, onClose, onAccepted }) 
           {stage === 'review' && plan && totals && targets && (
             <div>
               {/* Totals card */}
-              <div className="bg-gradient-to-br from-stone-900 to-stone-900/40 border border-stone-800 rounded-xl p-4 mb-3">
+              <div className="bg-gradient-to-br from-stone-900 to-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
                 <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-2">Day Totals</div>
                 <div className="grid grid-cols-4 gap-1.5">
                   {[
@@ -8939,7 +8944,7 @@ function PlannedMealsCard({ targetDate, label, plan, recipes, onPickRecipe, onDe
   );
 
   return (
-    <div className="bg-gradient-to-br from-amber-400/10 to-stone-900/40 border border-amber-400/30 rounded-xl p-4 mb-3">
+    <div className="bg-gradient-to-br from-amber-400/10 to-stone-900 border border-amber-400/30 rounded-xl p-4 mb-3">
       <div className="flex items-center justify-between mb-3">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-amber-400 mono flex items-center gap-1">
@@ -10561,7 +10566,7 @@ function RecipesView() {
   return (
     <div className="pb-16 relative">
       {/* Pantry summary banner */}
-      <div className="bg-gradient-to-br from-stone-900 to-stone-900/40 border border-stone-800 rounded-xl p-4 mb-3">
+      <div className="bg-gradient-to-br from-stone-900 to-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
         <div className="flex items-center justify-between">
           <div>
             <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">From Your Pantry</div>
@@ -11553,7 +11558,7 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
       </div>
 
       {/* Title block */}
-      <div className="bg-gradient-to-br from-stone-900 to-stone-900/40 border border-stone-800 rounded-xl p-5 mb-3">
+      <div className="bg-gradient-to-br from-stone-900 to-stone-900 border border-stone-800 rounded-xl p-5 mb-3">
         <div className="display text-2xl font-semibold text-stone-100">{baseRecipe.name}</div>
         <div className="mono text-[11px] uppercase tracking-wider text-stone-500 mt-1">
           {recipe.totalTime} min · {recipe.difficulty} · base {recipe.servings} {recipe.servings === 1 ? 'serving' : 'servings'}
@@ -12822,7 +12827,7 @@ function ShoppingView({ onConvertToReceipt }) {
   return (
     <div className="pb-32">
       {/* Summary card */}
-      <div className="bg-gradient-to-br from-stone-900 to-stone-900/40 border border-stone-800 rounded-xl p-4 mb-3">
+      <div className="bg-gradient-to-br from-stone-900 to-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
         <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">Shopping List</div>
         <div className="flex items-baseline gap-2 mt-1">
           <div className="display text-2xl font-semibold text-amber-400 tabular">
@@ -13968,7 +13973,8 @@ export default function FitnessTracker() {
 
   return (
     <ErrorBoundary>
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans">
+    <div className="relative isolate min-h-screen bg-stone-950 text-stone-100 font-sans">
+      <div className="app-ambient" aria-hidden="true" />
 
       <Header day={currentDay} activeDate={activeDate} onOpenSettings={() => setShowSettings(true)} />
 
@@ -13996,10 +14002,10 @@ export default function FitnessTracker() {
       </main>
 
       <nav
-        className="fixed bottom-0 left-0 right-0 z-30 bg-stone-950/80 ios-bar ios-hairline-t"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        className="fixed left-0 right-0 z-30 px-3 pointer-events-none"
+        style={{ bottom: 'max(10px, env(safe-area-inset-bottom, 0px))' }}
       >
-        <div className="max-w-3xl mx-auto grid grid-cols-6">
+        <div className="glass pointer-events-auto max-w-md mx-auto rounded-[30px] p-1.5 grid grid-cols-6">
           {tabs.map((t) => {
             const Icon = t.icon;
             const active = tab === t.id;
@@ -14008,10 +14014,10 @@ export default function FitnessTracker() {
                 key={t.id}
                 onClick={() => setTab(t.id)}
                 aria-current={active ? 'page' : undefined}
-                className={`flex flex-col items-center gap-0.5 pt-2 pb-1.5 px-1 ${active ? 'text-amber-400' : 'text-stone-500'}`}
+                className={`flex flex-col items-center gap-0.5 py-1.5 rounded-[24px] ${active ? 'tab-active text-amber-400' : 'text-stone-400'}`}
               >
-                <Icon size={24} strokeWidth={active ? 2.2 : 1.8} />
-                <span className="text-[10px] font-medium leading-tight">{t.label}</span>
+                <Icon size={23} strokeWidth={active ? 2.3 : 1.8} />
+                <span className={`text-[10px] leading-tight ${active ? 'font-semibold' : 'font-medium'}`}>{t.label}</span>
               </button>
             );
           })}
@@ -14078,7 +14084,7 @@ function Header({ day, activeDate, onOpenSettings }) {
   const isToday = activeDate === today();
   return (
     <header
-      className="bg-stone-950/80 ios-bar ios-hairline-b sticky top-0 z-30"
+      className="bg-stone-950/60 ios-bar ios-hairline-b sticky top-0 z-30"
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
       <div className="max-w-3xl mx-auto px-4 pt-2 pb-2.5 flex items-center justify-between gap-3">
@@ -14088,16 +14094,13 @@ function Header({ day, activeDate, onOpenSettings }) {
         </div>
         <div className="flex items-center gap-2.5 shrink-0">
           <StreakBadge />
-          <div className="text-right">
-            <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">
-              {isToday ? `Day ${day}/7` : fmtDate(activeDate)}
-            </div>
-            <div className="text-xs mono text-stone-300 mt-0.5">{session.type === 'lift' ? 'Lift' : session.type === 'cardio' ? 'Cardio' : 'Rest'}</div>
-          </div>
+          {!isToday && (
+            <div className="glass-chip rounded-full px-2.5 py-1 text-[12px] text-stone-200 tabular">{fmtDate(activeDate)}</div>
+          )}
           {onOpenSettings && (
             <button
               onClick={onOpenSettings}
-              className="w-9 h-9 -mr-1 rounded-full bg-stone-800 text-stone-300 flex items-center justify-center"
+              className="glass-chip w-9 h-9 -mr-1 rounded-full text-stone-200 flex items-center justify-center"
               aria-label="Settings"
             >
               <Settings size={18} />
@@ -14602,42 +14605,37 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
       )}
 
       {/* Session header */}
-      <div className="bg-gradient-to-br from-stone-900 to-stone-900/40 border border-stone-800 rounded-xl p-5 mb-5">
-        <div className="display text-2xl font-semibold mb-1">{session.name}</div>
-        <div className="text-stone-400 text-sm mb-3">{session.focus}</div>
-        <div className="flex gap-4 text-xs mono text-stone-500">
-          <span>~{session.duration} MIN</span>
-          <span className="text-stone-700">·</span>
-          <span>{session.blocks.reduce((n, b) => n + b.exercises.length, 0)} EXERCISES</span>
-        </div>
-        {/* Completion progress — only show if there's progress to display */}
-        {(() => {
-          const total = session.blocks.reduce((n, b) => n + b.exercises.length, 0);
-          const done = session.blocks.reduce(
-            (n, b) => n + b.exercises.filter((ex) => completed[ex.name]).length,
-            0
-          );
-          if (total === 0) return null;
-          const pct = (done / total) * 100;
-          const allDone = done === total && total > 0;
-          return (
-            <div className="mt-4 pt-4 border-t border-stone-800">
-              <div className="flex items-center justify-between mb-1.5">
-                <div className={`mono text-[11px] uppercase tracking-wider ${allDone ? 'text-emerald-400' : 'text-stone-500'}`}>
-                  {allDone ? '✓ Workout complete' : 'Progress'}
+      {(() => {
+        const total = session.blocks.reduce((n, b) => n + b.exercises.length, 0);
+        const done = session.blocks.reduce(
+          (n, b) => n + b.exercises.filter((ex) => completed[ex.name]).length,
+          0
+        );
+        const allDone = total > 0 && done === total;
+        return (
+          <div className={`hero-card bg-stone-900 ${allDone ? 'hero-done' : ''} relative overflow-hidden rounded-2xl p-5 mb-5`}>
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0">
+                <div className={`text-[11px] uppercase tracking-wider mb-1 ${allDone ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  {allDone ? 'Workout complete' : `Day ${effectiveDay} · ${session.type === 'lift' ? 'Lift' : session.type === 'cardio' ? 'Cardio' : 'Rest'}`}
                 </div>
-                <div className="mono tabular text-xs text-stone-300">{done}<span className="text-stone-500">/{total}</span></div>
+                <div className="display text-[28px] leading-8">{session.name}</div>
+                <div className="text-stone-300 text-sm mt-1">{session.focus}</div>
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  <span className="glass-chip rounded-full px-2.5 py-1 text-[12px] text-stone-200 tabular">~{session.duration} min</span>
+                  <span className="glass-chip rounded-full px-2.5 py-1 text-[12px] text-stone-200 tabular">{total} exercises</span>
+                </div>
               </div>
-              <div className="h-1.5 bg-stone-800 rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-300 ${allDone ? 'bg-emerald-400' : 'bg-amber-400'}`}
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
+              {total > 0 && (
+                <ProgressRing pct={(done / total) * 100} size={84} stroke={9} tone={allDone ? 'green' : 'accent'}>
+                  <div className="display text-xl leading-none tabular">{done}<span className="text-stone-500 text-sm">/{total}</span></div>
+                  <div className="text-[10px] text-stone-400 mt-0.5">done</div>
+                </ProgressRing>
+              )}
             </div>
-          );
-        })()}
-      </div>
+          </div>
+        );
+      })()}
 
       {/* Save indicator */}
       {saved && (
@@ -18834,13 +18832,13 @@ function ExerciseCard({ exercise, log, history, onUpdate, onFillWeight, complete
       onClick={(e) => { e.stopPropagation(); onToggleComplete?.(); }}
       className={`shrink-0 rounded-full transition-all flex items-center justify-center ${
         completed
-          ? 'bg-emerald-400 border-emerald-400 text-stone-950'
+          ? 'check-done bg-emerald-400 border-emerald-400 text-stone-950'
           : 'bg-transparent border-stone-600 hover:border-stone-400 text-transparent active:border-amber-400'
       }`}
-      style={{ width: '22px', height: '22px', borderWidth: '2px' }}
+      style={{ width: '26px', height: '26px', borderWidth: '2px' }}
       aria-label={completed ? 'Mark exercise incomplete' : 'Mark exercise complete'}
     >
-      <Check size={12} strokeWidth={3} />
+      <Check size={15} strokeWidth={3.2} />
     </button>
   );
 
@@ -21838,10 +21836,10 @@ function NutritionView({ day, activeDate, setActiveDate }) {
           {isToday ? 'Today' : fmtDate(dateForKey)} · {session.type === 'lift' ? 'Lift Day' : session.type === 'cardio' ? 'Cardio Day' : 'Rest Day'}
         </div>
         <div className="grid grid-cols-4 gap-3">
-          <MacroRing label="Cal" current={totals.cal} target={targets.cal} color="#fbbf24" />
-          <MacroRing label="Protein" current={totals.protein} target={targets.protein} color="#34d399" unit="g" />
-          <MacroRing label="Carbs" current={totals.carbs} target={targets.carbs} color="#60a5fa" unit="g" />
-          <MacroRing label="Fat" current={totals.fat} target={targets.fat} color="#fb7185" unit="g" />
+          <MacroRing label="Cal" current={totals.cal} target={targets.cal} color="rgb(var(--accent))" />
+          <MacroRing label="Protein" current={totals.protein} target={targets.protein} color="#30D158" unit="g" />
+          <MacroRing label="Carbs" current={totals.carbs} target={targets.carbs} color="#0A84FF" unit="g" />
+          <MacroRing label="Fat" current={totals.fat} target={targets.fat} color="#FF375F" unit="g" />
         </div>
         <div className="mt-4 pt-4 border-t border-stone-800 flex items-center justify-between text-[12px] mono text-stone-500">
           <span>FLOOR: 2,126 KCAL (BMR)</span>
@@ -23946,27 +23944,45 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
   );
 }
 
+// Activity-style ring: thick rounded stroke with a soft glow in its own colour.
+// tone 'accent' and 'green' follow the theme; pass `color` for a fixed colour.
+function ProgressRing({ pct, size = 72, stroke = 7, tone = 'accent', color, children }) {
+  const r = (size - stroke) / 2;
+  const C = 2 * Math.PI * r;
+  const p = Math.max(0, Math.min(100, Number.isFinite(pct) ? pct : 0));
+  const strokeColor = color || (tone === 'green' ? '#30D158' : 'rgb(var(--accent))');
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90 overflow-visible">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth={stroke} className="text-stone-500" opacity="0.22" />
+        {p > 0 && (
+          <circle
+            cx={size / 2} cy={size / 2} r={r}
+            fill="none"
+            stroke={strokeColor}
+            strokeWidth={stroke}
+            strokeDasharray={C}
+            strokeDashoffset={C - (p / 100) * C}
+            strokeLinecap="round"
+            className="transition-all duration-500"
+            style={{ filter: `drop-shadow(0 0 5px ${strokeColor})` }}
+          />
+        )}
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">{children}</div>
+    </div>
+  );
+}
+
 function MacroRing({ label, current, target, color, unit = '' }) {
-  const pct = Math.min(100, (current / target) * 100);
-  const C = 2 * Math.PI * 22;
+  const pct = target > 0 ? Math.min(100, (current / target) * 100) : 0;
   return (
     <div className="flex flex-col items-center">
-      <svg width="58" height="58" className="-rotate-90">
-        <circle cx="29" cy="29" r="22" fill="none" stroke="#2C2C2E" strokeWidth="4" />
-        <circle
-          cx="29" cy="29" r="22"
-          fill="none"
-          stroke={color}
-          strokeWidth="4"
-          strokeDasharray={C}
-          strokeDashoffset={C - (pct / 100) * C}
-          strokeLinecap="round"
-          className="transition-all duration-500"
-        />
-      </svg>
-      <div className="text-sm font-semibold mono tabular -mt-9">{Math.round(current)}{unit}</div>
-      <div className="text-[11px] mono text-stone-500 mt-7 tabular">/{target}{unit}</div>
-      <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mt-0.5">{label}</div>
+      <ProgressRing pct={pct} size={70} stroke={7} color={color}>
+        <div className="text-sm font-semibold tabular leading-none">{Math.round(current)}{unit}</div>
+      </ProgressRing>
+      <div className="text-[12px] font-semibold text-stone-200 mt-2">{label}</div>
+      <div className="text-[11px] text-stone-500 tabular">of {target}{unit}</div>
     </div>
   );
 }
