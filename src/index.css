@@ -152,9 +152,12 @@ select {
   .ios-backdrop > * {
     animation: sheet-up 0.34s cubic-bezier(0.2, 0.9, 0.25, 1) both;
   }
-  /* Each tab's content settles in when you switch. */
+  /* Each tab's content settles in when you switch. Fill mode is "backwards"
+     on purpose: a transform that lingers after the animation would make <main>
+     the containing block for every position:fixed sheet inside it, pinning
+     them inside the page and under the tab bar. */
   .ios-view {
-    animation: view-in 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation: view-in 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
   }
 }
 
@@ -378,4 +381,15 @@ button.bg-amber-400.text-stone-950:disabled {
 /* Titles carry more weight. */
 .display {
   font-weight: 800;
+}
+
+/* Bottom sheets: clear the home indicator, and scroll inside themselves on
+   short screens instead of running off the top or bottom. */
+.ios-backdrop.items-end {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+}
+.ios-backdrop.items-end > * {
+  max-height: calc(100dvh - 2rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
