@@ -121,7 +121,9 @@ export default async function handler(req, res) {
 
   if (req.body?.mode === 'micros') return handleMicros(req, res);
 
-  const { text, base64, mimeType } = req.body || {};
+  const { text, base64, mimeType, afterBase64 } = req.body || {};
+  // Before/after mode: a second photo of the plate once the person has finished.
+  const beforeAfter = !!(base64 && afterBase64);
   if (!text && !base64) {
     return res.status(400).json({ error: 'text or image required' });
   }
@@ -131,6 +133,7 @@ export default async function handler(req, res) {
 
   // Build the user message content — text, image, or both
   const content = [];
+  if (beforeAfter) content.push({ type: 'text', text: 'Photo 1: the meal BEFORE eating.' });
   if (base64) {
     content.push({
       type: 'image',
@@ -141,10 +144,16 @@ export default async function handler(req, res) {
       },
     });
   }
+  if (beforeAfter) {
+    content.push({ type: 'text', text: 'Photo 2: the same plate AFTER eating, showing what was left.' });
+    content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: afterBase64 } });
+  }
   const ctx = text ? String(text).slice(0, 4000) : '';
   content.push({
     type: 'text',
-    text: base64 && ctx
+    text: beforeAfter
+      ? `Estimate the macros for what the person ACTUALLY ATE: the food in photo 1 minus whatever remains in photo 2. For each component, estimate how much was served, subtract what is left, and report only the eaten amount as that item's grams and macros. Leave out components that were not touched. Totals and micros must cover only what was eaten. In "note", say roughly how much was eaten (for example "ate about 70% of the rice, all the chicken"). If the two photos do not look like the same meal, estimate the full meal from photo 1 and say so in "note".${ctx ? `\n\nThe person added this context — treat it as authoritative where it states portions, ingredients or cooking fats:\n\n${ctx}` : ''}`
+      : base64 && ctx
       ? `Estimate the macros for the meal shown in this image, broken down by component. The person added this context about it — treat it as authoritative where it states portions, ingredients, cooking fats, or how much was eaten, and use the image for everything it doesn't cover:\n\n${ctx}`
       : ctx
         ? `Estimate the macros for this meal, broken down by component:\n\n${ctx}`

@@ -21414,6 +21414,18 @@ function NutritionView({ day, activeDate, setActiveDate }) {
   // olive oil", "half eaten", "restaurant portion") before the AI runs.
   const [pendingPhoto, setPendingPhoto] = useState(null); // { dataUrl, base64 }
   const [photoContext, setPhotoContext] = useState('');
+  // Optional second photo of the plate after eating, so only what was eaten is logged.
+  const [pendingAfter, setPendingAfter] = useState(null); // { dataUrl, base64 }
+  const mealAfterRef = useRef(null);
+  const handleAfterPhoto = async (file) => {
+    if (!file) return;
+    try {
+      const dataUrl = await compressImageFile(file, { maxDim: 1280, quality: 0.8 });
+      setPendingAfter({ dataUrl, base64: dataUrl.split(',')[1] });
+    } catch (e) {
+      setEstimateError(e.message || 'Could not read image');
+    }
+  };
   // Search/scan a food (e.g. a Quest protein bar) right here and log it to today
   // without a detour through Library → Foods.
   const [showFuelSearch, setShowFuelSearch] = useState(false);
@@ -21508,6 +21520,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
       const dataUrl = await compressImageFile(file, { maxDim: 1600, quality: 0.85 });
       const base64 = dataUrl.split(',')[1];
       setPendingPhoto({ dataUrl, base64 });
+      setPendingAfter(null);
       setPhotoContext('');
       setEstimateError(null);
       setEstimateMode('photo');
@@ -22158,6 +22171,13 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                   className="hidden"
                   onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; handleMealPhoto(f); }}
                 />
+                <input
+                  ref={mealAfterRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; handleAfterPhoto(f); }}
+                />
                 <div className="bg-stone-950/60 border border-stone-800 rounded-lg p-2.5 mb-3">
                   <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mb-2">Estimate with AI</div>
                   {estimateMode === 'working' ? (
@@ -22167,7 +22187,40 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                     </div>
                   ) : estimateMode === 'photo' && pendingPhoto ? (
                     <div>
-                      <img src={pendingPhoto.dataUrl} alt="Meal to estimate" className="w-full max-h-56 object-cover rounded-lg border border-stone-800 mb-3" />
+                      {pendingAfter ? (
+                        <div className="grid grid-cols-2 gap-2 mb-1.5">
+                          <div>
+                            <img src={pendingPhoto.dataUrl} alt="Meal before eating" className="w-full h-32 object-cover rounded-lg border border-stone-800" />
+                            <div className="text-[12px] font-semibold text-stone-300 mt-1 text-center">Before</div>
+                          </div>
+                          <div className="relative">
+                            <img src={pendingAfter.dataUrl} alt="Plate after eating" className="w-full h-32 object-cover rounded-lg border border-stone-800" />
+                            <button
+                              type="button"
+                              onClick={() => setPendingAfter(null)}
+                              aria-label="Remove after photo"
+                              className="glass-chip absolute top-1.5 right-1.5 w-7 h-7 rounded-full flex items-center justify-center text-stone-100"
+                            >
+                              <X size={14} />
+                            </button>
+                            <div className="text-[12px] font-semibold text-stone-300 mt-1 text-center">After</div>
+                          </div>
+                        </div>
+                      ) : (
+                        <img src={pendingPhoto.dataUrl} alt="Meal to estimate" className="w-full max-h-56 object-cover rounded-lg border border-stone-800 mb-2" />
+                      )}
+                      {pendingAfter ? (
+                        <div className="text-xs text-emerald-400 mb-3 leading-snug">Only what you ate will be logged: the first photo minus what's left in the second.</div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => mealAfterRef.current?.click()}
+                          className="w-full border border-dashed border-stone-700 text-stone-300 rounded-md py-2 mb-3 flex items-center justify-center gap-1.5 text-sm"
+                        >
+                          <Camera size={14} className="text-sky-400" /> Add an after photo
+                          <span className="text-stone-500 text-xs">· logs only what you ate</span>
+                        </button>
+                      )}
                       <label htmlFor="meal-photo-caption" className="block text-sm font-semibold text-stone-100 mb-0.5">Caption</label>
                       <div className="text-xs text-stone-500 mb-2 leading-snug">Optional. Tell the AI what it can't see. Anything you write here overrides its guess from the photo.</div>
                       <textarea
@@ -22200,20 +22253,25 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                       </div>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => { setEstimateMode(null); setPendingPhoto(null); setPhotoContext(''); }}
+                          onClick={() => { setEstimateMode(null); setPendingPhoto(null); setPendingAfter(null); setPhotoContext(''); }}
                           className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-2.5 text-sm"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={() => {
-                            const ph = pendingPhoto, ctx = photoContext.trim();
-                            setPendingPhoto(null); setPhotoContext('');
-                            runMealEstimate({ base64: ph.base64, mimeType: 'image/jpeg', ...(ctx ? { text: ctx } : {}) });
+                            const ph = pendingPhoto, after = pendingAfter, ctx = photoContext.trim();
+                            setPendingPhoto(null); setPendingAfter(null); setPhotoContext('');
+                            runMealEstimate({
+                              base64: ph.base64,
+                              mimeType: 'image/jpeg',
+                              ...(after ? { afterBase64: after.base64 } : {}),
+                              ...(ctx ? { text: ctx } : {}),
+                            });
                           }}
                           className="flex-[2] bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded-md py-2.5 text-sm"
                         >
-                          {photoContext.trim() ? 'Estimate with caption' : 'Estimate'}
+                          {pendingAfter ? 'Estimate what I ate' : photoContext.trim() ? 'Estimate with caption' : 'Estimate'}
                         </button>
                       </div>
                     </div>
