@@ -11521,8 +11521,11 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
         }
       }
 
-      setAddedConfirm({ added, merged, total: ingredients.length, label });
-      setTimeout(() => setAddedConfirm(null), 2400);
+      if (label !== 'ran-out') {
+        setAddedConfirm({ added, merged, total: ingredients.length, label });
+        setTimeout(() => setAddedConfirm(null), 2400);
+      }
+      return { added, merged };
     } finally {
       setAdding(false);
     }
@@ -12090,6 +12093,13 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
         </ol>
       </div>
 
+      {/* Ran out of something while making this? → shopping list */}
+      <RanOutPrompt
+        key={`${recipe.id}:${variantIdx}`}
+        ingredients={recipe.ingredients || []}
+        onAdd={(ings) => handleAddToShoppingList(ings, 'ran-out')}
+      />
+
       {/* Notes — free-text notes the user (or the source) added to this recipe */}
       {recipe.notes && recipe.notes.trim() && (
         <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3">
@@ -12323,6 +12333,101 @@ function RecipeDetail({ recipe: baseRecipe, pantryItems, receipts = [], isFavori
 //
 // Sources is an array of { id, label, priority } so a single shopping-list
 // entry can credit multiple recipes that need the same ingredient.
+
+// Asked on every recipe page, under the instructions: did you run out of
+// anything making this? Yes → pick which ingredients → confirm adding them to
+// the shopping list. Purely additive: it never touches the pantry.
+function RanOutPrompt({ ingredients, onAdd }) {
+  const [stage, setStage] = useState('ask'); // ask | pick | saving | done | no
+  const [picked, setPicked] = useState(() => new Set());
+  const [result, setResult] = useState(null);
+  const items = (ingredients || []).filter((i) => i && String(i.name || '').trim());
+  if (items.length === 0) return null;
+
+  const toggle = (idx) => setPicked((prev) => {
+    const next = new Set(prev);
+    if (next.has(idx)) next.delete(idx); else next.add(idx);
+    return next;
+  });
+  const add = async () => {
+    const chosen = items.filter((_, i) => picked.has(i));
+    if (chosen.length === 0) return;
+    setStage('saving');
+    try {
+      const r = await onAdd(chosen);
+      setResult({ count: chosen.length, merged: r?.merged || 0 });
+      setStage('done');
+    } catch {
+      setStage('pick');
+    }
+  };
+  const reset = () => { setPicked(new Set()); setResult(null); setStage('ask'); };
+
+  return (
+    <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-3" data-ran-out={stage}>
+      {stage === 'ask' && (
+        <div className="flex items-center gap-3">
+          <div className="flex-1 text-sm text-stone-200">Did you run out of anything?</div>
+          <button onClick={() => setStage('no')} className="px-4 py-2 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-200 mono text-xs">No</button>
+          <button onClick={() => setStage('pick')} className="px-4 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold mono text-xs">Yes</button>
+        </div>
+      )}
+      {stage === 'no' && (
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-xs text-stone-500">Nothing ran out.</div>
+          <button onClick={reset} className="text-[12px] mono text-stone-400 hover:text-amber-400">Change</button>
+        </div>
+      )}
+      {(stage === 'pick' || stage === 'saving') && (
+        <div>
+          <div className="text-sm text-stone-200 mb-3">What did you run out of?</div>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {items.map((ing, i) => {
+              const on = picked.has(i);
+              return (
+                <button
+                  key={i}
+                  onClick={() => toggle(i)}
+                  aria-pressed={on}
+                  className={`px-3 py-2 rounded-full text-xs border flex items-center gap-1.5 ${on ? 'bg-amber-400/15 border-amber-400/60 text-amber-300' : 'bg-stone-800 border-stone-700 text-stone-300'}`}
+                >
+                  {on && <Check size={12} strokeWidth={3} />}
+                  {ing.name}
+                </button>
+              );
+            })}
+          </div>
+          {picked.size > 0 && (
+            <div className="text-sm text-stone-200 mb-3">
+              Add {picked.size === 1 ? 'it' : `these ${picked.size}`} to your shopping list?
+            </div>
+          )}
+          <div className="flex gap-2">
+            <button onClick={reset} className="flex-1 py-2.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-200 mono text-xs">Not now</button>
+            <button
+              onClick={add}
+              disabled={picked.size === 0 || stage === 'saving'}
+              className="flex-1 py-2.5 rounded-lg bg-amber-400 hover:bg-amber-300 disabled:opacity-40 text-stone-950 font-semibold mono text-xs flex items-center justify-center gap-2"
+            >
+              {stage === 'saving' ? <Loader2 size={12} className="animate-spin" /> : null}
+              Add to shopping list
+            </button>
+          </div>
+        </div>
+      )}
+      {stage === 'done' && result && (
+        <div className="flex items-start gap-2">
+          <Check size={14} className="text-emerald-400 shrink-0 mt-0.5" strokeWidth={3} />
+          <div className="flex-1 text-xs text-emerald-200 leading-relaxed">
+            Added {result.count} {result.count === 1 ? 'item' : 'items'} to your shopping list
+            {result.merged > 0 && <span className="text-emerald-400/70"> · {result.merged} already on it</span>}
+          </div>
+          <button onClick={reset} className="text-[12px] mono text-stone-400 hover:text-amber-400">More</button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 async function gatherShoppingSuggestions(existingShopItems = [], recipes = []) {
   // Pull pantry to know what's already covered
@@ -14603,6 +14708,8 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
           </div>
         </div>
       )}
+
+      {activeDate === today() && <DeloadCheck variant="alert" />}
 
       {/* Session header */}
       {(() => {
@@ -18632,6 +18739,187 @@ function sessionMuscleBreakdown(session, completed = {}) {
 }
 
 // ============================================================================
+// DELOAD CHECK — suggests a lighter week when lifts stall despite real effort
+// ============================================================================
+//
+// Only judges when the logs prove consistency over the last 21 days:
+//   · 90%+ of scheduled lift days have a logged workout
+//   · meals logged on 19+ of 21 days
+//   · protein averaging 85%+ of target on the logged days
+// Otherwise a stall is more likely missed sessions or under-eating than
+// fatigue, and the check says so instead of suggesting a deload.
+//
+// A lift counts as stalled when its best estimated 1RM over the last 14 days
+// is no higher than its best in the 14 days before that (needs 2+ recent
+// sessions and 1+ earlier). Suggests a deload when 3+ lifts are stalled and
+// they make up at least half of the lifts with enough data.
+const DELOAD_GATE = { days: 21, liftRate: 0.9, foodDays: 19, proteinRate: 0.85 };
+async function computeDeloadSignal() {
+  const t = today();
+  const mid = addDays(t, -14);
+  const start = addDays(t, -28);
+
+  const workouts = {};
+  for (const k of await storage.list('workout:')) {
+    const date = k.split(':')[1];
+    if (!date || date <= start || date > t) continue;
+    const entry = await storage.get(k);
+    if (entry && typeof entry === 'object') workouts[date] = entry;
+  }
+  const setsOf = (entry) => {
+    const sets = entry?.sets || entry || {};
+    const out = {};
+    for (const ex in sets) {
+      if (ex === 'scheduleDay' || ex === 'notes' || ex === 'completed') continue;
+      if (Array.isArray(sets[ex])) out[ex] = sets[ex];
+    }
+    return out;
+  };
+  const hasLog = (entry) => {
+    if (!entry) return false;
+    if (Object.values(entry.completed || {}).some(Boolean)) return true;
+    return Object.values(setsOf(entry)).some((arr) => arr.some((s) => parseInt(s.reps) > 0));
+  };
+
+  // ── Consistency gate ──
+  let liftDays = 0, liftLogged = 0, foodDays = 0, protein = 0, proteinTarget = 0;
+  for (let i = 1; i <= DELOAD_GATE.days; i++) {
+    const d = addDays(t, -i);
+    const session = SCHEDULE[await resolveScheduleDay(d)];
+    if (session?.type === 'lift') {
+      liftDays++;
+      if (hasLog(workouts[d])) liftLogged++;
+    }
+    const entries = await storage.get(`nutrition:${d}`);
+    if (Array.isArray(entries) && entries.some((e) => (parseFloat(e.cal) || 0) > 0)) {
+      foodDays++;
+      protein += entries.reduce((sum, e) => sum + (parseFloat(e.protein) || 0), 0);
+      proteinTarget += (await getMacroTargetsForDate(d)).protein || 0;
+    }
+  }
+  const liftRate = liftDays > 0 ? liftLogged / liftDays : 0;
+  const proteinRate = proteinTarget > 0 ? protein / proteinTarget : 0;
+  const stats = { liftDays, liftLogged, foodDays, proteinPct: Math.round(proteinRate * 100) };
+  const blockers = [];
+  if (liftDays < 6) blockers.push(`only ${liftDays} lift days scheduled in the last ${DELOAD_GATE.days} days`);
+  else if (liftRate < DELOAD_GATE.liftRate) blockers.push(`workouts logged on ${liftLogged} of ${liftDays} lift days`);
+  if (foodDays < DELOAD_GATE.foodDays) blockers.push(`meals logged on ${foodDays} of ${DELOAD_GATE.days} days`);
+  else if (proteinRate < DELOAD_GATE.proteinRate) blockers.push(`protein averaging ${stats.proteinPct}% of target`);
+
+  // ── Per-lift trend ──
+  const byLift = {};
+  for (const date of Object.keys(workouts)) {
+    const sets = setsOf(workouts[date]);
+    for (const ex in sets) {
+      let best = 0;
+      for (const s of sets[ex]) {
+        const r = parseInt(s.reps) || 0;
+        if (r < 1 || r > 12) continue;
+        const est = estimate1RM(s.weight, s.reps);
+        if (est > best) best = est;
+      }
+      if (best > 0) (byLift[ex] = byLift[ex] || []).push({ date, best });
+    }
+  }
+  const lifts = [];
+  for (const name in byLift) {
+    const recent = byLift[name].filter((x) => x.date > mid);
+    const prior = byLift[name].filter((x) => x.date <= mid);
+    if (recent.length < 2 || prior.length < 1) continue;
+    const recentBest = Math.max(...recent.map((x) => x.best));
+    const priorBest = Math.max(...prior.map((x) => x.best));
+    const pct = Math.round(((recentBest - priorBest) / priorBest) * 1000) / 10;
+    lifts.push({ name, pct, stalled: recentBest <= priorBest, dropped: recentBest < priorBest * 0.975 });
+  }
+  const stalled = lifts.filter((l) => l.stalled).sort((a, b) => a.pct - b.pct);
+  const triggered = stalled.length >= 3 && stalled.length >= lifts.length * 0.5;
+
+  if (blockers.length > 0) return { status: 'not-judging', blockers, stats, lifts, stalled };
+  return { status: triggered ? 'suggest' : 'ok', blockers, stats, lifts, stalled };
+}
+
+// variant="alert": renders only when a deload is suggested (Today screen).
+// variant="status": always renders the current verdict (Body screen).
+function DeloadCheck({ variant = 'status' }) {
+  const [data, setData] = useState(null);
+  const [dismissedAt, setDismissedAt] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [d, dis] = await Promise.all([computeDeloadSignal(), storage.get('deload:dismissed')]);
+        if (!cancelled) { setData(d); setDismissedAt(dis?.date || null); }
+      } catch (e) { console.error('deload check failed', e); }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+  if (!data) return null;
+
+  const snoozed = dismissedAt && dismissedAt > addDays(today(), -14);
+  const dismiss = async () => {
+    await storage.set('deload:dismissed', { date: today() });
+    setDismissedAt(today());
+  };
+  const liftList = (
+    <div className="mt-2 space-y-1">
+      {data.stalled.slice(0, 6).map((l) => (
+        <div key={l.name} className="flex items-center justify-between text-xs">
+          <span className="text-stone-300 truncate pr-2">{l.name}</span>
+          <span className={`mono tabular shrink-0 ${l.dropped ? 'text-rose-400' : 'text-stone-500'}`}>{l.pct === 0 ? 'flat' : `${l.pct}%`}</span>
+        </div>
+      ))}
+    </div>
+  );
+
+  if (variant === 'alert') {
+    if (data.status !== 'suggest' || snoozed) return null;
+    return (
+      <div className="bg-stone-900 border border-amber-400/40 rounded-xl p-4 mb-5" data-deload="suggest">
+        <div className="flex items-center gap-2 mb-1">
+          <TrendingUp size={14} className="text-amber-400" />
+          <div className="text-sm font-semibold text-stone-100">Time for a lighter week</div>
+        </div>
+        <div className="text-xs text-stone-400 leading-relaxed">
+          {data.stalled.length} of {data.lifts.length} lifts haven't moved in two weeks, and you've been showing up: {data.stats.liftLogged}/{data.stats.liftDays} workouts, meals logged {data.stats.foodDays}/{DELOAD_GATE.days} days, protein at {data.stats.proteinPct}%. That points to fatigue, not effort.
+        </div>
+        {liftList}
+        <div className="text-xs text-stone-300 leading-relaxed mt-3">
+          For the next 5–7 days: keep the same exercises, cut the sets in half, and drop the weight about 10%. Stop every set 3–4 reps short. Then go back to your normal numbers.
+        </div>
+        <button onClick={dismiss} className="mt-3 w-full py-2.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-200 mono text-xs">Got it · hide for 2 weeks</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-stone-900 border border-stone-800 rounded-lg p-3 mb-5" data-deload={data.status}>
+      <div className="flex items-center gap-2 mb-1">
+        <TrendingUp size={12} className={data.status === 'suggest' ? 'text-amber-400' : 'text-stone-600'} />
+        <div className="mono text-[11px] uppercase tracking-wider text-stone-500">Deload Check</div>
+      </div>
+      {data.status === 'not-judging' ? (
+        <div className="text-xs text-stone-500 leading-relaxed">
+          Not judging yet: {data.blockers.join(', ')}. It only suggests a lighter week once three weeks of logs show you've been consistent.
+        </div>
+      ) : data.status === 'suggest' ? (
+        <div>
+          <div className="text-xs text-amber-300 leading-relaxed">
+            Lighter week suggested: {data.stalled.length} of {data.lifts.length} lifts flat or down over two weeks while your tracking is solid.
+          </div>
+          {liftList}
+        </div>
+      ) : (
+        <div className="text-xs text-stone-400 leading-relaxed">
+          No deload needed. {data.lifts.length === 0
+            ? 'Not enough repeated lifts in the last four weeks to compare yet.'
+            : `${data.lifts.length - data.stalled.length} of ${data.lifts.length} lifts are still improving.`}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
 // LIFTING — 1RM estimation & weight prescription helpers
 // ============================================================================
 //
@@ -19630,6 +19918,9 @@ function MeasurementsView() {
 
       {/* Weekly lifting volume — sets/muscle vs hypertrophy targets */}
       <VolumePanel />
+
+      {/* Deload check — flags stalled lifts, but only when tracking is consistent */}
+      <DeloadCheck />
 
       {/* Weekly review — Claude reads your week */}
       <WeeklyReview />
@@ -21382,6 +21673,148 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
   );
 }
 
+// Ranks foods by how well one or two servings fill what's left of today's
+// macros. Protein counts triple; going over any macro or over calories costs
+// more than leaving a gap. Seth's own saved meals and foods outrank the
+// built-in list at equal fit, and prepped meals with servings left come first.
+function suggestGapFoods(left, { foods = [], meals = [] } = {}, limit = 6) {
+  const pool = [];
+  for (const m of meals) {
+    if (!m || m.status === 'archived') continue;
+    const prepped = m.mode === 'prepped';
+    if (prepped && !((m.servingsRemaining || 0) > 0)) continue;
+    pool.push({ item: m, kind: prepped ? 'prepped' : 'meal', max: prepped ? Math.floor(m.servingsRemaining) || 1 : 2 });
+  }
+  for (const f of foods) if (f) pool.push({ item: f, kind: 'food', max: 2 });
+  for (const f of FOOD_DB) pool.push({ item: f, kind: 'idea', max: 2 });
+
+  const W = { protein: 3, carbs: 1, fat: 1 };
+  const fit = (it, n) => {
+    let score = 0;
+    for (const k of ['protein', 'carbs', 'fat']) {
+      const have = (parseFloat(it[k]) || 0) * n;
+      const need = Math.max(0, left[k]);
+      const cap = Math.max(need, 10);
+      score += W[k] * (Math.min(have, need) / cap);
+      score -= W[k] * 1.5 * (Math.max(0, have - need) / cap);
+    }
+    const cal = (parseFloat(it.cal) || 0) * n;
+    score -= 4 * (Math.max(0, cal - Math.max(0, left.cal)) / Math.max(left.cal, 200));
+    return score;
+  };
+
+  const seen = new Set();
+  const scored = [];
+  for (const c of pool) {
+    const it = c.item;
+    const key = String(it.name || '').toLowerCase().trim();
+    if (!key || seen.has(key)) continue;
+    if (!((parseFloat(it.cal) || 0) > 0)) continue;
+    if (left.protein >= 15) {
+      // Protein is the gap: the food has to be at least ~70% as protein-dense
+      // as what's left of the day needs (capped at 10g per 100 cal), so a
+      // 1,000-calorie item with 30g of protein never makes the list.
+      const p = parseFloat(it.protein) || 0;
+      if (p < 8) continue;
+      const need = left.cal > 0 ? Math.min(10, (left.protein / left.cal) * 100 * 0.7) : 10;
+      if ((p / it.cal) * 100 < Math.max(4, need)) continue;
+    }
+    seen.add(key);
+    let best = { n: 1, score: fit(it, 1) };
+    if (c.max >= 2) {
+      const two = fit(it, 2);
+      if (two > best.score + 0.05) best = { n: 2, score: two };
+    }
+    const bonus = c.kind === 'prepped' ? 0.6 : c.kind === 'idea' ? 0 : 0.35;
+    if (best.score <= 0) continue;
+    scored.push({ ...c, servings: best.n, score: best.score + bonus });
+  }
+  scored.sort((a, b) => b.score - a.score);
+  // Keep the list mixed: at most half generic ideas when Seth's own items fit.
+  const own = scored.filter((x) => x.kind !== 'idea');
+  const ideas = scored.filter((x) => x.kind === 'idea');
+  const ownTake = own.slice(0, Math.max(limit - Math.min(ideas.length, Math.ceil(limit / 2)), Math.min(own.length, Math.floor(limit / 2))));
+  return [...ownTake, ...ideas.slice(0, limit - ownTake.length)].slice(0, limit);
+}
+
+function MacroGapCard({ totals, targets, foods, meals, onLog }) {
+  const [open, setOpen] = useState(false);
+  const [loggedKey, setLoggedKey] = useState(null);
+  const left = {
+    cal: Math.round((targets.cal || 0) - totals.cal),
+    protein: Math.round((targets.protein || 0) - totals.protein),
+    carbs: Math.round((targets.carbs || 0) - totals.carbs),
+    fat: Math.round((targets.fat || 0) - totals.fat),
+  };
+  const worthIt = left.protein >= 15 || (left.cal >= 300 && (left.carbs >= 30 || left.fat >= 10));
+  const picks = useMemo(
+    () => (open && worthIt ? suggestGapFoods(left, { foods, meals }) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [open, worthIt, left.cal, left.protein, left.carbs, left.fat, foods, meals]
+  );
+  if (!worthIt) return null;
+
+  const parts = [];
+  if (left.protein >= 5) parts.push(`${left.protein}g protein`);
+  if (left.carbs >= 10) parts.push(`${left.carbs}g carbs`);
+  if (left.fat >= 5) parts.push(`${left.fat}g fat`);
+  const kindLabel = { prepped: 'prepped', meal: 'your meal', food: 'your food', idea: 'idea' };
+
+  return (
+    <div className="bg-stone-900 border border-stone-800 rounded-xl mb-5 overflow-hidden" data-macro-gap>
+      <button onClick={() => setOpen((o) => !o)} className="w-full p-4 flex items-center gap-3 text-left" aria-expanded={open}>
+        <Target size={16} className="text-amber-400 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="text-sm text-stone-100 font-semibold">Still to hit today</div>
+          <div className="text-xs text-stone-400 mono tabular truncate">
+            {parts.join(' · ')}{left.cal > 0 ? ` · ${left.cal} cal` : ''}
+          </div>
+        </div>
+        <span className="text-[12px] mono text-amber-400 shrink-0">{open ? 'Hide' : 'What to eat'}</span>
+        <ChevronDown size={14} className={`text-stone-500 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="px-4 pb-4">
+          {left.cal <= 0 && (
+            <div className="text-xs text-amber-300 leading-relaxed mb-2">You're at your calories already, so these are the leanest ways to add what's missing.</div>
+          )}
+          {picks.length === 0 ? (
+            <div className="text-xs text-stone-500">Nothing fits what's left without going over.</div>
+          ) : (
+            <div className="space-y-2">
+              {picks.map((p) => {
+                const it = p.item;
+                const n = p.servings;
+                const key = `${p.kind}:${it.id || it.name}`;
+                const done = loggedKey === key;
+                return (
+                  <div key={key} className="flex items-center gap-3 bg-stone-800 rounded-lg px-3 py-2.5">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm text-stone-100 truncate">{n > 1 ? `${n} × ` : ''}{it.name}</div>
+                      <div className="text-[12px] mono tabular text-stone-400 truncate">
+                        +{Math.round((it.protein || 0) * n)}g protein · {Math.round((it.cal || 0) * n)} cal · {kindLabel[p.kind]}
+                        {p.kind === 'prepped' ? ` (${it.servingsRemaining} left)` : it.serving && p.kind === 'idea' ? ` · ${it.serving}` : ''}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => { onLog(it, n); setLoggedKey(key); setTimeout(() => setLoggedKey(null), 1500); }}
+                      disabled={done}
+                      className={`shrink-0 px-3 py-2 rounded-lg mono text-xs font-semibold ${done ? 'bg-emerald-400 text-stone-950' : 'bg-amber-400 hover:bg-amber-300 text-stone-950'}`}
+                    >
+                      {done ? 'Logged' : 'Log'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <div className="text-[11px] mono text-stone-600 mt-3 leading-snug">Picked from your saved meals and foods first, then common foods. Tapping Log adds it to today.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function NutritionView({ day, activeDate, setActiveDate }) {
   useSchedule(); // subscribe to schedule swaps
   const goals = useGoals();
@@ -21861,6 +22294,16 @@ function NutritionView({ day, activeDate, setActiveDate }) {
           </span>
         </div>
       </div>
+
+      {isToday && (
+        <MacroGapCard
+          totals={totals}
+          targets={targets}
+          foods={foods}
+          meals={meals}
+          onLog={(item, mult) => logFromLibrary(item, mult, 'serving', mult)}
+        />
+      )}
 
       {/* Meal protein guide */}
       <div className="bg-stone-900 border border-stone-800 rounded-lg p-3 mb-5">
