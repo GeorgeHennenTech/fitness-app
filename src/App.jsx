@@ -22167,18 +22167,41 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                     </div>
                   ) : estimateMode === 'photo' && pendingPhoto ? (
                     <div>
-                      <img src={pendingPhoto.dataUrl} alt="Meal to estimate" className="w-full max-h-48 object-cover rounded-md border border-stone-800 mb-2" />
+                      <img src={pendingPhoto.dataUrl} alt="Meal to estimate" className="w-full max-h-56 object-cover rounded-lg border border-stone-800 mb-3" />
+                      <label htmlFor="meal-photo-caption" className="block text-sm font-semibold text-stone-100 mb-0.5">Caption</label>
+                      <div className="text-xs text-stone-500 mb-2 leading-snug">Optional. Tell the AI what it can't see. Anything you write here overrides its guess from the photo.</div>
                       <textarea
+                        id="meal-photo-caption"
                         value={photoContext}
                         onChange={(e) => setPhotoContext(e.target.value)}
                         rows={3}
-                        placeholder="Add context (optional) — e.g. 'about 6 oz chicken, cooked in 1 tbsp olive oil' or 'only ate half'"
-                        className="w-full bg-stone-950 border border-stone-800 rounded px-2 py-1.5 text-xs text-stone-100 mb-2 focus:border-amber-400 focus:outline-none resize-none"
+                        maxLength={600}
+                        placeholder="e.g. 6 oz chicken, 1 cup rice, cooked in 1 tbsp olive oil"
+                        className="w-full bg-stone-950 border border-stone-800 rounded-md px-3 py-2 text-sm text-stone-100 mb-2 focus:border-amber-400 focus:outline-none resize-none"
                       />
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        {['Ate half', 'Ate all of it', 'Restaurant portion', 'Homemade', 'Cooked in oil', 'No sauce or dressing'].map((chip) => {
+                          const on = photoContext.toLowerCase().includes(chip.toLowerCase());
+                          return (
+                            <button
+                              key={chip}
+                              type="button"
+                              onClick={() => setPhotoContext((c) => {
+                                if (on) return c.replace(new RegExp(`(,\\s*)?${chip}`, 'i'), '').replace(/^[,\s]+/, '');
+                                const t = c.trim();
+                                return t ? `${t.replace(/[,.]$/, '')}, ${chip.toLowerCase()}` : chip;
+                              })}
+                              className={`rounded-full px-2.5 py-1 text-[12px] border ${on ? 'bg-amber-400/15 border-amber-400/50 text-amber-400' : 'bg-stone-800 border-stone-700 text-stone-300'}`}
+                            >
+                              {chip}
+                            </button>
+                          );
+                        })}
+                      </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => { setEstimateMode(null); setPendingPhoto(null); setPhotoContext(''); }}
-                          className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded py-1.5 mono text-[11px]"
+                          className="flex-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-md py-2.5 text-sm"
                         >
                           Cancel
                         </button>
@@ -22188,9 +22211,9 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                             setPendingPhoto(null); setPhotoContext('');
                             runMealEstimate({ base64: ph.base64, mimeType: 'image/jpeg', ...(ctx ? { text: ctx } : {}) });
                           }}
-                          className="flex-[2] bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded py-1.5 mono text-[11px]"
+                          className="flex-[2] bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded-md py-2.5 text-sm"
                         >
-                          Estimate
+                          {photoContext.trim() ? 'Estimate with caption' : 'Estimate'}
                         </button>
                       </div>
                     </div>
@@ -22226,13 +22249,13 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                         onClick={() => { setEstimateMode('text'); setEstimateError(null); }}
                         className="flex-1 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 rounded px-3 py-2 flex items-center justify-center gap-1.5 mono text-[12px]"
                       >
-                        <Edit3 size={13} className="text-rose-400" /> Paste text
+                        <Edit3 size={13} className="text-rose-400" /> Describe it
                       </button>
                       <button
                         onClick={() => { setEstimateError(null); mealPhotoRef.current?.click(); }}
                         className="flex-1 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 rounded px-3 py-2 flex items-center justify-center gap-1.5 mono text-[12px]"
                       >
-                        <ImageIcon size={13} className="text-sky-400" /> Screenshot
+                        <Camera size={13} className="text-sky-400" /> Photo + caption
                       </button>
                     </div>
                   )}
