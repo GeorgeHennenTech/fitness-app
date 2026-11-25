@@ -2911,6 +2911,8 @@ function GoalsEditor() {
       bfTarget: Number(form.bfTarget) || DEFAULT_GOALS.bfTarget,
       weeklyLossMin: Number(form.weeklyLossMin) || DEFAULT_GOALS.weeklyLossMin,
       weeklyLossMax: Number(form.weeklyLossMax) || DEFAULT_GOALS.weeklyLossMax,
+      // Dated only when the weight itself changes, so the newest body numbers win.
+      updatedAt: Number(form.baseline) !== Number(GOALS.baseline) ? today() : (GOALS.updatedAt || null),
       macros: {
         lift:   { cal: Number(form.macros.lift.cal)   || 0, protein: Number(form.macros.lift.protein)   || 0, carbs: form.macros.lift.carbs   ?? 0, fat: form.macros.lift.fat   ?? 0 },
         cardio: { cal: Number(form.macros.cardio.cal) || 0, protein: Number(form.macros.cardio.protein) || 0, carbs: form.macros.cardio.carbs ?? 0, fat: form.macros.cardio.fat ?? 0 },
@@ -2942,6 +2944,7 @@ function GoalsEditor() {
     }
     await storage.set('goals:active', clean);
     setActiveGoals(clean);
+    bustBodyComp();
     setSaveStatus('✓ Saved');
     setTimeout(() => setSaveStatus(''), 2500);
   };
@@ -5139,30 +5142,30 @@ function isCountableUnit(unit) {
 const MICRONUTRIENTS = [
   // General
   { key: 'fiber',        label: 'Fiber',            unit: 'g',   rdv: 30,   type: 'target', group: 'general', usda: '291' },
-  { key: 'sugar',        label: 'Sugar',            unit: 'g',   rdv: 50,   type: 'limit',  group: 'general', usda: '269' },
-  { key: 'addedSugar',   label: 'Added sugar',      unit: 'g',   rdv: 50,   type: 'limit',  group: 'general', usda: '539' },
-  { key: 'cholesterol',  label: 'Cholesterol',      unit: 'mg',  rdv: 300,  type: 'limit',  group: 'general', usda: '601' },
+  { key: 'sugar',        label: 'Sugar',            unit: 'g',   rdv: null,   type: null,  group: 'general', usda: '269' },
+  { key: 'addedSugar',   label: 'Added sugar',      unit: 'g',   rdv: 36,   type: 'limit',  group: 'general', usda: '539' },
+  { key: 'cholesterol',  label: 'Cholesterol',      unit: 'mg',  rdv: null,  type: null,  group: 'general', usda: '601' },
   { key: 'caffeine',     label: 'Caffeine',         unit: 'mg',  rdv: null, type: null,     group: 'general', usda: '262' },
   { key: 'choline',      label: 'Choline',          unit: 'mg',  rdv: 550,  type: 'target', group: 'general', usda: '421' },
   // Vitamins
   { key: 'vitaminA',     label: 'Vitamin A',        unit: 'mcg', rdv: 900,  type: 'target', group: 'vitamins', usda: '320' },
   { key: 'vitaminC',     label: 'Vitamin C',        unit: 'mg',  rdv: 90,   type: 'target', group: 'vitamins', usda: '401' },
-  { key: 'vitaminD',     label: 'Vitamin D',        unit: 'mcg', rdv: 20,   type: 'target', group: 'vitamins', usda: '328' },
+  { key: 'vitaminD',     label: 'Vitamin D',        unit: 'mcg', rdv: 15,   type: 'target', group: 'vitamins', usda: '328' },
   { key: 'vitaminE',     label: 'Vitamin E',        unit: 'mg',  rdv: 15,   type: 'target', group: 'vitamins', usda: '323' },
   { key: 'vitaminK',     label: 'Vitamin K',        unit: 'mcg', rdv: 120,  type: 'target', group: 'vitamins', usda: '430' },
   { key: 'thiamin',      label: 'Thiamin (B1)',     unit: 'mg',  rdv: 1.2,  type: 'target', group: 'vitamins', usda: '404' },
   { key: 'riboflavin',   label: 'Riboflavin (B2)',  unit: 'mg',  rdv: 1.3,  type: 'target', group: 'vitamins', usda: '405' },
   { key: 'niacin',       label: 'Niacin (B3)',      unit: 'mg',  rdv: 16,   type: 'target', group: 'vitamins', usda: '406' },
   { key: 'pantothenic',  label: 'Pantothenic (B5)', unit: 'mg',  rdv: 5,    type: 'target', group: 'vitamins', usda: '410' },
-  { key: 'vitaminB6',    label: 'Vitamin B6',       unit: 'mg',  rdv: 1.7,  type: 'target', group: 'vitamins', usda: '415' },
+  { key: 'vitaminB6',    label: 'Vitamin B6',       unit: 'mg',  rdv: 1.3,  type: 'target', group: 'vitamins', usda: '415' },
   { key: 'folate',       label: 'Folate (B9)',      unit: 'mcg', rdv: 400,  type: 'target', group: 'vitamins', usda: '435' },
   { key: 'vitaminB12',   label: 'Vitamin B12',      unit: 'mcg', rdv: 2.4,  type: 'target', group: 'vitamins', usda: '418' },
   // Minerals
-  { key: 'calcium',      label: 'Calcium',          unit: 'mg',  rdv: 1300, type: 'target', group: 'minerals', usda: '301' },
-  { key: 'iron',         label: 'Iron',             unit: 'mg',  rdv: 18,   type: 'target', group: 'minerals', usda: '303' },
+  { key: 'calcium',      label: 'Calcium',          unit: 'mg',  rdv: 1000, type: 'target', group: 'minerals', usda: '301' },
+  { key: 'iron',         label: 'Iron',             unit: 'mg',  rdv: 8,   type: 'target', group: 'minerals', usda: '303' },
   { key: 'magnesium',    label: 'Magnesium',        unit: 'mg',  rdv: 420,  type: 'target', group: 'minerals', usda: '304' },
-  { key: 'phosphorus',   label: 'Phosphorus',       unit: 'mg',  rdv: 1250, type: 'target', group: 'minerals', usda: '305' },
-  { key: 'potassium',    label: 'Potassium',        unit: 'mg',  rdv: 4700, type: 'target', group: 'minerals', usda: '306' },
+  { key: 'phosphorus',   label: 'Phosphorus',       unit: 'mg',  rdv: 700, type: 'target', group: 'minerals', usda: '305' },
+  { key: 'potassium',    label: 'Potassium',        unit: 'mg',  rdv: 3400, type: 'target', group: 'minerals', usda: '306' },
   { key: 'sodium',       label: 'Sodium',           unit: 'mg',  rdv: 2300, type: 'limit',  group: 'minerals', usda: '307' },
   { key: 'zinc',         label: 'Zinc',             unit: 'mg',  rdv: 11,   type: 'target', group: 'minerals', usda: '309' },
   { key: 'copper',       label: 'Copper',           unit: 'mg',  rdv: 0.9,  type: 'target', group: 'minerals', usda: '312' },
@@ -5202,6 +5205,98 @@ const MICRONUTRIENTS = [
   { key: 'luteinZea',    label: 'Lutein+Zeaxanthin',unit: 'mcg', rdv: null, type: null, group: 'other', usda: '338' },
   { key: 'betaCrypto',   label: 'Beta-cryptoxanthin',unit:'mcg', rdv: null, type: null, group: 'other', usda: '334' },
 ];
+// ── Personal targets ────────────────────────────────────────────────────────
+// The table above holds fixed adult-male (19–50) RDAs / AIs. These are the
+// targets that genuinely move with the body or the day's calories:
+//   · essential amino acids — WHO/FAO/UNU 2007, mg per kg bodyweight per day
+//   · fiber — 14 g per 1,000 kcal (Dietary Guidelines / IOM)
+//   · saturated fat limit — under 10% of calories (Dietary Guidelines)
+//   · thiamin / riboflavin / niacin — the per-1,000-kcal basis the RDAs were
+//     set on, never below the RDA itself
+// Vitamins and minerals are set by age and sex, not body composition, so they
+// stay fixed; the panel says so rather than inventing a scaling.
+const AMINO_MG_PER_KG = { histidine: 10, isoleucine: 20, leucine: 39, lysine: 30, methionine: 10, threonine: 15, tryptophan: 4, valine: 26 };
+const LB_PER_KG = 2.20462;
+
+// Most recent body numbers from any of: an InBody scan, a weigh-in under
+// Body → Measure, or the weight saved in Settings → Body Goals.
+async function loadBodyComp() {
+  const cands = [];
+  for (const k of await storage.list('scan:')) {
+    const sc = await storage.get(k);
+    const w = parseFloat(sc?.weight);
+    if (!sc?.date || !(w > 0)) continue;
+    const bf = parseFloat(sc.pbf ?? sc.bf);
+    const ffm = parseFloat(sc.fatFreeMass);
+    cands.push({ date: sc.date, source: 'InBody scan', weight: w, bf: bf > 0 ? bf : null, lean: ffm > 0 ? ffm : null, bmr: parseFloat(sc.bmr) > 0 ? parseFloat(sc.bmr) : null });
+  }
+  for (const k of await storage.list('body:')) {
+    const e = await storage.get(k);
+    const w = parseFloat(e?.weight);
+    if (!e?.date || !(w > 0)) continue;
+    const bf = parseFloat(e.bf);
+    cands.push({ date: e.date, source: 'weigh-in', weight: w, bf: bf > 0 ? bf : null, lean: null, bmr: null });
+  }
+  const goals = await storage.get('goals:active');
+  if (goals?.updatedAt && parseFloat(goals.baseline) > 0) {
+    cands.push({ date: goals.updatedAt, source: 'Settings', weight: parseFloat(goals.baseline), bf: null, lean: null, bmr: null });
+  }
+  if (cands.length === 0) return null;
+  cands.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+  const latest = { ...cands[0] };
+  // Lean mass: measured if the newest entry has it, else from its body-fat %,
+  // else carry the most recent known body-fat % onto the new weight.
+  if (!latest.lean) {
+    const bfSrc = latest.bf ? latest : cands.find((c) => c.bf || c.lean);
+    if (latest.bf) latest.lean = latest.weight * (1 - latest.bf / 100);
+    else if (bfSrc) {
+      const pct = bfSrc.bf || (1 - bfSrc.lean / bfSrc.weight) * 100;
+      latest.lean = latest.weight * (1 - pct / 100);
+      latest.leanEstimated = true;
+    }
+    latest.bmr = null; // a scan's BMR doesn't apply to a newer weight
+  }
+  // Katch-McArdle when there's no measured BMR for this exact entry.
+  if (!latest.bmr && latest.lean) latest.bmr = Math.round(370 + 21.6 * (latest.lean / LB_PER_KG));
+  return latest;
+}
+
+let _bodyCompBust = 0;
+const _bodyCompListeners = new Set();
+function bustBodyComp() { _bodyCompBust++; _bodyCompListeners.forEach((fn) => fn(_bodyCompBust)); }
+function useBodyComp() {
+  const [bust, setBust] = useState(_bodyCompBust);
+  const [bc, setBc] = useState(null);
+  useEffect(() => { _bodyCompListeners.add(setBust); return () => { _bodyCompListeners.delete(setBust); }; }, []);
+  useEffect(() => {
+    let cancelled = false;
+    loadBodyComp().then((v) => { if (!cancelled) setBc(v); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [bust]);
+  return bc;
+}
+
+// Resolved { rdv, type, personal } per nutrient for this body + calorie target.
+function microTargetsFor(bodyComp, calTarget) {
+  const out = {};
+  const cal = calTarget > 0 ? calTarget : null;
+  const kg = bodyComp?.weight > 0 ? bodyComp.weight / LB_PER_KG : null;
+  const r1 = (v) => Math.round(v * 10) / 10;
+  for (const m of MICRONUTRIENTS) {
+    let rdv = m.rdv, type = m.type, personal = false;
+    if (kg && AMINO_MG_PER_KG[m.key]) { rdv = r1((AMINO_MG_PER_KG[m.key] * kg) / 1000); type = 'target'; personal = true; }
+    if (cal) {
+      if (m.key === 'fiber') { rdv = Math.round((14 * cal) / 1000); personal = true; }
+      if (m.key === 'satFat') { rdv = Math.round((cal * 0.1) / 9); personal = true; }
+      if (m.key === 'thiamin') { rdv = r1(Math.max(m.rdv, (0.5 * cal) / 1000)); personal = rdv !== m.rdv; }
+      if (m.key === 'riboflavin') { rdv = r1(Math.max(m.rdv, (0.6 * cal) / 1000)); personal = rdv !== m.rdv; }
+      if (m.key === 'niacin') { rdv = Math.round(Math.max(m.rdv, (6.6 * cal) / 1000)); personal = rdv !== m.rdv; }
+    }
+    out[m.key] = { rdv, type, personal };
+  }
+  return out;
+}
+
 // Display groups, in order, with labels for the collapsible sections.
 const MICRO_GROUPS = [
   { id: 'general',  label: 'General' },
@@ -18838,6 +18933,62 @@ async function computeDeloadSignal() {
   return { status: triggered ? 'suggest' : 'ok', blockers, stats, lifts, stalled };
 }
 
+// Research behind the check, summarised honestly: the evidence for deloads is
+// thin, and the thresholds are this app's own judgment calls.
+const DELOAD_SOURCES = [
+  {
+    cite: 'Bell et al., Sports Medicine – Open, 2023',
+    url: 'https://doi.org/10.1186/s40798-023-00633-0',
+    says: 'A panel of expert strength and physique coaches agreed a deload is a period of reduced training stress meant to ease built-up physical and mental fatigue and set up the next block. This is expert consensus, not a trial, and the paper calls deloading under-researched.',
+  },
+  {
+    cite: 'Grandou et al., Sports Medicine, 2020',
+    url: 'https://doi.org/10.1007/s40279-019-01242-2',
+    says: 'A systematic review of 22 overtraining studies in lifting found a sustained drop in performance is the only reliable sign of overdoing it. That is why this check watches your lifts and nothing else.',
+  },
+  {
+    cite: 'Coleman et al., PeerJ, 2024',
+    url: 'https://doi.org/10.7717/peerj.16777',
+    says: 'In a 9-week trial of 39 trained lifters, taking a full week off in the middle made no difference to muscle growth and slightly reduced strength gains versus training straight through. So a deload is not free, and this check suggests training lighter, not stopping.',
+  },
+  {
+    cite: 'Morton et al., British Journal of Sports Medicine, 2018',
+    url: 'https://doi.org/10.1136/bjsports-2017-097608',
+    says: 'A meta-analysis of 49 trials (1,863 people) found protein adds to strength and muscle gains from lifting up to about 1.6 g per kg of bodyweight a day. Low protein can stall lifts on its own, so the check rules that out first.',
+  },
+];
+function DeloadScience() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-3 pt-3 border-t border-stone-800" data-deload-science={open ? 'open' : 'closed'}>
+      <div className="text-[11px] text-stone-500 leading-relaxed">
+        This is a rule of thumb, not medical or coaching advice. Pain, illness, poor sleep and stress can stall lifts too, and the app can't see those.
+      </div>
+      <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="mt-2 flex items-center gap-1 text-[12px] mono text-amber-400">
+        How this works + the research
+        <ChevronDown size={12} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="mt-2 space-y-3">
+          <div className="text-xs text-stone-400 leading-relaxed">
+            <span className="text-stone-200">The rule:</span> a lift is stalled when its best estimated one-rep max in the last 14 days is no higher than in the 14 days before. A lighter week is suggested when 3 or more lifts are stalled and they are at least half of the lifts with enough data. It only judges after 21 days with workouts logged on {Math.round(DELOAD_GATE.liftRate * 100)}%+ of lift days, meals logged on {DELOAD_GATE.foodDays}+ days, and protein at {Math.round(DELOAD_GATE.proteinRate * 100)}%+ of target.
+          </div>
+          <div className="text-xs text-stone-400 leading-relaxed">
+            <span className="text-stone-200">What is not from research:</span> those exact numbers (14 days, 3 lifts, 90%, 19 days, 85%) and the "half the sets, 10% lighter" plan. No study sets them. They are this app's judgment calls, in line with common coaching practice.
+          </div>
+          {DELOAD_SOURCES.map((src) => (
+            <div key={src.url} className="text-xs text-stone-400 leading-relaxed">
+              {src.says}{' '}
+              <a href={src.url} target="_blank" rel="noopener noreferrer" className="text-amber-400 underline underline-offset-2">{src.cite}</a>
+            </div>
+          ))}
+          <div className="text-[11px] mono text-stone-600">Study details via PubMed.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // variant="alert": renders only when a deload is suggested (Today screen).
 // variant="status": always renders the current verdict (Body screen).
 function DeloadCheck({ variant = 'status' }) {
@@ -18887,6 +19038,7 @@ function DeloadCheck({ variant = 'status' }) {
           For the next 5–7 days: keep the same exercises, cut the sets in half, and drop the weight about 10%. Stop every set 3–4 reps short. Then go back to your normal numbers.
         </div>
         <button onClick={dismiss} className="mt-3 w-full py-2.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-200 mono text-xs">Got it · hide for 2 weeks</button>
+        <DeloadScience />
       </div>
     );
   }
@@ -18915,6 +19067,7 @@ function DeloadCheck({ variant = 'status' }) {
             : `${data.lifts.length - data.stalled.length} of ${data.lifts.length} lifts are still improving.`}
         </div>
       )}
+      <DeloadScience />
     </div>
   );
 }
@@ -19812,6 +19965,7 @@ function MeasurementsView() {
     if (!form.weight) return;
     const entry = { ...form, weight: parseFloat(form.weight), bf: form.bf ? parseFloat(form.bf) : null };
     await storage.set(`body:${form.date}`, entry);
+    bustBodyComp();
     setShowAdd(false);
     setForm({ date: today(), weight: '', bf: '', neck: '', chest: '', waist: '', hips: '', arm: '', thigh: '' });
     load();
@@ -19856,8 +20010,10 @@ function MeasurementsView() {
     // If the date changed, remove the old key first so we don't leave a duplicate
     if (editForm.originalDate !== editForm.date) {
       await storage.delete(`body:${editForm.originalDate}`);
+      bustBodyComp();
     }
     await storage.set(`body:${editForm.date}`, updated);
+    bustBodyComp();
     cancelEdit();
     load();
   };
@@ -19869,6 +20025,7 @@ function MeasurementsView() {
     }
     if (!editingDate) return;
     await storage.delete(`body:${editingDate}`);
+    bustBodyComp();
     cancelEdit();
     load();
   };
@@ -20387,6 +20544,7 @@ IMPORTANT:
 
     // Save scan data
     const dataSaved = await storage.set(`scan:${id}`, scan);
+    bustBodyComp();
     if (!dataSaved) {
       setSaveError(`Save failed: ${storage.lastError || 'unknown'}`);
       return;
@@ -21541,14 +21699,59 @@ function MiniChart({ data, label, unit, color }) {
 // etc. Nutrients with a reference value get a progress bar (target fills green,
 // limit warns red); those without (amino acids, individual fats) show the raw
 // amount. "Hide empty" is on by default so untracked nutrients don't clutter.
-function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt-6', emptyText = null, footer = null, defaultOpen = false }) {
+function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt-6', emptyText = null, footer = null, defaultOpen = false, calTarget = null, personal = false }) {
   const { totals, any } = useMemo(() => sumMicros(entries), [entries]);
+  const bodyComp = useBodyComp();
+  const goals = useGoals();
+  // Daily panels use this body + the day's calories; recipe panels keep the
+  // plain reference values (a single dish isn't judged against a whole day).
+  const resolved = useMemo(
+    () => microTargetsFor(personal ? bodyComp : null, personal ? (calTarget || goals.macros.lift.cal) : null),
+    [personal, bodyComp, calTarget, goals]
+  );
   const [hideEmpty, setHideEmpty] = useState(true);
   const [openGroups, setOpenGroups] = useState({ general: true, vitamins: true, minerals: true });
   // Whole section collapses — it's long, and most days you just want the macros.
   const [open, setOpen] = useState(defaultOpen);
 
   const trackedCount = MICRONUTRIENTS.filter((m) => totals[m.key] > 0).length;
+
+  // Tap a nutrient to see which logged foods supplied it, biggest first.
+  const [openMicro, setOpenMicro] = useState(null);
+  const sourcesFor = (m) => {
+    const rows = [];
+    for (const e of entries || []) {
+      const v = parseFloat(e?.micros?.[m.key]);
+      if (isFinite(v) && v > 0) rows.push({ name: e.name || 'Unnamed', v });
+    }
+    rows.sort((x, y) => y.v - x.v);
+    const withMicros = (entries || []).filter((e) => e?.micros).length;
+    return { rows, missing: (entries || []).length - withMicros };
+  };
+  const fmtMicro = (v) => (v >= 100 ? Math.round(v) : v >= 10 ? Math.round(v * 10) / 10 : Math.round(v * 100) / 100);
+  const microSources = (m, total) => {
+    const { rows, missing } = sourcesFor(m);
+    return (
+      <div className="mt-1.5 mb-1 rounded-md bg-stone-950 px-2.5 py-2 space-y-1" data-micro-sources={m.key}>
+        {rows.length === 0 ? (
+          <div className="text-[11px] text-stone-500">Nothing logged supplied this.</div>
+        ) : rows.map((r, i) => (
+          <div key={i} className="flex items-baseline justify-between gap-2">
+            <span className="text-[12px] text-stone-300 truncate">{r.name}</span>
+            <span className="mono tabular text-[11px] text-stone-400 shrink-0">
+              {fmtMicro(r.v)} {m.unit}
+              <span className="text-stone-600"> · {Math.round((r.v / total) * 100)}%</span>
+            </span>
+          </div>
+        ))}
+        {missing > 0 && (
+          <div className="text-[11px] text-stone-600 leading-snug pt-0.5">
+            {missing} logged {missing === 1 ? 'item has' : 'items have'} no micronutrient data, so {missing === 1 ? 'it is' : 'they are'} not counted here.
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const header = (label) => (
     <button
@@ -21602,6 +21805,19 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
               {hideEmpty ? 'show all' : 'hide empty'}
             </button>
           </div>
+          {entries && entries.length > 1 && (
+            <div className="px-3 pt-1 text-[11px] text-stone-500">Tap a nutrient to see which foods it came from.</div>
+          )}
+          {personal && (
+            <div className="px-3 pt-1.5 text-[11px] text-stone-500 leading-snug" data-micro-basis>
+              {bodyComp ? (
+                <>Targets marked <span className="text-amber-400/70 mono uppercase">yours</span> are set for {Math.round(bodyComp.weight * 10) / 10} lb{bodyComp.lean ? ` (${Math.round(bodyComp.lean)} lb lean${bodyComp.leanEstimated ? ', estimated' : ''})` : ''} from your {bodyComp.source} on {fmtDate(bodyComp.date)} and {calTarget || goals.macros.lift.cal} cal. </>
+              ) : (
+                <>Add a weigh-in or InBody scan and the amino acid targets will be set for your bodyweight. </>
+              )}
+              Vitamins and minerals are adult-male RDAs: those depend on age and sex, not body size, so they don't move. No limit is shown for cholesterol or total sugar; only added sugar is capped (36 g).
+            </div>
+          )}
           <div className="divide-y divide-stone-900">
             {MICRO_GROUPS.map((grp) => {
           const items = MICRONUTRIENTS.filter((m) => m.group === grp.id);
@@ -21622,16 +21838,26 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
               </button>
               {open && (
                 <div className="px-3 pb-3 space-y-2">
-                  {shown.map((m) => {
+                  {shown.map((m0) => {
+                    const m = { ...m0, ...resolved[m0.key] };
                     const val = totals[m.key] || 0;
                     const hasData = val > 0;
                     const display = val >= 100 ? Math.round(val) : Math.round(val * 100) / 100;
                     if (m.rdv == null) {
                       // No standard target — show amount only, no bar
                       return (
-                        <div key={m.key} className={`flex items-baseline justify-between ${hasData ? '' : 'opacity-40'}`}>
-                          <span className="text-[12px] text-stone-300">{m.label}</span>
-                          <span className="mono tabular text-[11px] text-stone-400">{hasData ? display : '—'} {m.unit}</span>
+                        <div key={m.key} className={hasData ? '' : 'opacity-40'}>
+                          <button
+                            type="button"
+                            disabled={!hasData}
+                            aria-expanded={openMicro === m.key}
+                            onClick={() => setOpenMicro((k) => (k === m.key ? null : m.key))}
+                            className="w-full flex items-baseline justify-between text-left py-1"
+                          >
+                            <span className="text-[12px] text-stone-300">{m.label}</span>
+                            <span className="mono tabular text-[11px] text-stone-400">{hasData ? display : '—'} {m.unit}</span>
+                          </button>
+                          {hasData && openMicro === m.key && microSources(m, val)}
                         </div>
                       );
                     }
@@ -21641,10 +21867,18 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
                     const barColor = over ? 'bg-rose-400' : hit ? 'bg-emerald-400' : m.type === 'limit' ? 'bg-amber-400/70' : 'bg-sky-400/70';
                     return (
                       <div key={m.key} className={hasData ? '' : 'opacity-40'}>
+                        <button
+                          type="button"
+                          disabled={!hasData}
+                          aria-expanded={openMicro === m.key}
+                          onClick={() => setOpenMicro((k) => (k === m.key ? null : m.key))}
+                          className="w-full text-left py-1 block"
+                        >
                         <div className="flex items-baseline justify-between mb-0.5">
                           <span className="text-[12px] text-stone-300">
                             {m.label}
                             {m.type === 'limit' && <span className="text-stone-600 ml-1 text-[11px] mono uppercase">limit</span>}
+                            {m.personal && <span className="text-amber-400/70 ml-1 text-[11px] mono uppercase">yours</span>}
                           </span>
                           <span className="mono tabular text-[11px] text-stone-400">
                             {hasData ? display : '—'}<span className="text-stone-600"> / {m.rdv} {m.unit}</span>
@@ -21655,6 +21889,8 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
                         <div className="h-1.5 bg-stone-950 rounded-full overflow-hidden">
                           <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${hasData ? Math.max(2, pct) : 0}%` }} />
                         </div>
+                        </button>
+                        {hasData && openMicro === m.key && microSources(m, val)}
                       </div>
                     );
                   })}
@@ -21673,73 +21909,176 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
   );
 }
 
-// Ranks foods by how well one or two servings fill what's left of today's
-// macros. Protein counts triple; going over any macro or over calories costs
-// more than leaving a gap. Seth's own saved meals and foods outrank the
-// built-in list at equal fit, and prepped meals with servings left come first.
-function suggestGapFoods(left, { foods = [], meals = [] } = {}, limit = 6) {
-  const pool = [];
-  for (const m of meals) {
-    if (!m || m.status === 'archived') continue;
-    const prepped = m.mode === 'prepped';
-    if (prepped && !((m.servingsRemaining || 0) > 0)) continue;
-    pool.push({ item: m, kind: prepped ? 'prepped' : 'meal', max: prepped ? Math.floor(m.servingsRemaining) || 1 : 2 });
+// ── "Still to hit today" ────────────────────────────────────────────────────
+// Suggests what to eat to close today's macro gap, in three groups:
+//   1. Combos — two foods at specific amounts that land closest to the gap.
+//   2. Foods Seth actually eats — his logged history, prepped meals, saved items.
+//   3. Other ideas from the built-in list, which may or may not be in his
+//      kitchen; each is tagged "in your pantry" or "check you have it".
+const GAP_AMOUNTS = [0.5, 1, 1.5, 2];
+const GAP_MACROS = ['protein', 'carbs', 'fat'];
+const gapMacrosOf = (it, n) => ({
+  cal: (parseFloat(it.cal) || 0) * n,
+  protein: (parseFloat(it.protein) || 0) * n,
+  carbs: (parseFloat(it.carbs) || 0) * n,
+  fat: (parseFloat(it.fat) || 0) * n,
+});
+// How far a set of macros lands from what's left. Lower is better; 0 is a
+// perfect hit. Protein counts triple, and going over costs more than a gap.
+function gapMiss(have, left) {
+  const W = { protein: 3, carbs: 1, fat: 1.5 };
+  let miss = 0;
+  for (const k of GAP_MACROS) {
+    const need = Math.max(0, left[k]);
+    const d = have[k] - need;
+    miss += (W[k] * (d > 0 ? d * 1.5 : -d)) / Math.max(need, 10);
   }
-  for (const f of foods) if (f) pool.push({ item: f, kind: 'food', max: 2 });
-  for (const f of FOOD_DB) pool.push({ item: f, kind: 'idea', max: 2 });
+  const calNeed = Math.max(0, left.cal);
+  const d = have.cal - calNeed;
+  miss += (2 * (d > 0 ? d * 2 : -d)) / Math.max(calNeed, 200);
+  return miss;
+}
 
-  const W = { protein: 3, carbs: 1, fat: 1 };
-  const fit = (it, n) => {
-    let score = 0;
-    for (const k of ['protein', 'carbs', 'fat']) {
-      const have = (parseFloat(it[k]) || 0) * n;
-      const need = Math.max(0, left[k]);
-      const cap = Math.max(need, 10);
-      score += W[k] * (Math.min(have, need) / cap);
-      score -= W[k] * 1.5 * (Math.max(0, have - need) / cap);
+// Foods logged in the last 45 days, as they were logged (name + that portion's
+// macros), most-eaten first. Plus what's in stock in the pantry.
+async function loadGapContext() {
+  const cutoff = addDays(today(), -45);
+  const byName = new Map();
+  for (const k of await storage.list('nutrition:')) {
+    const date = k.split(':')[1];
+    if (!date || date < cutoff) continue;
+    const entries = await storage.get(k);
+    if (!Array.isArray(entries)) continue;
+    for (const e of entries) {
+      const name = String(e?.name || '').trim();
+      if (!name || !((parseFloat(e.cal) || 0) > 0)) continue;
+      const key = name.toLowerCase();
+      const prev = byName.get(key);
+      if (!prev || date >= prev.lastDate) {
+        byName.set(key, {
+          name, cal: +e.cal || 0, protein: +e.protein || 0, carbs: +e.carbs || 0, fat: +e.fat || 0,
+          ...(e.micros ? { micros: e.micros } : {}),
+          count: (prev?.count || 0) + 1, lastDate: date,
+        });
+      } else {
+        prev.count++;
+      }
     }
-    const cal = (parseFloat(it.cal) || 0) * n;
-    score -= 4 * (Math.max(0, cal - Math.max(0, left.cal)) / Math.max(left.cal, 200));
-    return score;
+  }
+  const history = Array.from(byName.values())
+    .sort((x, y) => y.count - x.count || (y.lastDate > x.lastDate ? 1 : -1))
+    .slice(0, 40);
+  const pantry = [];
+  for (const k of await storage.list('pantry:')) {
+    const it = await storage.get(k);
+    if (it && it.status === 'in-stock') pantry.push(it);
+  }
+  return { history, pantry };
+}
+
+function suggestGapFoods(left, { foods = [], meals = [], history = [], pantry = [] } = {}) {
+  const pool = [];
+  const seen = new Set();
+  const push = (item, kind, max) => {
+    const key = String(item?.name || '').toLowerCase().trim();
+    if (!key || seen.has(key) || !((parseFloat(item.cal) || 0) > 0)) return;
+    seen.add(key);
+    pool.push({ item, kind, max, key: `${kind}:${item.id || key}` });
+  };
+  for (const m of meals) {
+    if (!m || m.status === 'archived' || m.mode !== 'prepped' || !((m.servingsRemaining || 0) > 0)) continue;
+    push(m, 'prepped', m.servingsRemaining);
+  }
+  for (const h of history) push(h, 'log', 2);
+  for (const m of meals) if (m && m.status !== 'archived' && m.mode !== 'prepped') push(m, 'meal', 2);
+  for (const f of foods) if (f) push(f, 'food', 2);
+  for (const f of FOOD_DB) push(f, 'idea', 2);
+
+  const base = gapMiss({ cal: 0, protein: 0, carbs: 0, fat: 0 }, left);
+  const proteinIsGap = left.protein >= 15;
+  // A food can stand on its own only if it's protein-dense enough for what the
+  // rest of the day needs (capped at 10g per 100 cal). Combos may still pair it.
+  const dense = (it) => {
+    if (!proteinIsGap) return true;
+    const pr = parseFloat(it.protein) || 0;
+    if (pr < 8) return false;
+    const need = left.cal > 0 ? Math.min(10, (left.protein / left.cal) * 100 * 0.7) : 10;
+    return (pr / it.cal) * 100 >= Math.max(4, need);
+  };
+  const bestAmount = (c) => {
+    let best = null;
+    for (const n of GAP_AMOUNTS) {
+      if (n > c.max) continue;
+      const miss = gapMiss(gapMacrosOf(c.item, n), left);
+      if (!best || miss < best.miss - 0.02) best = { n, miss };
+    }
+    return best;
   };
 
-  const seen = new Set();
-  const scored = [];
+  const singles = [];
   for (const c of pool) {
-    const it = c.item;
-    const key = String(it.name || '').toLowerCase().trim();
-    if (!key || seen.has(key)) continue;
-    if (!((parseFloat(it.cal) || 0) > 0)) continue;
-    if (left.protein >= 15) {
-      // Protein is the gap: the food has to be at least ~70% as protein-dense
-      // as what's left of the day needs (capped at 10g per 100 cal), so a
-      // 1,000-calorie item with 30g of protein never makes the list.
-      const p = parseFloat(it.protein) || 0;
-      if (p < 8) continue;
-      const need = left.cal > 0 ? Math.min(10, (left.protein / left.cal) * 100 * 0.7) : 10;
-      if ((p / it.cal) * 100 < Math.max(4, need)) continue;
-    }
-    seen.add(key);
-    let best = { n: 1, score: fit(it, 1) };
-    if (c.max >= 2) {
-      const two = fit(it, 2);
-      if (two > best.score + 0.05) best = { n: 2, score: two };
-    }
-    const bonus = c.kind === 'prepped' ? 0.6 : c.kind === 'idea' ? 0 : 0.35;
-    if (best.score <= 0) continue;
-    scored.push({ ...c, servings: best.n, score: best.score + bonus });
+    const b = bestAmount(c);
+    if (!b || b.miss >= base - 0.05) continue;
+    c.solo = b;
+    if (dense(c.item)) singles.push({ ...c, servings: b.n, miss: b.miss });
   }
-  scored.sort((a, b) => b.score - a.score);
-  // Keep the list mixed: at most half generic ideas when Seth's own items fit.
-  const own = scored.filter((x) => x.kind !== 'idea');
-  const ideas = scored.filter((x) => x.kind === 'idea');
-  const ownTake = own.slice(0, Math.max(limit - Math.min(ideas.length, Math.ceil(limit / 2)), Math.min(own.length, Math.floor(limit / 2))));
-  return [...ownTake, ...ideas.slice(0, limit - ownTake.length)].slice(0, limit);
+  singles.sort((x, y) => x.miss - y.miss);
+
+  // Pairs: a strong single plus anything else, each at 0.5–2 servings.
+  const own = (c) => c.kind !== 'idea';
+  const anchors = [...singles.filter(own).slice(0, 10), ...singles.filter((c) => !own(c)).slice(0, 6)];
+  const partners = [
+    ...pool.filter(own).slice(0, 40),
+    ...pool.filter((c) => !own(c) && (parseFloat(c.item.cal) || 0) <= 350),
+  ];
+  const combos = [];
+  for (const a of anchors) {
+    for (const p of partners) {
+      if (p.key === a.key) continue;
+      let best = null;
+      for (const na of GAP_AMOUNTS) {
+        if (na > a.max) continue;
+        const ma = gapMacrosOf(a.item, na);
+        for (const nb of GAP_AMOUNTS) {
+          if (nb > p.max) continue;
+          const mb = gapMacrosOf(p.item, nb);
+          const have = { cal: ma.cal + mb.cal, protein: ma.protein + mb.protein, carbs: ma.carbs + mb.carbs, fat: ma.fat + mb.fat };
+          const miss = gapMiss(have, left);
+          if (!best || miss < best.miss - 0.02) best = { na, nb, miss, have };
+        }
+      }
+      // Only worth showing if the pair beats the better of its two halves.
+      const soloBest = Math.min(a.miss, p.solo ? p.solo.miss : Infinity);
+      if (!best || best.miss > soloBest - 0.25) continue;
+      // Nudge toward pairs made of Seth's own foods.
+      const rank = best.miss + (own(a) ? 0 : 0.3) + (own(p) ? 0 : 0.3);
+      combos.push({ key: [a.key, p.key].sort().join('+'), parts: [{ ...a, servings: best.na }, { ...p, servings: best.nb }], have: best.have, miss: best.miss, rank });
+    }
+  }
+  combos.sort((x, y) => x.rank - y.rank);
+  const pickedCombos = [];
+  const usedInCombo = new Set();
+  for (const c of combos) {
+    if (pickedCombos.some((x) => x.key === c.key)) continue;
+    // Keep the two combos different: no shared anchor food.
+    if (c.parts.some((pt) => usedInCombo.has(pt.key)) && pickedCombos.length > 0) continue;
+    pickedCombos.push(c);
+    c.parts.forEach((pt) => usedInCombo.add(pt.key));
+    if (pickedCombos.length >= 2) break;
+  }
+
+  const tagPantry = (c) => ({ ...c, inPantry: !!ingredientMatchesPantry(c.item.name, pantry) });
+  return {
+    combos: pickedCombos.map((c) => ({ ...c, parts: c.parts.map(tagPantry) })),
+    mine: singles.filter(own).slice(0, 5),
+    ideas: singles.filter((c) => !own(c)).slice(0, 5).map(tagPantry),
+  };
 }
 
 function MacroGapCard({ totals, targets, foods, meals, onLog }) {
   const [open, setOpen] = useState(false);
   const [loggedKey, setLoggedKey] = useState(null);
+  const [ctx, setCtx] = useState(null); // { history, pantry } — loaded when first opened
   const left = {
     cal: Math.round((targets.cal || 0) - totals.cal),
     protein: Math.round((targets.protein || 0) - totals.protein),
@@ -21747,10 +22086,18 @@ function MacroGapCard({ totals, targets, foods, meals, onLog }) {
     fat: Math.round((targets.fat || 0) - totals.fat),
   };
   const worthIt = left.protein >= 15 || (left.cal >= 300 && (left.carbs >= 30 || left.fat >= 10));
+  useEffect(() => {
+    if (!open || ctx) return;
+    let cancelled = false;
+    loadGapContext()
+      .then((c) => { if (!cancelled) setCtx(c); })
+      .catch(() => { if (!cancelled) setCtx({ history: [], pantry: [] }); });
+    return () => { cancelled = true; };
+  }, [open, ctx]);
   const picks = useMemo(
-    () => (open && worthIt ? suggestGapFoods(left, { foods, meals }) : []),
+    () => (open && worthIt && ctx ? suggestGapFoods(left, { foods, meals, ...ctx }) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [open, worthIt, left.cal, left.protein, left.carbs, left.fat, foods, meals]
+    [open, worthIt, ctx, left.cal, left.protein, left.carbs, left.fat, foods, meals]
   );
   if (!worthIt) return null;
 
@@ -21758,7 +22105,50 @@ function MacroGapCard({ totals, targets, foods, meals, onLog }) {
   if (left.protein >= 5) parts.push(`${left.protein}g protein`);
   if (left.carbs >= 10) parts.push(`${left.carbs}g carbs`);
   if (left.fat >= 5) parts.push(`${left.fat}g fat`);
-  const kindLabel = { prepped: 'prepped', meal: 'your meal', food: 'your food', idea: 'idea' };
+  const amt = (n) => (n === 0.5 ? '½' : n === 1.5 ? '1½' : String(n));
+  const label = (pt) => `${amt(pt.servings)} × ${pt.item.name}`;
+  const sourceNote = (c) => {
+    if (c.kind === 'prepped') return `prepped · ${c.item.servingsRemaining} left`;
+    if (c.kind === 'log') return `logged ${c.item.count}× lately`;
+    if (c.kind === 'idea') return `${c.item.serving ? `${c.item.serving} · ` : ''}${c.inPantry ? 'in your pantry' : 'check you have it'}`;
+    return c.kind === 'meal' ? 'your saved meal' : 'your saved food';
+  };
+  const verdict = (have) => {
+    const p = Math.round(left.protein - have.protein);
+    const c = Math.round(left.cal - have.cal);
+    if (Math.abs(p) <= 6 && Math.abs(c) <= 80) return 'Lands almost exactly on your protein and calories';
+    const bits = [];
+    if (p > 6) bits.push(`${p}g protein`);
+    if (c > 80) bits.push(`${c} cal`);
+    if (bits.length) return `Leaves ${bits.join(' and ')} for later`;
+    return c < -80 ? `${-c} cal over` : 'Covers your protein';
+  };
+  const logBtn = (key, items) => {
+    const done = loggedKey === key;
+    return (
+      <button
+        onClick={() => { onLog(items); setLoggedKey(key); setTimeout(() => setLoggedKey(null), 1500); }}
+        disabled={done}
+        className={`shrink-0 px-3 py-2 rounded-lg mono text-xs font-semibold ${done ? 'bg-emerald-400 text-stone-950' : 'bg-amber-400 hover:bg-amber-300 text-stone-950'}`}
+      >
+        {done ? 'Logged' : items.length > 1 ? 'Log both' : 'Log'}
+      </button>
+    );
+  };
+  const row = (c) => {
+    const m = gapMacrosOf(c.item, c.servings);
+    return (
+      <div key={c.key} className="flex items-center gap-3 bg-stone-800 rounded-lg px-3 py-2.5">
+        <div className="flex-1 min-w-0">
+          <div className="text-sm text-stone-100 truncate">{c.servings !== 1 ? label(c) : c.item.name}</div>
+          <div className="text-[12px] mono tabular text-stone-400 truncate">+{Math.round(m.protein)}g protein · {Math.round(m.cal)} cal · {sourceNote(c)}</div>
+        </div>
+        {logBtn(c.key, [{ item: c.item, servings: c.servings }])}
+      </div>
+    );
+  };
+  const heading = (text) => <div className="text-[11px] uppercase tracking-wider mono text-stone-500 mt-4 mb-2">{text}</div>;
+  const empty = picks && picks.combos.length === 0 && picks.mine.length === 0 && picks.ideas.length === 0;
 
   return (
     <div className="bg-stone-900 border border-stone-800 rounded-xl mb-5 overflow-hidden" data-macro-gap>
@@ -21778,37 +22168,43 @@ function MacroGapCard({ totals, targets, foods, meals, onLog }) {
           {left.cal <= 0 && (
             <div className="text-xs text-amber-300 leading-relaxed mb-2">You're at your calories already, so these are the leanest ways to add what's missing.</div>
           )}
-          {picks.length === 0 ? (
+          {!picks ? (
+            <div className="flex items-center gap-2 text-xs text-stone-400"><Loader2 size={13} className="animate-spin text-amber-400" /> Looking through your log…</div>
+          ) : empty ? (
             <div className="text-xs text-stone-500">Nothing fits what's left without going over.</div>
           ) : (
-            <div className="space-y-2">
-              {picks.map((p) => {
-                const it = p.item;
-                const n = p.servings;
-                const key = `${p.kind}:${it.id || it.name}`;
-                const done = loggedKey === key;
-                return (
-                  <div key={key} className="flex items-center gap-3 bg-stone-800 rounded-lg px-3 py-2.5">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm text-stone-100 truncate">{n > 1 ? `${n} × ` : ''}{it.name}</div>
-                      <div className="text-[12px] mono tabular text-stone-400 truncate">
-                        +{Math.round((it.protein || 0) * n)}g protein · {Math.round((it.cal || 0) * n)} cal · {kindLabel[p.kind]}
-                        {p.kind === 'prepped' ? ` (${it.servingsRemaining} left)` : it.serving && p.kind === 'idea' ? ` · ${it.serving}` : ''}
+            <>
+              {picks.combos.length > 0 && heading('Best combos')}
+              <div className="space-y-2">
+                {picks.combos.map((c) => (
+                  <div key={c.key} className="bg-stone-800 rounded-lg px-3 py-2.5" data-gap-combo>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        {c.parts.map((pt, i) => (
+                          <div key={pt.key} className="text-sm text-stone-100 leading-snug">
+                            {i > 0 && <span className="text-amber-400">+ </span>}{label(pt)}
+                            {pt.kind === 'idea' && <span className="text-[11px] mono text-stone-500"> · {pt.inPantry ? 'in your pantry' : 'check you have it'}</span>}
+                          </div>
+                        ))}
                       </div>
+                      {logBtn(c.key, c.parts.map((pt) => ({ item: pt.item, servings: pt.servings })))}
                     </div>
-                    <button
-                      onClick={() => { onLog(it, n); setLoggedKey(key); setTimeout(() => setLoggedKey(null), 1500); }}
-                      disabled={done}
-                      className={`shrink-0 px-3 py-2 rounded-lg mono text-xs font-semibold ${done ? 'bg-emerald-400 text-stone-950' : 'bg-amber-400 hover:bg-amber-300 text-stone-950'}`}
-                    >
-                      {done ? 'Logged' : 'Log'}
-                    </button>
+                    <div className="text-[12px] mono tabular text-stone-400 mt-1.5">
+                      +{Math.round(c.have.protein)}g protein · {Math.round(c.have.carbs)}g carbs · {Math.round(c.have.fat)}g fat · {Math.round(c.have.cal)} cal
+                    </div>
+                    <div className="text-[12px] text-emerald-300 mt-0.5">{verdict(c.have)}</div>
                   </div>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+              {picks.mine.length > 0 && heading('From what you eat')}
+              <div className="space-y-2">{picks.mine.map(row)}</div>
+              {picks.ideas.length > 0 && heading('Other ideas · may not be in your kitchen')}
+              <div className="space-y-2">{picks.ideas.map(row)}</div>
+            </>
           )}
-          <div className="text-[11px] mono text-stone-600 mt-3 leading-snug">Picked from your saved meals and foods first, then common foods. Tapping Log adds it to today.</div>
+          <div className="text-[11px] mono text-stone-600 mt-3 leading-snug">
+            Your own foods use the portion you last logged or saved. "In your pantry" comes from your receipts; anything else, check before you count on it.
+          </div>
         </div>
       )}
     </div>
@@ -21822,6 +22218,8 @@ function NutritionView({ day, activeDate, setActiveDate }) {
   const targets = goals.macros[session.type];
   const isToday = (activeDate || today()) === today();
   const dateForKey = activeDate || today();
+  const bodyCompNow = useBodyComp();
+  const bmrFloor = Math.round(bodyCompNow?.bmr || 2126);
   const [entries, setEntries] = useState([]);
   const [foods, setFoods] = useState([]);
   const [meals, setMeals] = useState([]);
@@ -22072,8 +22470,9 @@ function NutritionView({ day, activeDate, setActiveDate }) {
     setEstimateConfidence(null);
   };
 
-  const logFromLibrary = (item, mult, unit, amount) => {
+  const logFromLibrary = (item, mult, unit, amount, baseEntries) => {
     if (!mult || mult <= 0) return;
+    const base = baseEntries || entries;
     // Build a descriptive name suffix based on unit + amount
     let suffix = '';
     if (mult !== 1 || unit !== 'serving') {
@@ -22120,13 +22519,13 @@ function NutritionView({ day, activeDate, setActiveDate }) {
       }
     }
 
-    const next = [...entries, {
+    const next = [...base, {
       name: item.name + suffix,
       cal: Math.round((item.cal || 0) * mult),
       protein: Math.round((item.protein || 0) * mult * 10) / 10,
       carbs: Math.round((item.carbs || 0) * mult * 10) / 10,
       fat: Math.round((item.fat || 0) * mult * 10) / 10,
-      id: Date.now(),
+      id: Date.now() + (baseEntries ? base.length : 0),
       ...(scaleMicros(item.micros, mult) ? { micros: scaleMicros(item.micros, mult) } : {}),
       ...(entryCost > 0 ? { cost: entryCost, source: costSource, ...(isPreppedMeal ? { mealId: item.id } : {}) } : {}),
     }];
@@ -22160,6 +22559,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
     setExpandedItem(null);
     setUnitMode({});
     setAmountInput({});
+    return next;
   };
 
   const removeMeal = (id) => save(entries.filter((m) => m.id !== id));
@@ -22288,9 +22688,9 @@ function NutritionView({ day, activeDate, setActiveDate }) {
           <MacroRing label="Fat" current={totals.fat} target={targets.fat} color="#FF375F" unit="g" />
         </div>
         <div className="mt-4 pt-4 border-t border-stone-800 flex items-center justify-between text-[12px] mono text-stone-500">
-          <span>FLOOR: 2,126 KCAL (BMR)</span>
-          <span className={totals.cal > 0 && totals.cal < 2126 ? 'text-rose-400' : 'text-stone-500'}>
-            {totals.cal < 2126 && totals.cal > 0 ? '⚠ BELOW BMR' : '✓ ABOVE'}
+          <span>FLOOR: {bmrFloor.toLocaleString()} KCAL (BMR)</span>
+          <span className={totals.cal > 0 && totals.cal < bmrFloor ? 'text-rose-400' : 'text-stone-500'}>
+            {totals.cal < bmrFloor && totals.cal > 0 ? '⚠ BELOW BMR' : '✓ ABOVE'}
           </span>
         </div>
       </div>
@@ -22301,7 +22701,11 @@ function NutritionView({ day, activeDate, setActiveDate }) {
           targets={targets}
           foods={foods}
           meals={meals}
-          onLog={(item, mult) => logFromLibrary(item, mult, 'serving', mult)}
+          onLog={(items) => {
+            // Chain through one array so logging a combo doesn't drop its first item.
+            let cur = entries;
+            for (const it of items) cur = logFromLibrary(it.item, it.servings, 'serving', it.servings, cur) || cur;
+          }}
         />
       )}
 
@@ -22974,7 +23378,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
 
       {/* Micronutrient daily summary — grouped, collapsible, hides empty rows
           by default. Populated from USDA/OFF data on logged foods. */}
-      <MicronutrientPanel entries={entries} />
+      <MicronutrientPanel entries={entries} personal calTarget={targets.cal} />
 
       <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mt-6 mb-2">Phase Targets</div>
       <div className="space-y-1.5">
