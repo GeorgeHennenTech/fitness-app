@@ -433,12 +433,6 @@ function useStreak() {
   return streak;
 }
 
-const PHASES = [
-  { name: 'Phase 1', range: '227 → 200 lbs', cal: '2,400-2,500', target: 215 },
-  { name: 'Phase 2', range: '200 → 192 lbs', cal: '2,250-2,400', target: 200 },
-  { name: 'Phase 3', range: '192 → 185 lbs', cal: '2,100-2,300', target: 192 },
-];
-
 const MILESTONES = [
   { date: '2026-07-01', weight: 215, bf: 17 },
   { date: '2026-10-01', weight: 205, bf: 13.5 },
@@ -14678,6 +14672,12 @@ function Header({ day, activeDate, onOpenSettings }) {
   useSchedule(); // subscribe to schedule swaps
   const session = SCHEDULE[day];
   const isToday = activeDate === today();
+  // Where you are now → where you're going: newest weigh-in / scan / Settings
+  // weight, and the goal weight from Settings.
+  const goals = useGoals();
+  const bodyComp = useBodyComp();
+  const fromLb = Math.round(bodyComp?.weight || parseFloat(goals.baseline) || 0);
+  const toLb = Math.round(parseFloat(goals.target) || 0);
   return (
     <header
       className="bg-stone-950/60 ios-bar ios-hairline-b sticky top-0 z-30"
@@ -14686,7 +14686,7 @@ function Header({ day, activeDate, onOpenSettings }) {
       <div className="max-w-3xl mx-auto px-4 pt-2 pb-2.5 flex items-center justify-between gap-3">
         <div className="min-w-0">
           <div className="text-[11px] uppercase tracking-wider text-stone-500">Recomp Protocol · v6</div>
-          <h1 className="display text-[22px] leading-7 truncate">227 → 200 <span className="text-stone-600">·</span> <span className="text-amber-400">Lean Athletic</span></h1>
+          <h1 className="display text-[22px] leading-7 truncate" data-header-goal>{fromLb && toLb ? `${fromLb} → ${toLb}` : 'Tracker'} <span className="text-stone-600">·</span> <span className="text-amber-400">Lean Athletic</span></h1>
         </div>
         <div className="flex items-center gap-2.5 shrink-0">
           <StreakBadge />
@@ -22743,7 +22743,8 @@ function NutritionView({ day, activeDate, setActiveDate }) {
   const isToday = (activeDate || today()) === today();
   const dateForKey = activeDate || today();
   const bodyCompNow = useBodyComp();
-  const bmrFloor = Math.round(bodyCompNow?.bmr || 2126);
+  const goalsNow = useGoals();
+  const bmrFloor = bodyCompNow?.bmr ? Math.round(bodyCompNow.bmr) : null; // unknown until there's a weight + body-fat reading
   const [entries, setEntries] = useState([]);
   const [foods, setFoods] = useState([]);
   const [meals, setMeals] = useState([]);
@@ -23293,10 +23294,16 @@ function NutritionView({ day, activeDate, setActiveDate }) {
           <MacroRing label="Fat" current={totals.fat} target={targets.fat} color="#FF375F" unit="g" />
         </div>
         <div className="mt-4 pt-4 border-t border-stone-800 flex items-center justify-between text-[12px] mono text-stone-500">
-          <span>FLOOR: {bmrFloor.toLocaleString()} KCAL (BMR)</span>
-          <span className={totals.cal > 0 && totals.cal < bmrFloor ? 'text-rose-400' : 'text-stone-500'}>
-            {totals.cal < bmrFloor && totals.cal > 0 ? '⚠ BELOW BMR' : '✓ ABOVE'}
-          </span>
+          {bmrFloor ? (
+            <>
+              <span>FLOOR: {bmrFloor.toLocaleString()} KCAL (BMR)</span>
+              <span className={totals.cal > 0 && totals.cal < bmrFloor ? 'text-rose-400' : 'text-stone-500'}>
+                {totals.cal < bmrFloor && totals.cal > 0 ? '⚠ BELOW BMR' : '✓ ABOVE'}
+              </span>
+            </>
+          ) : (
+            <span>BMR floor shows once you log a weight with body fat %</span>
+          )}
         </div>
       </div>
 
@@ -23989,18 +23996,25 @@ function NutritionView({ day, activeDate, setActiveDate }) {
           by default. Populated from USDA/OFF data on logged foods. */}
       <MicronutrientPanel entries={entries} personal calTarget={targets.cal} date={dateForKey} filling={microFilling} weekBust={microWeekBust} calEaten={totals.cal} />
 
-      <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mt-6 mb-2">Phase Targets</div>
-      <div className="space-y-1.5">
-        {PHASES.map((p) => (
-          <div key={p.name} className="bg-stone-900 border border-stone-900 rounded px-3 py-2 flex items-center justify-between">
-            <div>
-              <div className="text-sm mono">{p.name}</div>
-              <div className="text-[12px] text-stone-500">{p.range}</div>
-            </div>
-            <div className="text-xs mono text-stone-400 tabular">{p.cal}</div>
-          </div>
-        ))}
+      <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mt-6 mb-2" data-your-targets>
+        Your targets{bodyCompNow?.weight && goalsNow.target ? ` · ${Math.round(bodyCompNow.weight)} → ${Math.round(goalsNow.target)} lb` : ''}
       </div>
+      <div className="space-y-1.5">
+        {[['lift', 'Lift day'], ['cardio', 'Cardio day'], ['rest', 'Rest day']].map(([k, label]) => {
+          const m = goalsNow.macros?.[k];
+          if (!m) return null;
+          return (
+            <div key={k} className="bg-stone-900 border border-stone-900 rounded px-3 py-2 flex items-center justify-between">
+              <div>
+                <div className="text-sm mono">{label}</div>
+                <div className="text-[12px] text-stone-500">{m.protein}g protein · {m.carbs}g carbs · {m.fat}g fat</div>
+              </div>
+              <div className="text-xs mono text-stone-400 tabular">{Number(m.cal).toLocaleString()} cal</div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="text-[11px] mono text-stone-600 mt-1.5">Change these in Settings → Body Goals.</div>
     </div>
   );
 }
