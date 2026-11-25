@@ -3,11 +3,17 @@
 // with "load failed". This endpoint runs server-side and returns raw OFF JSON.
 //
 // Mount path: /api/food-search
-// Two modes:
+// Three modes:
+//   GET /api/food-search?source=usda&query=<text> → USDA search (see _usda.js)
 //   GET /api/food-search?query=<text>       → text search, returns OFF /cgi/search.pl JSON
 //   GET /api/food-search?barcode=<code>     → product lookup, returns OFF /api/v2/product JSON
 
+import usdaSearch from './_usda.js';
+
 export default async function handler(req, res) {
+  // USDA FoodData Central search shares this function (one endpoint for every
+  // food lookup): GET /api/food-search?source=usda&query=<text>
+  if ((req.query?.source || '') === 'usda') return usdaSearch(req, res);
   const query = (req.query?.query || '').toString().trim();
   const barcode = (req.query?.barcode || '').toString().trim();
 

@@ -2030,11 +2030,11 @@ Rules:
   }));
 }
 
-// Search USDA FoodData Central via our /api/usda-search proxy. Returns rich
+// Search USDA FoodData Central via /api/food-search?source=usda. Returns rich
 // whole-food results with the full micronutrient panel (Foundation / SR Legacy
 // foods carry deep data; branded are label-level). Public-domain USDA data.
 async function searchUSDA(query) {
-  const res = await fetch(`/api/usda-search?query=${encodeURIComponent(query)}`);
+  const res = await fetch(`/api/food-search?source=usda&query=${encodeURIComponent(query)}`);
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
     try { const j = JSON.parse(txt); throw new Error(j.error || `HTTP ${res.status}`); }
@@ -2044,7 +2044,7 @@ async function searchUSDA(query) {
   if (!ct.includes('json')) {
     const peek = (await res.text().catch(() => '')).slice(0, 60).trim();
     if (peek.toLowerCase().startsWith('<!doctype') || peek.startsWith('<html')) {
-      throw new Error('API endpoint /api/usda-search is not deployed. Drop api-usda-search.js into the api/ folder of your Vercel project.');
+      throw new Error('The food search endpoint (/api/food-search) is not deployed.');
     }
     throw new Error(`Expected JSON, got ${ct || 'unknown'}.`);
   }
@@ -6814,7 +6814,7 @@ let SHARE_INBOX = (() => {
 const consumeShareInbox = () => { const u = SHARE_INBOX; SHARE_INBOX = null; return u; };
 
 function ReceiptsView() {
-  const [mainTab, setMainTab] = useState(SHARE_INBOX ? 'recipes' : 'receipts'); // 'receipts' | 'pantry'
+  const [mainTab, setMainTab] = useState('receipts'); // 'receipts' | 'pantry' | 'shopping'
   const [view, setView] = useState('list');           // 'list' | 'intake' | 'confirm' | 'detail'
   const [receipts, setReceipts] = useState([]);
   const [loaded, setLoaded] = useState(false);
@@ -6829,7 +6829,6 @@ function ReceiptsView() {
       {[
         { id: 'receipts', label: 'Receipts' },
         { id: 'pantry', label: 'Pantry' },
-        { id: 'recipes', label: 'Recipes' },
         { id: 'shopping', label: 'Shop' },
       ].map((t) => (
         <button
@@ -6990,8 +6989,6 @@ function ReceiptsView() {
       {subtabSwitcher}
       {mainTab === 'pantry' ? (
         <PantryView />
-      ) : mainTab === 'recipes' ? (
-        <RecipesView />
       ) : mainTab === 'shopping' ? (
         <ShoppingView
           onConvertToReceipt={(draft) => {
@@ -14493,7 +14490,7 @@ function ShoppingItemRow({ item, onToggle, onRemove, onQty, isCommon = false, on
 }
 
 export default function FitnessTracker() {
-  const [tab, setTab] = useState(SHARE_INBOX ? 'receipts' : 'today');
+  const [tab, setTab] = useState(SHARE_INBOX ? 'library' : 'today'); // a shared recipe link opens Library → Recipes
   // Each tab opens at its top, as on iOS.
   useEffect(() => { try { window.scrollTo(0, 0); } catch {} }, [tab]);
   const [activeDate, setActiveDate] = useState(today());
@@ -23194,6 +23191,48 @@ function NutritionView({ day, activeDate, setActiveDate }) {
     return tagged.sort((a, b) => a.name.localeCompare(b.name));
   }, [meals, foods]);
 
+  // What the Add food box shows, in order: prepped meals with servings left,
+  // your saved meals and foods, things from your recent log that aren't saved,
+  // then (once you type) the built-in list of common foods. One name appears
+  // once; the saved version wins because it knows its serving size.
+  const [addHistory, setAddHistory] = useState(null);
+  useEffect(() => {
+    if (!addOpen || addHistory) return;
+    let cancelled = false;
+    loadGapContext().then((c) => { if (!cancelled) setAddHistory(c.history || []); }).catch(() => { if (!cancelled) setAddHistory([]); });
+    return () => { cancelled = true; };
+  }, [addOpen, addHistory]);
+  const addResults = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    const words = q.split(/\s+/).filter(Boolean);
+    const match = (it) => {
+      if (!words.length) return true;
+      const hay = `${it.name || ''} ${it.tags || ''}`.toLowerCase();
+      return words.every((w) => hay.includes(w));
+    };
+    const seen = new Set();
+    const out = [];
+    const add = (it) => {
+      const k = microFillNameKey(it.name);
+      if (!k || seen.has(k) || !match(it)) return;
+      seen.add(k);
+      out.push(it);
+    };
+    savedItems.filter((i) => i.mode === 'prepped' && i.servingsRemaining > 0).forEach(add);
+    savedItems.forEach(add);
+    const savedNames = new Set(savedItems.map((i) => microFillNameKey(i.name)));
+    (addHistory || []).forEach((h) => { if (!savedNames.has(microFillNameKey(h.name))) add({ ...h, id: `log:${h.name}`, _type: 'log' }); });
+    if (q.length >= 2) {
+      let n = 0;
+      for (const f of FOOD_DB) {
+        const before = out.length;
+        add({ ...f, id: `db:${f.name}`, _type: 'db' });
+        if (out.length > before && ++n >= 25) break;
+      }
+    }
+    return out;
+  }, [search, savedItems, addHistory]);
+
   // Close the whole sheet and clear any transient add state.
   const closeAdd = () => {
     setAddOpen(false);
@@ -23299,26 +23338,33 @@ function NutritionView({ day, activeDate, setActiveDate }) {
 
       {addOpen && (
         <div className="bg-stone-900 border border-stone-800 rounded-xl mb-4 overflow-hidden">
-          {/* Sheet header: mode tabs + close */}
-          <div className="flex items-center gap-1 p-1.5 border-b border-stone-800 bg-stone-900">
-            <div className="flex gap-1 flex-1 bg-stone-950/60 border border-stone-800 rounded-lg p-1">
-              {[
-                { id: 'saved',  label: `Saved · ${savedItems.length}` },
-                { id: 'search', label: 'Search' },
-                { id: 'custom', label: 'Custom' },
-              ].map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => { setAddTab(t.id); setExpandedItem(null); }}
-                  className={`flex-1 mono text-[11px] py-1.5 rounded-md transition-colors ${
-                    addTab === t.id ? 'bg-stone-800 text-amber-400' : 'text-stone-500 hover:text-stone-300'
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
+          {/* Sheet header: one search box, with scan and AI estimate beside it */}
+          <div className="flex items-center gap-1.5 p-2 border-b border-stone-800 bg-stone-900" data-add-food>
+            <div className="relative flex-1 min-w-0">
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-500" />
+              <input
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); if (addTab !== 'saved') setAddTab('saved'); }}
+                placeholder="Search any food…"
+                className="bg-stone-950 border border-stone-800 rounded-lg pl-8 pr-2 py-2 text-sm w-full focus:border-amber-400 focus:outline-none"
+                autoFocus
+              />
             </div>
-            <button onClick={closeAdd} className="p-2 text-stone-500 hover:text-stone-300" aria-label="Close">
+            <button
+              onClick={() => { setAddOpen(false); setShowFuelScan(true); }}
+              className="shrink-0 p-2.5 rounded-lg bg-stone-800 border border-stone-700 text-amber-400 hover:bg-stone-700"
+              aria-label="Scan a barcode" title="Scan a barcode"
+            >
+              <Camera size={15} />
+            </button>
+            <button
+              onClick={() => { setAddTab(addTab === 'custom' ? 'saved' : 'custom'); setExpandedItem(null); }}
+              className={`shrink-0 p-2.5 rounded-lg border ${addTab === 'custom' ? 'bg-amber-400/10 border-amber-400 text-amber-400' : 'bg-stone-800 border-stone-700 text-sky-400 hover:bg-stone-700'}`}
+              aria-label="Estimate with AI or enter it yourself" title="Estimate with AI or enter it yourself"
+            >
+              <Sparkles size={15} />
+            </button>
+            <button onClick={closeAdd} className="shrink-0 p-2 text-stone-500 hover:text-stone-300" aria-label="Close">
               <X size={16} />
             </button>
           </div>
@@ -23327,13 +23373,6 @@ function NutritionView({ day, activeDate, setActiveDate }) {
             {/* ── SAVED: one merged list of your meals + foods ──────────────── */}
             {addTab === 'saved' && (
               <div>
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search saved meals & foods…"
-                  className="bg-stone-950 border border-stone-800 rounded px-3 py-2 text-sm w-full mb-2 focus:border-amber-400 focus:outline-none"
-                  autoFocus
-                />
                 {(missingMicros.length > 0 || savedMicro) && (
                   <div className="flex items-center justify-between gap-2 mb-2 bg-stone-950/60 border border-stone-800 rounded px-2.5 py-1.5">
                     <span className="mono text-[11px] text-stone-400 leading-snug">
@@ -23341,7 +23380,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                         ? `Estimating micronutrients… ${savedMicro.done}/${savedMicro.total}`
                         : savedMicro?.error
                           ? <span className="text-rose-300">{savedMicro.error}</span>
-                          : `${missingMicros.length} saved ${missingMicros.length === 1 ? 'item has' : 'items have'} no micronutrients`}
+                          : `${missingMicros.length} saved ${missingMicros.length === 1 ? 'item is' : 'items are'} missing some nutrients`}
                     </span>
                     {!savedMicro?.total && missingMicros.length > 0 && (
                       <button onClick={fillSavedMicros} className="shrink-0 flex items-center gap-1 text-[11px] mono text-amber-400 hover:text-amber-300">
@@ -23352,14 +23391,14 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                   </div>
                 )}
                 <div className="max-h-72 overflow-y-auto space-y-1">
-                  {filterItems(savedItems).length === 0 ? (
+                  {addResults.length === 0 ? (
                     <div className="text-center text-xs mono text-stone-500 py-6">
-                      {savedItems.length === 0
-                        ? 'Nothing saved yet. Add meals & foods in the Library tab, or use Search / Custom.'
-                        : `No matches for "${search}"`}
+                      {search.trim()
+                        ? `Nothing of yours matches "${search}". Search online below.`
+                        : 'Nothing saved or logged yet. Type a food to search.'}
                     </div>
                   ) : (
-                    filterItems(savedItems).map((item) => {
+                    addResults.map((item) => {
                       const isExpanded = expandedItem === item.id;
                       const isFood = item._type === 'food';
                       const parsed = parseServing(item.serving);
@@ -23424,9 +23463,11 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                                 <div className="min-w-0 flex-1">
                                   <div className="text-sm text-stone-200 truncate flex items-center gap-2">
                                     <span className={`text-[8px] mono uppercase tracking-wider px-1 py-0.5 rounded shrink-0 ${
-                                      isFood ? 'text-sky-400/80 bg-sky-400/10 border border-sky-400/20' : 'text-amber-400/80 bg-amber-400/10 border border-amber-400/20'
+                                      item._type === 'log' ? 'text-emerald-400/80 bg-emerald-400/10 border border-emerald-400/20'
+                                        : item._type === 'db' ? 'text-stone-400 bg-stone-400/10 border border-stone-400/20'
+                                        : isFood ? 'text-sky-400/80 bg-sky-400/10 border border-sky-400/20' : 'text-amber-400/80 bg-amber-400/10 border border-amber-400/20'
                                     }`}>
-                                      {isFood ? 'Food' : 'Meal'}
+                                      {item._type === 'log' ? 'Logged' : item._type === 'db' ? 'Common' : isFood ? 'Food' : 'Meal'}
                                     </span>
                                     {item.name}
                                     {item.mode === 'prepped' && item.servingsRemaining > 0 && (
@@ -23448,6 +23489,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                                   : <Plus size={14} className="text-stone-600 group-hover:text-amber-400 mt-1 flex-shrink-0" />}
                               </div>
                             </button>
+                            {(item._type === 'food' || item._type === 'meal') && (
                             <button
                               onClick={() => deletePickerItem(item)}
                               className={`px-2.5 flex items-center justify-center border-l border-stone-800 transition-colors ${
@@ -23464,6 +23506,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                                 <Trash2 size={13} />
                               )}
                             </button>
+                            )}
                           </div>
                           {isExpanded && (
                             <div className="border-t border-stone-800 px-3 py-3 bg-stone-950/80">
@@ -23548,28 +23591,24 @@ function NutritionView({ day, activeDate, setActiveDate }) {
                     })
                   )}
                 </div>
-              </div>
-            )}
-
-            {/* ── SEARCH: look up any food (USDA / Open Food Facts) or scan ──── */}
-            {addTab === 'search' && (
-              <div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 mt-2.5">
                   <button
                     onClick={() => { setAddOpen(false); setShowFuelSearch(true); }}
-                    className="flex-1 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 rounded px-3 py-2.5 flex items-center justify-center gap-1.5 mono text-[12px]"
+                    className="flex-1 min-w-0 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 rounded px-3 py-2.5 flex items-center justify-center gap-1.5 mono text-[12px]"
+                    data-add-online
                   >
-                    <Search size={13} className="text-emerald-400" /> Search
+                    <Search size={13} className="text-emerald-400 shrink-0" />
+                    <span className="truncate">{search.trim() ? `Search online for "${search.trim()}"` : 'Search online'}</span>
                   </button>
                   <button
-                    onClick={() => { setAddOpen(false); setShowFuelScan(true); }}
-                    className="flex-1 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 rounded px-3 py-2.5 flex items-center justify-center gap-1.5 mono text-[12px]"
+                    onClick={() => { setAddTab('custom'); setExpandedItem(null); }}
+                    className="shrink-0 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200 rounded px-3 py-2.5 flex items-center justify-center gap-1.5 mono text-[12px]"
                   >
-                    <Camera size={13} className="text-amber-400" /> Scan barcode
+                    <Edit3 size={13} className="text-rose-400" /> Enter it yourself
                   </button>
                 </div>
                 <div className="mono text-[11px] text-stone-600 mt-2 leading-snug">
-                  Finds it (USDA / Open Food Facts), logs it to today, and saves it to your Library for next time.
+                  Your saved and logged foods show first. Online results (USDA / Open Food Facts) are saved to your Library when you log them.
                 </div>
               </div>
             )}
@@ -23577,6 +23616,9 @@ function NutritionView({ day, activeDate, setActiveDate }) {
             {/* ── CUSTOM: AI estimate + manual macro entry ──────────────────── */}
             {addTab === 'custom' && (
               <div>
+                <button onClick={() => setAddTab('saved')} className="mono text-[11px] text-stone-500 hover:text-stone-300 mb-2 flex items-center gap-1">
+                  <ChevronLeft size={12} /> Back to search
+                </button>
                 <input
                   ref={mealPhotoRef}
                   type="file"
@@ -23845,7 +23887,8 @@ function NutritionView({ day, activeDate, setActiveDate }) {
       {/* Search / scan panels — logging directly to today */}
       {showFuelSearch && (
         <FoodSearchPanel
-          onClose={() => setShowFuelSearch(false)}
+          initialQuery={search}
+          onClose={() => { setShowFuelSearch(false); setSearch(''); }}
           onPick={logSearchedFood}
         />
       )}
@@ -23974,43 +24017,23 @@ function NutritionView({ day, activeDate, setActiveDate }) {
 // individual foods; both support macro-only entries.
 function LibraryView() {
   const [query, setQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all'); // 'all' | 'meals' | 'foods'
-  const showMeals = typeFilter === 'all' || typeFilter === 'meals';
-  const showFoods = typeFilter === 'all' || typeFilter === 'foods';
+  // Everything you eat lives here: full recipes, saved meals, single foods.
+  // The last filter is remembered between visits.
+  const [typeFilter, setTypeFilterRaw] = useState(() => {
+    if (SHARE_INBOX) return 'recipes';
+    try { const v = window.localStorage.getItem('sft:ui:libraryFilter'); return ['recipes', 'meals', 'foods'].includes(v) ? v : 'recipes'; } catch { return 'recipes'; }
+  });
+  const setTypeFilter = (v) => { setTypeFilterRaw(v); try { window.localStorage.setItem('sft:ui:libraryFilter', v); } catch {} };
+  const showRecipes = typeFilter === 'recipes';
+  const showMeals = typeFilter === 'meals';
+  const showFoods = typeFilter === 'foods';
 
   return (
     <div>
-      {/* One combined intro for the whole catalog */}
-      <div className="bg-stone-900 border border-stone-800 rounded-lg p-3 mb-3">
-        <div className="text-xs text-stone-400 leading-relaxed">
-          Your saved catalog — <span className="text-amber-400">meals</span> for one-tap logging and individual <span className="text-sky-400">foods</span> to log or compose meals from. Search across everything below; add either kind from its section. For full recipes with ingredients + steps, use <span className="text-stone-300">Spend → Recipes</span>.
-        </div>
-      </div>
-
-      {/* Shared search */}
-      <div className="relative mb-3">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" />
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search meals & foods…"
-          className="w-full bg-stone-900 border border-stone-800 rounded-lg pl-9 pr-9 py-2 text-sm text-stone-100 placeholder-stone-600 focus:border-amber-400 focus:outline-none"
-        />
-        {query && (
-          <button
-            onClick={() => setQuery('')}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-300 p-0.5"
-            aria-label="Clear search"
-          >
-            <X size={14} />
-          </button>
-        )}
-      </div>
-
       {/* Type filter */}
       <div className="flex gap-1 mb-4 bg-stone-900 border border-stone-800 rounded-lg p-1">
         {[
-          { id: 'all', label: 'All' },
+          { id: 'recipes', label: 'Recipes' },
           { id: 'meals', label: 'Meals' },
           { id: 'foods', label: 'Foods' },
         ].map((s) => (
@@ -24026,8 +24049,31 @@ function LibraryView() {
         ))}
       </div>
 
+      {/* Shared search */}
+      {!showRecipes && (
+      <div className="relative mb-3">
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-500" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={showMeals ? 'Search saved meals…' : 'Search saved foods…'}
+          className="w-full bg-stone-900 border border-stone-800 rounded-lg pl-9 pr-9 py-2 text-sm text-stone-100 placeholder-stone-600 focus:border-amber-400 focus:outline-none"
+        />
+        {query && (
+          <button
+            onClick={() => setQuery('')}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-500 hover:text-stone-300 p-0.5"
+            aria-label="Clear search"
+          >
+            <X size={14} />
+          </button>
+        )}
+      </div>
+      )}
+
+      {showRecipes && <RecipesView />}
       {showMeals && (
-        <div className={showFoods ? 'mb-6' : ''}>
+        <div>
           <MealsLibrary externalQuery={query} compact />
         </div>
       )}
@@ -24357,8 +24403,11 @@ function FoodsLibrary({ externalQuery = '', compact = false } = {}) {
   );
 }
 
-function FoodSearchPanel({ onClose, onPick }) {
-  const [query, setQuery] = useState('');
+function FoodSearchPanel({ onClose, onPick, initialQuery = '' }) {
+  const [query, setQuery] = useState(initialQuery);
+  // Opened from the Add food box with something already typed: search at once.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (initialQuery.trim()) runSearch(); }, []);
   const [results, setResults] = useState([]);
   const [source, setSource] = useState(null);
   const [error, setError] = useState(null);
@@ -25084,7 +25133,7 @@ function MealsLibrary({ externalQuery = '', compact = false } = {}) {
             <span className="text-amber-400 font-medium">Saved Meals</span> are macro-only entries for one-tap logging — things like protein shakes, restaurant meals, or pre-packaged foods you eat regularly. Compose them from Foods or enter macros directly.
           </div>
           <div className="mono text-[11px] text-stone-600 leading-relaxed">
-            Want a full cooking recipe with ingredients + instructions? Use <span className="text-stone-400">Spend → Recipes</span> instead.
+            Want a full cooking recipe with ingredients + instructions? Use <span className="text-stone-400">Library → Recipes</span> instead.
           </div>
         </div>
       )}

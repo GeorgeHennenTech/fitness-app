@@ -1,8 +1,9 @@
-// Drop this at /api/usda-search.js in your Vercel project.
+// USDA search, served through /api/food-search?source=usda (the leading
+// underscore keeps Vercel from counting this file as its own function).
 // Requires a FREE USDA FoodData Central API key in env as USDA_API_KEY.
 //   Get one at https://fdc.nal.usda.gov/api-key-signup/  (instant, free)
 //
-// GET /api/usda-search?query=chicken breast
+// GET /api/food-search?source=usda&query=chicken breast
 //   → { results: [{ fdcId, name, dataType, serving, cal, protein, carbs, fat, micros }] }
 //
 // USDA FoodData Central is public domain (CC0). Foundation Foods and SR Legacy
