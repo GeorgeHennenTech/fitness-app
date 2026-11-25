@@ -5163,7 +5163,7 @@ const MICRONUTRIENTS = [
   // Minerals
   { key: 'calcium',      label: 'Calcium',          unit: 'mg',  rdv: 1000, type: 'target', group: 'minerals', usda: '301' },
   { key: 'iron',         label: 'Iron',             unit: 'mg',  rdv: 8,   type: 'target', group: 'minerals', usda: '303' },
-  { key: 'magnesium',    label: 'Magnesium',        unit: 'mg',  rdv: 420,  type: 'target', group: 'minerals', usda: '304' },
+  { key: 'magnesium',    label: 'Magnesium',        unit: 'mg',  rdv: 400,  type: 'target', group: 'minerals', usda: '304' },
   { key: 'phosphorus',   label: 'Phosphorus',       unit: 'mg',  rdv: 700, type: 'target', group: 'minerals', usda: '305' },
   { key: 'potassium',    label: 'Potassium',        unit: 'mg',  rdv: 3400, type: 'target', group: 'minerals', usda: '306' },
   { key: 'sodium',       label: 'Sodium',           unit: 'mg',  rdv: 2300, type: 'limit',  group: 'minerals', usda: '307' },
