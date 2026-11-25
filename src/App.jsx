@@ -5383,6 +5383,405 @@ async function estimateMicrosFor(foods, onProgress) {
   }
   return { results, failed, error };
 }
+// ── Filling the gaps ────────────────────────────────────────────────────────
+// Every logged food should carry all 58 nutrients. Measured values (USDA,
+// label) are kept; whatever is missing is estimated by the model once, marked
+// as an estimate (microsEst), and the food is stamped microsFull so it is never
+// sent again. Estimates are cached per food name (per calorie), so logging the
+// same food again, at any portion, costs nothing.
+const MICRO_FILL_VERSION = 2;
+const microNeedsFill = (x) => !!x && (parseFloat(x.cal) || 0) > 0 && x.microsFull !== MICRO_FILL_VERSION;
+// Which of a food's nutrient values are estimates rather than measured.
+function microEstKeys(x) {
+  if (Array.isArray(x?.microsEst)) return x.microsEst;
+  if (x?.microsSource === 'ai' && x.micros) return Object.keys(x.micros);
+  return [];
+}
+const microMetaOf = (x) => ({
+  ...(x?.microsFull ? { microsFull: x.microsFull } : {}),
+  ...(microEstKeys(x).length ? { microsEst: microEstKeys(x) } : {}),
+});
+function applyMicroFill(x, filled) {
+  const known = cleanMicros(x.micros) || {};
+  const add = {};
+  for (const [k, v] of Object.entries(cleanMicros(filled) || {})) if (!(k in known)) add[k] = v;
+  const est = Array.from(new Set([...microEstKeys(x), ...Object.keys(add)]));
+  return { ...x, micros: { ...add, ...known }, microsEst: est, microsFull: MICRO_FILL_VERSION };
+}
+const microFillNameKey = (name) => String(name || '').toLowerCase().replace(/\s*\([\d.½¼¾]+\s*×\)\s*$/, '').replace(/\s+/g, ' ').trim().slice(0, 120);
+// items: foods / log entries needing a fill. opts.idOf(x) → unique id,
+// opts.extra(x) → extra job fields (serving, ingredients).
+// Returns { filled: Map(id → nutrient values to add), failed, error }.
+async function fillMicrosForItems(items, opts = {}) {
+  const idOf = opts.idOf || ((x) => String(x.id));
+  const filled = new Map();
+  const jobs = [];
+  const waiting = new Map(); // nameKey → [items] sharing one request
+  for (const x of items) {
+    const cal = parseFloat(x.cal) || 0;
+    const nk = microFillNameKey(x.name);
+    const knownKeys = Object.keys(cleanMicros(x.micros) || {});
+    const cached = nk ? await storage.get(`microfill:${nk}`).catch(() => null) : null;
+    if (cached?.perCal && (cached.covered || []).every((k) => knownKeys.includes(k))) {
+      const m = {};
+      for (const [k, v] of Object.entries(cached.perCal)) m[k] = +(v * cal).toFixed(3);
+      filled.set(idOf(x), m);
+      continue;
+    }
+    if (nk && waiting.has(nk)) { waiting.get(nk).push(x); continue; }
+    if (nk) waiting.set(nk, [x]);
+    jobs.push({
+      id: idOf(x), name: x.name, cal: x.cal, protein: x.protein, carbs: x.carbs, fat: x.fat,
+      ...(cleanMicros(x.micros) ? { known: cleanMicros(x.micros) } : {}),
+      ...(opts.extra ? opts.extra(x) : {}),
+    });
+  }
+  let failed = 0, error = null;
+  if (jobs.length) {
+    const r = await estimateMicrosFor(jobs, opts.onProgress);
+    failed = r.failed; error = r.error;
+    for (const x of items) {
+      const m = r.results[idOf(x)];
+      if (!m) continue;
+      filled.set(idOf(x), m);
+      const cal = parseFloat(x.cal) || 0;
+      const nk = microFillNameKey(x.name);
+      if (!nk || !(cal > 0)) continue;
+      const perCal = {};
+      for (const [k, v] of Object.entries(m)) perCal[k] = v / cal;
+      await storage.set(`microfill:${nk}`, { perCal, covered: Object.keys(cleanMicros(x.micros) || {}) }).catch(() => {});
+      // Same food logged more than once in this batch: scale the one answer.
+      for (const y of waiting.get(nk) || []) {
+        if (y === x) continue;
+        const ycal = parseFloat(y.cal) || 0;
+        const ym = {};
+        for (const [k, v] of Object.entries(perCal)) ym[k] = +(v * ycal).toFixed(3);
+        filled.set(idOf(y), ym);
+      }
+    }
+  }
+  return { filled, failed, error };
+}
+// Fill one day's log in storage. Returns the updated entries, or null if
+// nothing changed.
+async function fillDayMicros(dayKey) {
+  const stored = await storage.get(dayKey);
+  if (!Array.isArray(stored)) return null;
+  const need = stored.filter(microNeedsFill);
+  if (!need.length) return null;
+  const { filled } = await fillMicrosForItems(need);
+  if (!filled.size) return null;
+  // Re-read: the log may have changed while the estimate was running.
+  const latest = (await storage.get(dayKey)) || [];
+  const next = latest.map((e) => (filled.has(String(e.id)) && microNeedsFill(e) ? applyMicroFill(e, filled.get(String(e.id))) : e));
+  await storage.set(dayKey, next);
+  return next;
+}
+
+// ── What each nutrient does ─────────────────────────────────────────────────
+// Shown when a nutrient is tapped. Three short lines each:
+//   low    — what running short does
+//   enough — what getting enough does
+//   note   — the thing specific to this nutrient (timing, storage, ratios,
+//            upper limits, absorption). Upper limits are the adult ULs.
+// General nutrition information from the standard references (NIH Office of
+// Dietary Supplements fact sheets, Dietary Reference Intakes, Dietary
+// Guidelines, AHA). Not medical advice; the panel says so.
+const MICRO_INFO = {
+  fiber: {
+    low: 'Constipation, bigger blood-sugar swings after meals, and less fullness per calorie.',
+    enough: 'Steadier blood sugar, lower LDL cholesterol, better digestion, and it keeps you fuller on a cut.',
+    note: 'Your target scales with calories (14 g per 1,000). If you are well under, raise it over a week or two and drink more water, or it backfires as bloating.',
+  },
+  sugar: {
+    low: 'Nothing. There is no requirement for sugar itself.',
+    enough: 'Sugar from fruit and dairy comes packaged with fiber, potassium or protein, which is why it has no limit.',
+    note: 'Total sugar is shown for reference only. The number that matters is added sugar, on the next row.',
+  },
+  addedSugar: {
+    low: 'Nothing. You need none.',
+    enough: 'Staying under the limit leaves room in your calories for food that carries protein and micronutrients.',
+    note: 'The 36 g limit is the American Heart Association figure for men. Around training is the least costly time to have it; the limit is about the daily total, not any one food.',
+  },
+  cholesterol: {
+    low: 'Nothing. Your liver makes all the cholesterol you need.',
+    enough: 'No benefit to eating more.',
+    note: 'The 300 mg cap was dropped from the US guidelines in 2015 because, for most people, saturated fat moves blood cholesterol more than cholesterol in food does. The advice is still to keep it low without counting it. Some people do respond strongly, which only a blood test shows.',
+  },
+  caffeine: {
+    low: 'Nothing, apart from withdrawal headaches if you are used to it.',
+    enough: 'Better alertness and a small, well-documented boost to strength and endurance work.',
+    note: 'Up to about 400 mg a day is considered safe for most adults. For training, 3 to 6 mg per kg about an hour before is the studied range. It takes roughly 5 hours for half of it to clear, so late doses cost sleep.',
+  },
+  choline: {
+    low: 'Over time, fat build-up in the liver and muscle damage. Most people eat less than the target.',
+    enough: 'Supports liver function, cell membranes and the nerve signal that makes muscles contract.',
+    note: 'Eggs are the easy source (about 150 mg per yolk). Your body makes a little, so a short day is not a problem. Upper limit 3,500 mg.',
+  },
+  vitaminA: {
+    low: 'Poor night vision first, then dry eyes and skin and more infections.',
+    enough: 'Supports vision, immune function and skin.',
+    note: 'Stored in the liver for months, so judge it by the week, not the day. Preformed vitamin A (liver, supplements) has an upper limit of 3,000 mcg; the plant form (carotenoids) does not build up to toxic levels.',
+  },
+  vitaminC: {
+    low: 'Slow wound healing, easy bruising and bleeding gums; long-term, scurvy.',
+    enough: 'Needed to build collagen (tendons, skin), and it boosts iron absorption from plant foods.',
+    note: 'Not stored for long, so aim for it most days. Blood levels plateau at around 200 mg a day, so megadoses mostly leave in urine. Upper limit 2,000 mg.',
+  },
+  vitaminD: {
+    low: 'Weaker bones over time, muscle weakness and aches.',
+    enough: 'Lets you absorb calcium; supports bone and muscle function.',
+    note: 'Food rarely covers it. Sun on skin makes most of it, so intake matters more in winter or if you train indoors. Stored in body fat, so the weekly average is what counts. Upper limit 100 mcg. A blood test is the only way to know your level.',
+  },
+  vitaminE: {
+    low: 'Rare from diet alone; nerve and muscle problems when it happens.',
+    enough: 'Protects cell membranes from oxidative damage.',
+    note: 'Stored in fat tissue, so think weekly. Nuts, seeds and oils carry it, which means very low-fat days will show low. Upper limit 1,000 mg applies to supplements.',
+  },
+  vitaminK: {
+    low: 'Slower blood clotting and, long-term, weaker bones.',
+    enough: 'Needed for blood clotting and for putting calcium into bone.',
+    note: 'One serving of leafy greens covers several days. If you ever take the blood thinner warfarin, keeping intake consistent matters more than the amount.',
+  },
+  thiamin: {
+    low: 'Fatigue, irritability and, when severe, nerve and heart problems.',
+    enough: 'Needed to turn carbohydrate into energy.',
+    note: 'Your target rises with calories because need tracks how much carbohydrate you burn. Little is stored (a few weeks at most), so aim for it most days. Heavy drinking drains it.',
+  },
+  riboflavin: {
+    low: 'Cracks at the corners of the mouth, sore throat, tired eyes.',
+    enough: 'Part of the machinery that releases energy from food.',
+    note: 'Target rises with calories. Dairy is the main source; light destroys it, which is why milk comes in opaque containers. Excess turns urine bright yellow and is harmless.',
+  },
+  niacin: {
+    low: 'Fatigue and, when severe, pellagra (skin, gut and mental symptoms).',
+    enough: 'Central to energy production in every cell.',
+    note: 'Your body also makes niacin from the amino acid tryptophan, so high-protein diets rarely run short. The 35 mg upper limit applies only to supplements and fortified foods, where it causes skin flushing.',
+  },
+  pantothenic: {
+    low: 'Deficiency is almost unknown outside starvation.',
+    enough: 'Needed to burn fat and carbohydrate for energy.',
+    note: 'It is in nearly every food, so this row is for completeness. No upper limit has been set.',
+  },
+  vitaminB6: {
+    low: 'Anemia, cracked lips, low mood and weaker immunity.',
+    enough: 'Runs protein metabolism and helps make neurotransmitters and red blood cells.',
+    note: 'Need goes up with protein intake, so on a high-protein diet treat the target as a floor. The 100 mg upper limit is a supplement issue (nerve damage at high doses over time), not a food one.',
+  },
+  folate: {
+    low: 'A type of anemia with fatigue and weakness, and raised homocysteine.',
+    enough: 'Needed to make DNA and new red blood cells.',
+    note: 'Leafy greens, beans and fortified grains. The 1,000 mcg upper limit applies only to the synthetic form (folic acid), because large doses can hide a B12 deficiency.',
+  },
+  vitaminB12: {
+    low: 'Anemia, fatigue, and numbness or tingling that can become permanent.',
+    enough: 'Keeps nerves and red blood cells healthy.',
+    note: 'Only in animal foods and fortified products. The liver stores several years\' worth, so a low day or week means nothing; only a long pattern does. No upper limit.',
+  },
+  calcium: {
+    low: 'No symptoms day to day: the body takes it from bone to keep blood levels steady, which costs bone density over years.',
+    enough: 'Maintains bone, and is needed for every muscle contraction.',
+    note: 'You absorb it best in doses of 500 mg or less, so spreading it across meals beats one big hit. Needs vitamin D to be absorbed. Upper limit 2,500 mg.',
+  },
+  iron: {
+    low: 'Fatigue, poor endurance and getting winded easily, from iron-deficiency anemia.',
+    enough: 'Carries oxygen in blood and muscle.',
+    note: 'Men lose very little iron and store it, so 8 mg is enough and more is not better (upper limit 45 mg). Vitamin C in the same meal raises absorption from plant foods; coffee, tea and calcium lower it. Heavy running mileage can raise losses.',
+  },
+  magnesium: {
+    low: 'Muscle cramps and twitches, poor sleep, fatigue. Many people eat less than the target.',
+    enough: 'Involved in muscle and nerve function, blood sugar control and blood pressure.',
+    note: 'Some is lost in sweat. The 350 mg upper limit applies only to supplements (they cause diarrhea); magnesium from food has no limit.',
+  },
+  phosphorus: {
+    low: 'Rare; weakness and bone pain when it happens.',
+    enough: 'Builds bone and is part of ATP, the molecule that powers muscle.',
+    note: 'High-protein diets go well over the target and that is expected. It only becomes a concern with kidney disease. Upper limit 4,000 mg.',
+  },
+  potassium: {
+    low: 'Higher blood pressure, muscle cramps and weakness.',
+    enough: 'Lowers blood pressure by offsetting sodium, and keeps muscles and the heartbeat working normally.',
+    note: 'Most people fall short. What matters most is the balance with sodium: more potassium than sodium is the pattern linked with lower blood pressure. Lost in sweat. No upper limit from food.',
+  },
+  sodium: {
+    low: 'Rarely an issue, except with heavy sweating plus lots of plain water: cramps, headache, dizziness.',
+    enough: 'Needed for fluid balance, nerve signals and muscle contraction.',
+    note: 'The 2,300 mg limit is about blood pressure over years, not a single day. Long sweaty sessions raise what you need, so a higher number on a hard running day is reasonable. Judge it next to potassium.',
+  },
+  zinc: {
+    low: 'More frequent infections, slow wound healing, reduced taste and, in men, lower testosterone.',
+    enough: 'Supports immune function, protein synthesis and normal testosterone.',
+    note: 'Meat and shellfish are absorbed far better than plant sources. More is not better: above the 40 mg upper limit over time it blocks copper absorption.',
+  },
+  copper: {
+    low: 'Rare; anemia and low white blood cells.',
+    enough: 'Helps the body use iron and build connective tissue.',
+    note: 'Competes with zinc for absorption, so the usual cause of a shortfall is long-term high-dose zinc. Upper limit 10 mg.',
+  },
+  manganese: {
+    low: 'Deficiency is essentially unknown.',
+    enough: 'Used in bone formation and in enzymes that handle carbohydrate and fat.',
+    note: 'Whole grains, nuts and tea supply plenty. Upper limit 11 mg.',
+  },
+  selenium: {
+    low: 'Rare in the US; affects thyroid function and immunity.',
+    enough: 'Needed for thyroid hormone and antioxidant enzymes.',
+    note: 'Narrow safe range: the upper limit is 400 mcg, and a single Brazil nut can carry 70 to 90 mcg. Meat, fish and eggs cover the target easily.',
+  },
+  satFat: {
+    low: 'Nothing. There is no requirement.',
+    enough: 'Staying under the limit keeps LDL cholesterol lower.',
+    note: 'Your limit is 10% of the day\'s calories. Swapping it for unsaturated fat (olive oil, nuts, fish) is what lowers risk; swapping it for sugar does not.',
+  },
+  monoFat: {
+    low: 'No specific deficiency.',
+    enough: 'In place of saturated fat, it lowers LDL cholesterol.',
+    note: 'No target. Olive oil, avocado and most nuts. Useful as the default fat when you need calories.',
+  },
+  polyFat: {
+    low: 'True deficiency of the essential fats is rare: dry, scaly skin.',
+    enough: 'Includes the two fats your body cannot make (omega-6 linoleic acid and omega-3 ALA); replacing saturated fat with it lowers heart risk.',
+    note: 'No single target. Most diets have plenty of omega-6 and little omega-3, so the omega-3 rows below are the ones to watch.',
+  },
+  transFat: {
+    low: 'Nothing. You need none.',
+    enough: 'There is no safe amount to aim for; lower is better.',
+    note: 'Raises LDL and lowers HDL at the same time. Industrial trans fat is banned in US food, so what shows here is mostly the small natural amount in beef and dairy, which is less of a concern.',
+  },
+  omega3ALA: {
+    low: 'Rare; dry, scaly skin.',
+    enough: 'The essential plant omega-3 (flax, chia, walnuts, canola oil).',
+    note: 'Your body converts only a small share of ALA (under about 10%) into EPA and DHA, so hitting this does not replace eating fish.',
+  },
+  omega3EPA: {
+    low: 'No acute symptoms; low long-term intake is linked with higher heart risk.',
+    enough: 'Lowers triglycerides and is linked with lower heart risk.',
+    note: 'Judge EPA and DHA together and by the week: about two servings of fatty fish a week, roughly 250 to 500 mg a day on average. A zero today is fine if the week has fish in it.',
+  },
+  omega3DHA: {
+    low: 'No acute symptoms; DHA is a main structural fat in the brain and retina.',
+    enough: 'Supports brain and eye tissue and, with EPA, heart health.',
+    note: 'Same rule as EPA: count the two together across the week, not per day.',
+  },
+  histidine: {
+    low: 'Only with very low protein intake.',
+    enough: 'Essential amino acid; used to make histamine and carnosine, which buffers acid in hard-working muscle.',
+    note: 'Target is set from your bodyweight. If total protein is on target from mixed sources, this is covered.',
+  },
+  isoleucine: {
+    low: 'Only with very low protein intake.',
+    enough: 'Essential branched-chain amino acid used directly by muscle for energy and repair.',
+    note: 'Target is set from your bodyweight. Covered automatically at your protein intake.',
+  },
+  leucine: {
+    low: 'Slower muscle repair and growth if protein overall is low.',
+    enough: 'The amino acid that switches on muscle protein synthesis after a meal.',
+    note: 'The daily target (from bodyweight) is a minimum. For muscle, the often-cited figure is 2 to 3 g of leucine per meal, which is about 25 to 40 g of quality protein, so spread across meals beats one big dose.',
+  },
+  lysine: {
+    low: 'Only on low-protein or mostly grain-based diets.',
+    enough: 'Essential; needed for collagen and for making carnitine, which carries fat into cells to be burned.',
+    note: 'The amino acid grains are shortest in. Meat, dairy, eggs and beans are rich in it.',
+  },
+  methionine: {
+    low: 'Only with very low protein intake.',
+    enough: 'Essential; starts the building of every protein and supplies sulfur for other compounds.',
+    note: 'The amino acid beans and lentils are shortest in, which is why beans plus grains make a complete pairing.',
+  },
+  phenylalanine: {
+    low: 'Only with very low protein intake.',
+    enough: 'Essential; the body turns it into tyrosine, then dopamine and adrenaline.',
+    note: 'No separate target is shown because the requirement is set for phenylalanine and tyrosine combined.',
+  },
+  threonine: {
+    low: 'Only with very low protein intake.',
+    enough: 'Essential; used in collagen and in the gut\'s protective lining.',
+    note: 'Target is set from your bodyweight. Covered at your protein intake.',
+  },
+  tryptophan: {
+    low: 'Only with very low protein intake; it is the scarcest essential amino acid in food.',
+    enough: 'Essential; the body makes serotonin, melatonin and some niacin from it.',
+    note: 'Target is set from your bodyweight. The idea that turkey makes you sleepy from tryptophan is a myth; the amount is ordinary.',
+  },
+  valine: {
+    low: 'Only with very low protein intake.',
+    enough: 'Essential branched-chain amino acid used for muscle energy and repair.',
+    note: 'Target is set from your bodyweight. Covered at your protein intake.',
+  },
+  arginine: {
+    low: 'Not a concern in healthy adults; your body makes it.',
+    enough: 'Used to make nitric oxide, which widens blood vessels.',
+    note: 'No target. Shown for completeness.',
+  },
+  alanine: {
+    low: 'None; your body makes it.',
+    enough: 'Shuttles nitrogen from muscle to the liver during exercise.',
+    note: 'No target. Not the same thing as the supplement beta-alanine.',
+  },
+  asparticAcid: {
+    low: 'None; your body makes it.',
+    enough: 'A building block for proteins and other amino acids.',
+    note: 'No target. Shown for completeness.',
+  },
+  glutamicAcid: {
+    low: 'None; your body makes it.',
+    enough: 'The most common amino acid in food protein; also a signalling molecule in the brain.',
+    note: 'No target. This row includes glutamine, since food data counts the two together.',
+  },
+  glycine: {
+    low: 'None; your body makes it, though possibly less than is ideal for collagen.',
+    enough: 'About a third of collagen (tendons, ligaments, skin) is glycine.',
+    note: 'No target. Skin-on and bone-in cuts, broth and gelatin are the rich sources; lean muscle meat has less.',
+  },
+  proline: {
+    low: 'None; your body makes it.',
+    enough: 'The other main component of collagen.',
+    note: 'No target. Same sources as glycine.',
+  },
+  serine: {
+    low: 'None; your body makes it.',
+    enough: 'Used in cell membranes and in making other amino acids.',
+    note: 'No target. Shown for completeness.',
+  },
+  tyrosine: {
+    low: 'None when protein is adequate; your body makes it from phenylalanine.',
+    enough: 'Raw material for dopamine, adrenaline and thyroid hormone.',
+    note: 'No separate target; counted together with phenylalanine.',
+  },
+  cystine: {
+    low: 'None when protein is adequate; your body makes it from methionine.',
+    enough: 'Supplies sulfur for glutathione, the body\'s main internal antioxidant.',
+    note: 'No separate target; counted together with methionine.',
+  },
+  betaCarotene: {
+    low: 'No deficiency of its own; it matters as a source of vitamin A.',
+    enough: 'Converted to vitamin A as needed, and linked with the benefits of eating colourful vegetables.',
+    note: 'About 12 mcg from food makes 1 mcg of vitamin A. Absorbed much better with some fat in the meal. Food sources are safe at any amount; high-dose supplements raised lung cancer risk in smokers.',
+  },
+  alphaCarotene: {
+    low: 'No deficiency of its own.',
+    enough: 'Converts to vitamin A at about half the rate of beta-carotene.',
+    note: 'No target. Carrots and pumpkin are the main sources. Think of it as a marker of orange vegetables.',
+  },
+  lycopene: {
+    low: 'No deficiency; it is not essential.',
+    enough: 'The red pigment in tomatoes; higher intake is linked with lower prostate cancer and heart risk in observational studies.',
+    note: 'No target. Cooked and processed tomato (sauce, paste) is absorbed better than raw, and fat in the meal helps.',
+  },
+  luteinZea: {
+    low: 'No deficiency; it is not essential.',
+    enough: 'Concentrates in the retina and is linked with lower risk of age-related eye disease.',
+    note: 'No official target; studies showing benefit used around 10 mg (10,000 mcg) a day. Leafy greens and egg yolks, and it is absorbed especially well from eggs.',
+  },
+  betaCrypto: {
+    low: 'No deficiency of its own.',
+    enough: 'Another carotenoid the body can turn into vitamin A.',
+    note: 'No target. Oranges, tangerines, papaya and red peppers.',
+  },
+};
+// Nutrients the body holds in reserve: a weekly view is the fair one.
+const MICRO_STORED = new Set(['vitaminA', 'vitaminD', 'vitaminE', 'vitaminB12', 'iron', 'omega3EPA', 'omega3DHA']);
+
 // Fingerprint of what a recipe's micros were computed from, so editing the
 // ingredients or servings marks them stale and they get recalculated.
 function microsSig(ingredients, servings) {
@@ -21699,8 +22098,29 @@ function MiniChart({ data, label, unit, color }) {
 // etc. Nutrients with a reference value get a progress bar (target fills green,
 // limit warns red); those without (amino acids, individual fats) show the raw
 // amount. "Hide empty" is on by default so untracked nutrients don't clutter.
-function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt-6', emptyText = null, footer = null, defaultOpen = false, calTarget = null, personal = false }) {
+function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt-6', emptyText = null, footer = null, defaultOpen = false, calTarget = null, personal = false, date = null, filling = false, weekBust = 0, calEaten = 0 }) {
   const { totals, any } = useMemo(() => sumMicros(entries), [entries]);
+  // Nutrients where at least part of the day's total is an AI estimate.
+  const estByKey = useMemo(() => {
+    const out = {};
+    for (const e of entries || []) for (const k of microEstKeys(e)) if (parseFloat(e?.micros?.[k]) > 0) out[k] = true;
+    return out;
+  }, [entries]);
+  // The six days before this one, for 7-day averages (daily panel only).
+  const [weekDays, setWeekDays] = useState(null);
+  useEffect(() => {
+    if (!personal || !date) return;
+    let cancelled = false;
+    (async () => {
+      const days = [];
+      for (let i = 1; i <= 6; i++) {
+        const arr = await storage.get(`nutrition:${addDays(date, -i)}`);
+        if (Array.isArray(arr) && arr.length) days.push(sumMicros(arr).totals);
+      }
+      if (!cancelled) setWeekDays(days);
+    })().catch(() => {});
+    return () => { cancelled = true; };
+  }, [personal, date, weekBust]);
   const bodyComp = useBodyComp();
   const goals = useGoals();
   // Daily panels use this body + the day's calories; recipe panels keep the
@@ -21709,7 +22129,7 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
     () => microTargetsFor(personal ? bodyComp : null, personal ? (calTarget || goals.macros.lift.cal) : null),
     [personal, bodyComp, calTarget, goals]
   );
-  const [hideEmpty, setHideEmpty] = useState(true);
+  const [hideEmpty, setHideEmpty] = useState(!personal);
   const [openGroups, setOpenGroups] = useState({ general: true, vitamins: true, minerals: true });
   // Whole section collapses — it's long, and most days you just want the macros.
   const [open, setOpen] = useState(defaultOpen);
@@ -21722,11 +22142,11 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
     const rows = [];
     for (const e of entries || []) {
       const v = parseFloat(e?.micros?.[m.key]);
-      if (isFinite(v) && v > 0) rows.push({ name: e.name || 'Unnamed', v });
+      if (isFinite(v) && v > 0) rows.push({ name: e.name || 'Unnamed', v, est: microEstKeys(e).includes(m.key) });
     }
     rows.sort((x, y) => y.v - x.v);
-    const withMicros = (entries || []).filter((e) => e?.micros).length;
-    return { rows, missing: (entries || []).length - withMicros };
+    const missing = (entries || []).filter((e) => (personal ? microNeedsFill(e) : !e?.micros)).length;
+    return { rows, missing };
   };
   const fmtMicro = (v) => (v >= 100 ? Math.round(v) : v >= 10 ? Math.round(v * 10) / 10 : Math.round(v * 100) / 100);
   const microSources = (m, total) => {
@@ -21734,19 +22154,78 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
     return (
       <div className="mt-1.5 mb-1 rounded-md bg-stone-950 px-2.5 py-2 space-y-1" data-micro-sources={m.key}>
         {rows.length === 0 ? (
-          <div className="text-[11px] text-stone-500">Nothing logged supplied this.</div>
+          <div className="text-[11px] text-stone-500">{personal ? 'None of the food logged this day supplied any.' : 'Nothing here supplied this.'}</div>
         ) : rows.map((r, i) => (
           <div key={i} className="flex items-baseline justify-between gap-2">
             <span className="text-[12px] text-stone-300 truncate">{r.name}</span>
             <span className="mono tabular text-[11px] text-stone-400 shrink-0">
-              {fmtMicro(r.v)} {m.unit}
+              {r.est ? '~' : ''}{fmtMicro(r.v)} {m.unit}
               <span className="text-stone-600"> · {Math.round((r.v / total) * 100)}%</span>
             </span>
           </div>
         ))}
         {missing > 0 && (
           <div className="text-[11px] text-stone-600 leading-snug pt-0.5">
-            {missing} logged {missing === 1 ? 'item has' : 'items have'} no micronutrient data, so {missing === 1 ? 'it is' : 'they are'} not counted here.
+            {personal
+              ? `${missing} logged ${missing === 1 ? 'item is' : 'items are'} still waiting for ${missing === 1 ? 'its' : 'their'} missing nutrients to be estimated, so this may be low.`
+              : `${missing} logged ${missing === 1 ? 'item has' : 'items have'} no micronutrient data, so ${missing === 1 ? 'it is' : 'they are'} not counted here.`}
+          </div>
+        )}
+      </div>
+    );
+  };
+  // Notes worked out from this day's and this week's numbers.
+  const personalNotes = (m, val) => {
+    if (!personal) return [];
+    const notes = [];
+    const fmtU = (v, unit) => `${fmtMicro(v)} ${unit}`;
+    const logged = (entries || []).length > 0;
+    const days = [...(logged ? [totals] : []), ...(weekDays || [])];
+    const avg = (k) => (days.length ? days.reduce((t, d) => t + (d[k] || 0), 0) / days.length : 0);
+    if (m.key === 'potassium' || m.key === 'sodium') {
+      const k = totals.potassium || 0, na = totals.sodium || 0;
+      if (k > 0 && na > 0) {
+        const r = k / na;
+        notes.push(`Today: ${Math.round(k)} mg potassium to ${Math.round(na)} mg sodium, a ratio of ${r.toFixed(1)} to 1. ${r >= 1 ? 'Potassium is ahead, which is the side you want.' : 'Sodium is ahead. Potatoes, bananas, beans, yogurt and leafy greens pull it back.'} Your targets work out to about 1.5 to 1.`);
+      }
+    }
+    if (m.key === 'omega3EPA' || m.key === 'omega3DHA') {
+      const today = ((totals.omega3EPA || 0) + (totals.omega3DHA || 0)) * 1000;
+      const a = (avg('omega3EPA') + avg('omega3DHA')) * 1000;
+      if (days.length >= 2) notes.push(`EPA + DHA: ${Math.round(today)} mg today, averaging ${Math.round(a)} mg a day over ${days.length} logged days. ${a >= 500 ? 'That is above the 250 to 500 mg range, which is fine.' : a >= 250 ? 'That is in the 250 to 500 mg range.' : 'Under the 250 to 500 mg range; one or two servings of salmon, sardines or trout this week would cover it.'}`);
+      else notes.push(`EPA + DHA today: ${Math.round(today)} mg. The weekly average will show once more days are logged.`);
+      return notes;
+    }
+    if (m.key === 'caffeine' && val > 0 && bodyComp?.weight > 0) {
+      notes.push(`Today's ${Math.round(val)} mg is ${(val / (bodyComp.weight / LB_PER_KG)).toFixed(1)} mg per kg of your bodyweight.`);
+    }
+    if (m.key === 'satFat' && val > 0 && calEaten > 0) {
+      notes.push(`So far today saturated fat is ${Math.round((val * 9 * 100) / calEaten)}% of the calories you've eaten.`);
+    }
+    if (m.rdv != null && days.length >= 2) {
+      const a = avg(m.key);
+      const pct = Math.round((a / m.rdv) * 100);
+      const stored = MICRO_STORED.has(m.key);
+      notes.push(`7-day average: ${fmtU(a, m.unit)} a day, ${pct}% of your ${m.type === 'limit' ? 'limit' : 'target'}, over ${days.length} logged days.${stored ? ` Your body stores this, so the average matters more than today${m.type === 'target' && val < m.rdv && a >= m.rdv ? ': you are short today but covered for the week' : ''}.` : ''}`);
+    } else if (m.rdv != null && MICRO_STORED.has(m.key)) {
+      notes.push('Your body stores this, so a single short day does not matter. The 7-day average will show once more days are logged.');
+    }
+    return notes;
+  };
+  const microDetail = (m, val) => {
+    const info = MICRO_INFO[m.key];
+    const notes = personalNotes(m, val);
+    return (
+      <div data-micro-detail={m.key}>
+        {microSources(m, val)}
+        {(info || notes.length > 0) && (
+          <div className="mb-2 rounded-md bg-stone-950 px-2.5 py-2 space-y-1.5 text-[12px] leading-snug text-stone-300" data-micro-info={m.key}>
+            {notes.map((n, i) => (
+              <div key={i} className="text-amber-200/90" data-micro-note>{n}</div>
+            ))}
+            {info?.low && <div><span className="text-rose-300/90 mono text-[11px] uppercase tracking-wide">Running low </span>{info.low}</div>}
+            {info?.enough && <div><span className="text-emerald-300/90 mono text-[11px] uppercase tracking-wide">Getting enough </span>{info.enough}</div>}
+            {info?.note && <div><span className="text-sky-300/90 mono text-[11px] uppercase tracking-wide">Worth knowing </span>{info.note}</div>}
           </div>
         )}
       </div>
@@ -21779,10 +22258,10 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
             {emptyText || (
               <>
                 <div className="text-xs text-stone-400 leading-relaxed mt-2">
-                  No micronutrient data for today yet. It gets attached when you log via Search, a barcode scan, an AI text/photo estimate, a recipe, or a saved food that has micronutrients.
+                  {filling ? 'Estimating micronutrients for what you logged… ' : ''}No micronutrient data for today yet. It gets attached when you log via Search, a barcode scan, an AI text/photo estimate, a recipe, or a saved food that has micronutrients.
                 </div>
                 <div className="mono text-[11px] text-stone-600 leading-snug mt-1.5">
-                  Saved foods without them: Add → Saved → "Fill micronutrients". Hand-typed macros carry none.
+                  Anything a food is missing is estimated automatically a moment after you log it.
                 </div>
               </>
             )}
@@ -21807,6 +22286,13 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
           </div>
           {entries && entries.length > 1 && (
             <div className="px-3 pt-1 text-[11px] text-stone-500">Tap a nutrient to see which foods it came from.</div>
+          )}
+          {personal && (
+            <div className="px-3 pt-1 text-[11px] text-stone-500 leading-snug" data-micro-fill-status>
+              {filling
+                ? <span className="text-amber-300"><Loader2 size={11} className="inline animate-spin mr-1" />Estimating the nutrients your foods are missing…</span>
+                : <>Tap any nutrient for where it came from, what it does, and notes for you. <span className="mono">~</span> marks a value that is partly an AI estimate.</>}
+            </div>
           )}
           {personal && (
             <div className="px-3 pt-1.5 text-[11px] text-stone-500 leading-snug" data-micro-basis>
@@ -21849,15 +22335,14 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
                         <div key={m.key} className={hasData ? '' : 'opacity-40'}>
                           <button
                             type="button"
-                            disabled={!hasData}
                             aria-expanded={openMicro === m.key}
                             onClick={() => setOpenMicro((k) => (k === m.key ? null : m.key))}
                             className="w-full flex items-baseline justify-between text-left py-1"
                           >
                             <span className="text-[12px] text-stone-300">{m.label}</span>
-                            <span className="mono tabular text-[11px] text-stone-400">{hasData ? display : '—'} {m.unit}</span>
+                            <span className="mono tabular text-[11px] text-stone-400">{hasData ? `${estByKey[m.key] ? '~' : ''}${display}` : '0'} {m.unit}</span>
                           </button>
-                          {hasData && openMicro === m.key && microSources(m, val)}
+                          {openMicro === m.key && microDetail(m, val)}
                         </div>
                       );
                     }
@@ -21869,7 +22354,6 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
                       <div key={m.key} className={hasData ? '' : 'opacity-40'}>
                         <button
                           type="button"
-                          disabled={!hasData}
                           aria-expanded={openMicro === m.key}
                           onClick={() => setOpenMicro((k) => (k === m.key ? null : m.key))}
                           className="w-full text-left py-1 block"
@@ -21881,7 +22365,7 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
                             {m.personal && <span className="text-amber-400/70 ml-1 text-[11px] mono uppercase">yours</span>}
                           </span>
                           <span className="mono tabular text-[11px] text-stone-400">
-                            {hasData ? display : '—'}<span className="text-stone-600"> / {m.rdv} {m.unit}</span>
+                            {hasData ? `${estByKey[m.key] ? '~' : ''}${display}` : '0'}<span className="text-stone-600"> / {m.rdv} {m.unit}</span>
                             {over && <span className="text-rose-300 ml-1">over</span>}
                             {hit && <span className="text-emerald-300 ml-1">✓</span>}
                           </span>
@@ -21890,7 +22374,7 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
                           <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${hasData ? Math.max(2, pct) : 0}%` }} />
                         </div>
                         </button>
-                        {hasData && openMicro === m.key && microSources(m, val)}
+                        {openMicro === m.key && microDetail(m, val)}
                       </div>
                     );
                   })}
@@ -21900,7 +22384,7 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
           );
         })}
             <div className="text-[11px] mono text-stone-600 px-3 py-2 leading-snug">
-              {footer || 'Deep data (vitamins, minerals, amino acids) comes from USDA whole-food entries; branded items carry label nutrients; AI-estimated foods and recipes cover vitamins, minerals and fats but not amino acids, and are approximate.'} Reference values are general adult guidance, not medical advice.
+              {footer || 'Measured values come from USDA entries and product labels. Anything a food was missing is estimated by AI from typical food composition and marked ~; treat those as approximate, the amino acids and carotenoids most of all.'} Targets and the notes under each nutrient are general nutrition information, not medical advice.
             </div>
           </div>
         </div>
@@ -22473,6 +22957,45 @@ function NutritionView({ day, activeDate, setActiveDate }) {
     await storage.set(key, next);
   };
 
+  // Fill missing nutrients for this day's log (and quietly for the six days
+  // before it, which feed the 7-day averages). Each entry is tried once per
+  // session; a failure just leaves it as it was.
+  const microTried = useRef(new Set());
+  const keyRef = useRef(key);
+  keyRef.current = key;
+  const [microFilling, setMicroFilling] = useState(false);
+  const [microWeekBust, setMicroWeekBust] = useState(0);
+  const needFillSig = entries.filter(microNeedsFill).map((e) => e.id).join(',');
+  useEffect(() => {
+    const myKey = key;
+    const t = setTimeout(async () => {
+      const stored = await storage.get(myKey);
+      const need = (Array.isArray(stored) ? stored : []).filter((e) => microNeedsFill(e) && !microTried.current.has(`${myKey}:${e.id}`));
+      if (need.length) {
+        need.forEach((e) => microTried.current.add(`${myKey}:${e.id}`));
+        setMicroFilling(true);
+        try {
+          const next = await fillDayMicros(myKey);
+          if (next && keyRef.current === myKey) {
+            const byId = new Map(next.map((e) => [e.id, e]));
+            setEntries((cur) => cur.map((e) => (byId.has(e.id) && microNeedsFill(e) ? byId.get(e.id) : e)));
+          }
+        } catch {}
+        setMicroFilling(false);
+      }
+      const tag = `week:${myKey}`;
+      if (microTried.current.has(tag)) return;
+      microTried.current.add(tag);
+      let changed = false;
+      for (let i = 1; i <= 6; i++) {
+        try { if (await fillDayMicros(`nutrition:${addDays(dateForKey, -i)}`)) changed = true; } catch {}
+      }
+      if (changed) setMicroWeekBust((n) => n + 1);
+    }, 600);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, needFillSig]);
+
   const addMeal = () => {
     if (!meal.name) return;
     const entry = {
@@ -22569,7 +23092,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
       carbs: Math.round((item.carbs || 0) * mult * 10) / 10,
       fat: Math.round((item.fat || 0) * mult * 10) / 10,
       id: Date.now() + (baseEntries ? base.length : 0),
-      ...(scaleMicros(item.micros, mult) ? { micros: scaleMicros(item.micros, mult) } : {}),
+      ...(scaleMicros(item.micros, mult) ? { micros: scaleMicros(item.micros, mult), ...microMetaOf(item) } : {}),
       ...(entryCost > 0 ? { cost: entryCost, source: costSource, ...(isPreppedMeal ? { mealId: item.id } : {}) } : {}),
     }];
     save(next);
@@ -22630,29 +23153,29 @@ function NutritionView({ day, activeDate, setActiveDate }) {
   // Fill in micronutrients for every saved food / meal that has none. Foods
   // that already carry USDA or label data are left untouched.
   const missingMicros = useMemo(
-    () => [...foods.map((f) => ({ ...f, _type: 'food' })), ...meals.map((m) => ({ ...m, _type: 'meal' }))].filter((x) => !cleanMicros(x.micros)),
+    () => [...foods.map((f) => ({ ...f, _type: 'food' })), ...meals.map((m) => ({ ...m, _type: 'meal' }))].filter(microNeedsFill),
     [foods, meals]
   );
   const fillSavedMicros = async () => {
     const items = missingMicros;
     if (!items.length) return;
     setSavedMicro({ done: 0, total: items.length });
-    const jobs = items.map((x) => ({
-      id: `${x._type}:${x.id}`,
-      name: x.name,
-      serving: x.serving || (x._type === 'meal' ? '1 serving' : ''),
-      cal: x.cal, protein: x.protein, carbs: x.carbs, fat: x.fat,
-      ...(x._type === 'meal' && Array.isArray(x.components) && x.components.length
-        ? { ingredients: x.components.map((c) => ({ qty: c.servings, unit: 'serving of', name: `${c.name}${c.serving ? ` (${c.serving})` : ''}` })) }
-        : {}),
-    }));
-    const { results, failed, error } = await estimateMicrosFor(jobs, (done, total) => setSavedMicro({ done, total }));
+    const { filled, failed, error } = await fillMicrosForItems(items, {
+      idOf: (x) => `${x._type}:${x.id}`,
+      onProgress: (done, total) => setSavedMicro({ done, total }),
+      extra: (x) => ({
+        serving: x.serving || (x._type === 'meal' ? '1 serving' : ''),
+        ...(x._type === 'meal' && Array.isArray(x.components) && x.components.length
+          ? { ingredients: x.components.map((c) => ({ qty: c.servings, unit: 'serving of', name: `${c.name}${c.serving ? ` (${c.serving})` : ''}` })) }
+          : {}),
+      }),
+    });
     const nextFoods = [...foods], nextMeals = [...meals];
     for (const x of items) {
-      const m = results[`${x._type}:${x.id}`];
+      const m = filled.get(`${x._type}:${x.id}`);
       if (!m) continue;
       const stored = (await storage.get(`${x._type}:${x.id}`)) || x;
-      const { _type, ...clean } = { ...stored, micros: m, microsSource: 'ai' };
+      const { _type, ...clean } = applyMicroFill({ ...stored, ...(stored.microsSource ? {} : { microsSource: 'ai' }) }, m);
       await storage.set(`${x._type}:${x.id}`, clean);
       const list = x._type === 'food' ? nextFoods : nextMeals;
       const i = list.findIndex((y) => y.id === x.id);
@@ -23421,7 +23944,7 @@ function NutritionView({ day, activeDate, setActiveDate }) {
 
       {/* Micronutrient daily summary — grouped, collapsible, hides empty rows
           by default. Populated from USDA/OFF data on logged foods. */}
-      <MicronutrientPanel entries={entries} personal calTarget={targets.cal} />
+      <MicronutrientPanel entries={entries} personal calTarget={targets.cal} date={dateForKey} filling={microFilling} weekBust={microWeekBust} calEaten={totals.cal} />
 
       <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mt-6 mb-2">Phase Targets</div>
       <div className="space-y-1.5">

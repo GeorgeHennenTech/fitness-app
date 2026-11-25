@@ -27,8 +27,10 @@ export const config = {
 };
 
 // Micronutrients the AI is asked to estimate. Keys/units MUST match the app's
-// MICRONUTRIENTS table. Amino acids and carotenoids are deliberately left out:
-// a model's guesses there are too loose to be worth showing as numbers.
+// MICRONUTRIENTS table. AI_MICROS is the core set returned with every meal
+// estimate; the 'micros' fill mode also covers amino acids and carotenoids
+// (AI_MICROS_ALL) so no nutrient is left untracked. The app marks every
+// AI-supplied value as an estimate.
 const AI_MICROS = [
   ['fiber','g'],['sugar','g'],['addedSugar','g'],['cholesterol','mg'],['caffeine','mg'],['choline','mg'],
   ['vitaminA','mcg RAE'],['vitaminC','mg'],['vitaminD','mcg'],['vitaminE','mg'],['vitaminK','mcg'],
@@ -38,11 +40,19 @@ const AI_MICROS = [
   ['satFat','g'],['monoFat','g'],['polyFat','g'],['transFat','g'],['omega3ALA','g'],['omega3EPA','g'],['omega3DHA','g'],
 ];
 const MICRO_KEY_LIST = AI_MICROS.map(([k, u]) => `${k} (${u})`).join(', ');
+const AI_MICROS_ALL = [
+  ...AI_MICROS,
+  ['histidine','g'],['isoleucine','g'],['leucine','g'],['lysine','g'],['methionine','g'],['phenylalanine','g'],
+  ['threonine','g'],['tryptophan','g'],['valine','g'],['arginine','g'],['alanine','g'],['asparticAcid','g'],
+  ['glutamicAcid','g'],['glycine','g'],['proline','g'],['serine','g'],['tyrosine','g'],['cystine','g'],
+  ['betaCarotene','mcg'],['alphaCarotene','mcg'],['lycopene','mcg'],['luteinZea','mcg'],['betaCrypto','mcg'],
+];
+const MICRO_KEY_LIST_ALL = AI_MICROS_ALL.map(([k, u]) => `${k} (${u})`).join(', ');
 
-function cleanMicros(obj) {
+function cleanMicros(obj, keys = AI_MICROS) {
   if (!obj || typeof obj !== 'object') return null;
   const out = {};
-  for (const [k] of AI_MICROS) {
+  for (const [k] of keys) {
     const v = parseFloat(obj[k]);
     if (isFinite(v) && v > 0) out[k] = +v.toFixed(3);
   }
@@ -56,9 +66,12 @@ For EACH food you're given, return the amount in ONE serving:
 - Otherwise use the name, serving size and macros to identify the food and estimate a typical serving.
 
 Keys and units (use exactly these keys; amounts in these units):
-${MICRO_KEY_LIST}
+${MICRO_KEY_LIST_ALL}
+
+Some foods come with "known": values already measured for that serving (from a database or label). Treat those as fact, use them to pin down what the food is and how big the serving is, and do NOT return those keys. Return every OTHER key.
 
 Rules:
+- Cover every key that isn't known. Amino acids: use the typical amino-acid profile of each protein source, scaled to the food's protein; all 18 amino acids together must not exceed the food's protein in grams. Carotenoids: typical values for the plant (or egg/dairy) ingredients; zero for foods with none.
 - Numbers only. Omit a key (or use 0) when the food genuinely has none of it — e.g. no vitamin B12 in plant foods, no cholesterol in oils, caffeine only in coffee/tea/energy drinks/chocolate.
 - Be realistic: sodium includes salt added in the recipe; account for cooking oils and sauces.
 - Keep satFat + monoFat + polyFat + transFat at or below the food's total fat if fat is given.
@@ -278,6 +291,7 @@ async function handleMicros(req, res) {
     ...(f.serving ? { serving: String(f.serving).slice(0, 80) } : {}),
     ...(f.servings ? { servings: +f.servings || 1 } : {}),
     ...(f.cal != null ? { cal: +f.cal || 0, protein: +f.protein || 0, carbs: +f.carbs || 0, fat: +f.fat || 0 } : {}),
+    ...(cleanMicros(f.known, AI_MICROS_ALL) ? { known: cleanMicros(f.known, AI_MICROS_ALL) } : {}),
     ...(Array.isArray(f.ingredients) && f.ingredients.length
       ? { ingredients: f.ingredients.slice(0, 60).map((i) => `${i.qty ?? ''} ${i.unit ?? ''} ${i.name ?? ''}`.replace(/\s+/g, ' ').trim()) }
       : {}),
@@ -293,7 +307,7 @@ async function handleMicros(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-opus-4-8',
-        max_tokens: 1200 * payload.length + 500,
+        max_tokens: 1700 * payload.length + 500,
         system: MICROS_PROMPT,
         messages: [{ role: 'user', content: `Foods:\n${JSON.stringify(payload)}\n\nReturn the JSON.` }],
       }),
@@ -310,8 +324,17 @@ async function handleMicros(req, res) {
     catch { return res.status(500).json({ error: `Could not parse response. First 200 chars: ${cleaned.slice(0, 200)}` }); }
     const results = {};
     for (const f of payload) {
-      const m = cleanMicros(parsed?.results?.[f.id]);
-      if (m) results[f.id] = m;
+      const m = cleanMicros(parsed?.results?.[f.id], AI_MICROS_ALL);
+      if (!m) continue;
+      // Measured values always win: drop anything the model returned for a known key.
+      for (const k of Object.keys(f.known || {})) delete m[k];
+      // Amino acids can't add up to more than the food's protein.
+      if (f.protein > 0) {
+        const AA = AI_MICROS_ALL.slice(AI_MICROS.length, AI_MICROS.length + 18).map(([k]) => k);
+        const sum = AA.reduce((t, k) => t + (m[k] || 0), 0);
+        if (sum > f.protein) for (const k of AA) if (m[k]) m[k] = +(m[k] * (f.protein / sum)).toFixed(3);
+      }
+      results[f.id] = m;
     }
     return res.status(200).json({ results });
   } catch (e) {
