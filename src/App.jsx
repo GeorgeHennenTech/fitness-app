@@ -21911,11 +21911,13 @@ function MicronutrientPanel({ entries, title = 'Micronutrients', className = 'mt
 
 // ── "Still to hit today" ────────────────────────────────────────────────────
 // Suggests what to eat to close today's macro gap, in three groups:
-//   1. Combos — two foods at specific amounts that land closest to the gap.
+//   1. Combos — foods at specific amounts that land closest to the gap
+//      (two to GAP_MAX_PARTS foods — as many as it takes to close the gap)
 //   2. Foods Seth actually eats — his logged history, prepped meals, saved items.
 //   3. Other ideas from the built-in list, which may or may not be in his
 //      kitchen; each is tagged "in your pantry" or "check you have it".
 const GAP_AMOUNTS = [0.5, 1, 1.5, 2];
+const GAP_MAX_PARTS = 5; // most foods in one suggested combo
 const GAP_MACROS = ['protein', 'carbs', 'fat'];
 const gapMacrosOf = (it, n) => ({
   cal: (parseFloat(it.cal) || 0) * n,
@@ -22056,8 +22058,49 @@ function suggestGapFoods(left, { foods = [], meals = [], history = [], pantry = 
     }
   }
   combos.sort((x, y) => x.rank - y.rank);
+  // Grow the best pairs: keep adding one more food (up to GAP_MAX_PARTS) for as
+  // long as each addition closes the remaining gap by a meaningful amount.
+  // Each extra food costs a little rank, so a simpler combo wins a near-tie.
+  const grown = [];
+  const allOwn = (c) => c.parts.every(own);
+  // Two passes: any food, then Seth's own foods only, so there is always a
+  // candidate built purely from what he already eats.
+  const starts = [
+    ...combos.slice(0, 12).map((c) => [c, partners]),
+    ...combos.filter(allOwn).slice(0, 12).map((c) => [c, partners.filter(own)]),
+  ];
+  for (const [start, pool2] of starts) {
+    let cur = start;
+    while (cur.parts.length < GAP_MAX_PARTS) {
+      let best = null;
+      for (const p of pool2) {
+        if (cur.parts.some((pt) => pt.key === p.key)) continue;
+        for (const n of GAP_AMOUNTS) {
+          if (n > p.max) continue;
+          const m = gapMacrosOf(p.item, n);
+          const have = { cal: cur.have.cal + m.cal, protein: cur.have.protein + m.protein, carbs: cur.have.carbs + m.carbs, fat: cur.have.fat + m.fat };
+          const miss = gapMiss(have, left) + (own(p) ? 0 : 0.1);
+          if (!best || miss < best.score - 0.02) best = { p, n, have, score: miss, miss: gapMiss(have, left) };
+        }
+      }
+      if (!best || best.miss > cur.miss - 0.2) break;
+      const parts = [...cur.parts, { ...best.p, servings: best.n }];
+      cur = {
+        key: parts.map((pt) => pt.key).sort().join('+'),
+        parts, have: best.have, miss: best.miss,
+        rank: best.miss + parts.reduce((t, pt) => t + (own(pt) ? 0 : 0.3), 0) + (parts.length - 2) * 0.08,
+      };
+      grown.push(cur);
+    }
+  }
+  combos.push(...grown);
+  combos.sort((x, y) => x.rank - y.rank);
   const pickedCombos = [];
   const usedInCombo = new Set();
+  // His own foods first: lead with the best combo made only of them, if one
+  // gets reasonably close, then the best of everything else.
+  const ownFirst = combos.find((c) => allOwn(c) && c.miss < base * 0.5);
+  if (ownFirst) { pickedCombos.push(ownFirst); ownFirst.parts.forEach((pt) => usedInCombo.add(pt.key)); }
   for (const c of combos) {
     if (pickedCombos.some((x) => x.key === c.key)) continue;
     // Keep the two combos different: no shared anchor food.
@@ -22131,7 +22174,7 @@ function MacroGapCard({ totals, targets, foods, meals, onLog }) {
         disabled={done}
         className={`shrink-0 px-3 py-2 rounded-lg mono text-xs font-semibold ${done ? 'bg-emerald-400 text-stone-950' : 'bg-amber-400 hover:bg-amber-300 text-stone-950'}`}
       >
-        {done ? 'Logged' : items.length > 1 ? 'Log both' : 'Log'}
+        {done ? 'Logged' : items.length > 2 ? `Log all ${items.length}` : items.length > 1 ? 'Log both' : 'Log'}
       </button>
     );
   };
