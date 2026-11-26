@@ -2810,6 +2810,154 @@ async function parseGoalsFromText(text) {
   }
 }
 
+// ── Optional carb refeeds (cut only) ─────────────────────────────────────────
+// goals.refeed = { on, startDay }. Two consecutive cycle days a week eat at
+// about maintenance, with the extra calories going to carbs. Protein and fat
+// stay at the normal target for that day.
+const REFEED_ACTIVITY = 1.5; // BMR multiplier used only until the weight trend can give a real number
+function refeedDays(refeed) {
+  const a = Math.min(7, Math.max(1, parseInt(refeed?.startDay) || 1));
+  return [a, (a % 7) + 1];
+}
+function sessionWorkingSets(session) {
+  let n = 0;
+  for (const b of session?.blocks || []) for (const ex of b.exercises || []) if (ex.track) n += parseInt(ex.sets) || 0;
+  return n;
+}
+// The back-to-back pair of days with the most working sets.
+function defaultRefeedStart(schedule) {
+  let best = 1, bestSets = -1;
+  for (let a = 1; a <= 7; a++) {
+    const sets = sessionWorkingSets(schedule?.[a]) + sessionWorkingSets(schedule?.[(a % 7) + 1]);
+    if (sets > bestSets) { best = a; bestSets = sets; }
+  }
+  return best;
+}
+function refeedTargets(base, maintenance) {
+  if (!base || !(maintenance > (base.cal || 0))) return null;
+  const extra = maintenance - base.cal;
+  return { ...base, cal: Math.round(maintenance), carbs: Math.round((base.carbs || 0) + extra / 4) };
+}
+// Maintenance calories: from the weight trend and food log when there is
+// enough of both and the answer is plausible, otherwise BMR × 1.5.
+async function loadMaintenance() {
+  const bc = await loadBodyComp();
+  const bmr = bc?.bmr || null;
+  let t = null;
+  try { t = await computeTDEE(); } catch (e) { t = null; }
+  if (t?.ready && t.tdee > 0 && (!bmr || (t.tdee >= bmr * 1.1 && t.tdee <= bmr * 2.3))) return { cal: t.tdee, source: 'trend' };
+  if (bmr) return { cal: Math.round((bmr * REFEED_ACTIVITY) / 10) * 10, source: 'estimate' };
+  return null;
+}
+function useRefeed(day, base) {
+  const goals = useGoals();
+  const bodyComp = useBodyComp();
+  const [info, setInfo] = useState(null);
+  const on = !!goals.refeed?.on;
+  useEffect(() => {
+    if (!on) { setInfo(null); return; }
+    let cancelled = false;
+    Promise.all([storage.get('training:phase'), loadMaintenance()]).then(([phase, m]) => { if (!cancelled) setInfo({ phase, m }); });
+    return () => { cancelled = true; };
+  }, [on, bodyComp?.date, bodyComp?.weight]);
+  if (!on || !info || info.phase !== 'cut' || !refeedDays(goals.refeed).includes(day)) return { active: false, targets: base };
+  const t = info.m ? refeedTargets(base, info.m.cal) : null;
+  return { active: true, applied: !!t, targets: t || base, maintenance: info.m };
+}
+const REFEED_SOURCES = [
+  {
+    cite: 'Campbell et al., Journal of Functional Morphology and Kinesiology, 2020',
+    url: 'https://doi.org/10.3390/jfmk5010019',
+    says: '27 lifters dieted for 7 weeks on about a 25% deficit. Half ate more carbs on two back-to-back days each week. They lost less fat-free mass (0.4 kg against 1.3 kg) with the same fat loss. It was small and short, the two groups started with different amounts of lean mass, and some of the mass that was "kept" is likely glycogen and water.',
+  },
+  {
+    cite: 'Campbell, reply to a reanalysis, 2020',
+    url: 'https://doi.org/10.3390/jfmk5040086',
+    says: 'A published comment on that trial argued that on reanalysis only dry fat-free mass differed between the groups.',
+  },
+  {
+    cite: 'Peos et al. (ICECAP), Medicine and Science in Sports and Exercise, 2021',
+    url: 'https://doi.org/10.1249/MSS.0000000000002636',
+    says: '61 lifters, 12 weeks of dieting. This one tested week-long diet breaks, not two-day refeeds. Fat loss and fat-free mass came out the same either way, but the group taking breaks reported less hunger.',
+  },
+];
+function RefeedSettings() {
+  const goals = useGoals();
+  useSchedule();
+  const [phase, setPhase] = useState(null);
+  const [m, setM] = useState(undefined);
+  const [why, setWhy] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([storage.get('training:phase'), loadMaintenance()]).then(([p, mm]) => { if (!cancelled) { setPhase(p || 'recomp'); setM(mm); } });
+    return () => { cancelled = true; };
+  }, []);
+  if (phase !== 'cut') return null; // hidden entirely outside a cut
+  const refeed = goals.refeed || { on: false };
+  const start = refeed.startDay || defaultRefeedStart(SCHEDULE);
+  const save = async (next) => {
+    const g = { ...GOALS, refeed: next };
+    await storage.set('goals:active', g);
+    setActiveGoals(g);
+  };
+  const label = (d) => `D${d} ${SCHEDULE[d]?.name || ''}`.trim();
+  const days = refeedDays({ startDay: start });
+  return (
+    <div className="mt-5 pt-4 border-t border-stone-900" data-refeed-settings>
+      <label className="flex items-start gap-2">
+        <input type="checkbox" className="mt-1" checked={!!refeed.on} data-refeed-toggle onChange={(e) => save({ on: e.target.checked, startDay: start })} />
+        <span>
+          <span className="block text-sm text-stone-200">Weekly carb refeed: 2 consecutive days</span>
+          <span className="block text-[11px] text-stone-500">Optional, for a cut. Those two days eat at about maintenance, with the extra going to carbs.</span>
+        </span>
+      </label>
+      {refeed.on && (
+        <div className="mt-3">
+          <label className="block text-[11px] uppercase tracking-wider text-stone-500 mono mb-1">Refeed days</label>
+          <select value={start} data-refeed-start onChange={(e) => save({ on: true, startDay: parseInt(e.target.value) })} className="w-full bg-stone-950 border border-stone-800 rounded px-2.5 py-1.5 text-sm mono">
+            {[1, 2, 3, 4, 5, 6, 7].map((a) => (
+              <option key={a} value={a}>{label(a)} + {label((a % 7) + 1)}</option>
+            ))}
+          </select>
+          <div className="text-[11px] text-stone-500 mt-1">Starts on your two hardest back-to-back days by working sets. Change it if you like.</div>
+          <div className="mt-2 space-y-1" data-refeed-preview>
+            {m === undefined ? null : m === null ? (
+              <div className="text-xs text-amber-300">Maintenance can't be worked out yet. Log a weight with a body fat % and the refeed targets will appear. Until then those days keep their normal targets.</div>
+            ) : days.map((d) => {
+              const base = goals.macros[SCHEDULE[d]?.type] || goals.macros.rest;
+              const t = refeedTargets(base, m.cal);
+              return (
+                <div key={d} className="text-xs text-stone-400 mono">
+                  {label(d)}: {t ? `${base.cal} → ${t.cal} kcal, carbs ${base.carbs} → ${t.carbs} g` : `already at or above maintenance (${m.cal}), no change`}
+                </div>
+              );
+            })}
+            {m && <div className="text-[11px] text-stone-500">Maintenance {m.cal} kcal, {m.source === 'trend' ? 'worked out from your weight trend and food log' : 'a rough estimate (BMR × 1.5) until there are about 3 weeks of weigh-ins and food logs'}. Protein and fat stay the same.</div>}
+          </div>
+        </div>
+      )}
+      <button onClick={() => setWhy((o) => !o)} aria-expanded={why} data-refeed-why-toggle className="mt-3 flex items-center gap-1 text-[12px] mono text-amber-400">
+        Why
+        <ChevronDown size={12} className={`transition-transform ${why ? 'rotate-180' : ''}`} />
+      </button>
+      {why && (
+        <div className="mt-2 space-y-3" data-refeed-why>
+          <div className="text-xs text-stone-400 leading-relaxed">
+            <span className="text-stone-200">Bottom line:</span> mainly a tool to make a cut easier to stick to. Confidence that it protects muscle is low.
+          </div>
+          {REFEED_SOURCES.map((src) => (
+            <div key={src.url} className="text-xs text-stone-400 leading-relaxed">
+              {src.says}{' '}
+              <a href={src.url} target="_blank" rel="noopener noreferrer" className="text-amber-400 underline underline-offset-2">{src.cite}</a>
+            </div>
+          ))}
+          <div className="text-[11px] text-stone-500 leading-relaxed">Study details from PubMed.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function GoalsEditor() {
   const live = useGoals();
   const [form, setForm] = useState(live);
@@ -2907,6 +3055,7 @@ function GoalsEditor() {
       weeklyLossMax: Number(form.weeklyLossMax) || DEFAULT_GOALS.weeklyLossMax,
       // Dated only when the weight itself changes, so the newest body numbers win.
       updatedAt: Number(form.baseline) !== Number(GOALS.baseline) ? today() : (GOALS.updatedAt || null),
+      refeed: GOALS.refeed,
       macros: {
         lift:   { cal: Number(form.macros.lift.cal)   || 0, protein: Number(form.macros.lift.protein)   || 0, carbs: form.macros.lift.carbs   ?? 0, fat: form.macros.lift.fat   ?? 0 },
         cardio: { cal: Number(form.macros.cardio.cal) || 0, protein: Number(form.macros.cardio.protein) || 0, carbs: form.macros.cardio.carbs ?? 0, fat: form.macros.cardio.fat ?? 0 },
@@ -3133,6 +3282,7 @@ function GoalsEditor() {
       {saveStatus && (
         <div className="mt-2 text-xs text-emerald-400 mono text-center">{saveStatus}</div>
       )}
+      <RefeedSettings />
     </div>
   );
 }
@@ -9066,7 +9216,16 @@ async function getMacroTargetsForDate(targetDate) {
   if (!goals?.macros) return { cal: 2500, protein: 200, carbs: 250, fat: 80 };
   const dayType = await getDayTypeForDate(targetDate);
   const m = goals.macros[dayType] || goals.macros.rest;
-  return { cal: m.cal || 2500, protein: m.protein || 200, carbs: m.carbs || 250, fat: m.fat || 80 };
+  const base = { cal: m.cal || 2500, protein: m.protein || 200, carbs: m.carbs || 250, fat: m.fat || 80 };
+  if (goals.refeed?.on && (await storage.get('training:phase')) === 'cut') {
+    const day = await resolveScheduleDay(targetDate);
+    if (refeedDays(goals.refeed).includes(day)) {
+      const maint = await loadMaintenance();
+      const t = maint && refeedTargets(base, maint.cal);
+      if (t) return t;
+    }
+  }
+  return base;
 }
 
 async function getMealNamesForDate(date) {
@@ -15269,7 +15428,16 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
             ].map((p) => (
               <button
                 key={p.id}
-                onClick={async () => { setPhase(p.id); await storage.set('training:phase', p.id); }}
+                onClick={async () => {
+                  setPhase(p.id);
+                  await storage.set('training:phase', p.id);
+                  // Refeeds are a cut-only tool: leaving a cut switches them off.
+                  if (p.id !== 'cut' && GOALS.refeed?.on) {
+                    const g = { ...GOALS, refeed: { ...GOALS.refeed, on: false } };
+                    await storage.set('goals:active', g);
+                    setActiveGoals(g);
+                  }
+                }}
                 role="tab"
                 aria-selected={phase === p.id}
                 className={`ios-seg-item ${
@@ -23637,7 +23805,8 @@ function NutritionView({ day, activeDate, setActiveDate }) {
   useSchedule(); // subscribe to schedule swaps
   const goals = useGoals();
   const session = SCHEDULE[day];
-  const targets = goals.macros[session.type];
+  const refeed = useRefeed(day, goals.macros[session.type]);
+  const targets = refeed.targets;
   const isToday = (activeDate || today()) === today();
   const dateForKey = activeDate || today();
   const bodyCompNow = useBodyComp();
@@ -24184,7 +24353,17 @@ function NutritionView({ day, activeDate, setActiveDate }) {
       <div className="bg-stone-900 border border-stone-800 rounded-xl p-5 mb-5">
         <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-3">
           {isToday ? 'Today' : fmtDate(dateForKey)} · {session.type === 'lift' ? 'Lift Day' : session.type === 'cardio' ? 'Cardio Day' : 'Rest Day'}
+          {refeed.active && <span className="text-amber-400" data-refeed-label> · Refeed day</span>}
         </div>
+        {refeed.active && (
+          <div className="text-[11px] text-stone-500 -mt-1 mb-3 leading-relaxed" data-refeed-note>
+            {refeed.applied
+              ? `Calories are at about maintenance (${refeed.maintenance.cal}${refeed.maintenance.source === 'estimate' ? ', a rough estimate' : ''}). The extra goes to carbs; protein and fat are unchanged.`
+              : refeed.maintenance
+                ? 'Your normal target for today is already at or above maintenance, so nothing changes.'
+                : "Maintenance can't be worked out yet (log a weight with a body fat %), so today keeps its normal targets."}
+          </div>
+        )}
         <div className="grid grid-cols-4 gap-3">
           <MacroRing label="Cal" current={totals.cal} target={targets.cal} color="rgb(var(--accent))" />
           <MacroRing label="Protein" current={totals.protein} target={targets.protein} color="#30D158" unit="g" />
