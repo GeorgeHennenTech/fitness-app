@@ -6,7 +6,7 @@ const read = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
 const src = read('../src/App.jsx');
 const a = src.indexOf('// >>> MEAL TREE ENGINE'), b = src.indexOf('// <<< MEAL TREE ENGINE');
 assert.ok(a >= 0 && b > a);
-const api = new Function(`${src.slice(a, b)}\nreturn { MEAL_SLOTS, MEAL_OPTIONS, parseFoodsCsv, mealFoodIndex, mealMacros, mealRoundGrams, mealTargetsFor, mealRemaining, mealBuildTree, mealInRange, mealSwaps, mealResolveParsed, mealAdd, mealZero, MEAL_EFFORTS, MEAL_EFFORT_SLOTS, mealApplyVariant, mealSwapIndex, mealTier1Chips };`)();
+const api = new Function(`${src.slice(a, b)}\nreturn { MEAL_SLOTS, MEAL_OPTIONS, parseFoodsCsv, mealFoodIndex, mealMacros, mealRoundGrams, mealTargetsFor, mealRemaining, mealBuildTree, mealInRange, mealSwaps, mealResolveParsed, mealAdd, mealZero, MEAL_EFFORTS, MEAL_EFFORT_SLOTS, mealApplyVariant, mealSwapIndex, mealTier1Chips, mealIngredientOptions, mealCostText, mealOrderOptions, mealStallCheck, mealUnitText, mealShortName, mealFit, MEAL_UNITS };`)();
 const foods = api.parseFoodsCsv(read('../src/data/foods.csv'));
 const ix = api.mealFoodIndex(foods);
 const targets = JSON.parse(read('../src/data/targets.json'));
@@ -169,6 +169,83 @@ test('chips combine, start from the database portion, and unknown swaps are igno
   assert.equal(v.variantLabel, 'Tilapia, Brown rice');
   assert.equal(api.mealApplyVariant(base, { 'Chicken breast, cooked': 'Unicorn' }, ix, swapIx), base);
   assert.equal(api.mealApplyVariant(base, null, ix, swapIx), base);
+});
+
+test('ingredient swaps: every food offered fits the dish, covers the newer foods, and keeps the day in range', () => {
+  let offered = 0, ingredients = 0, empty = 0; const tiers = {};
+  for (const slot of api.MEAL_SLOTS) for (const o of api.MEAL_OPTIONS[slot]) for (const [from] of o.parts) {
+    ingredients++;
+    const want = api.mealBuildTree({ tree, targets, dayType: 'lift', stall: false, eaten: api.mealZero(), doneSlots: [], ix, swapIx }).slots[slot].want;
+    const choices = api.mealIngredientOptions(o, null, from, want, ix, swapIx, foods);
+    if (!choices.length) empty++;
+    const order = choices.map((c) => c.tier); assert.deepEqual(order, [...order].sort((x, y) => x - y), `${o.id} ${from}: tier order`);
+    for (const c of choices) {
+      tiers[c.tier] = (tiers[c.tier] || 0) + 1; offered++;
+      assert.ok(api.mealFit(ix[c.food]).some((g) => api.mealFit(ix[from]).includes(g)), `${from} -> ${c.food} is not a fit`);
+      assert.ok(!o.parts.some((p) => p[0] === c.food));
+      for (const d of ['lift', 'cardio', 'rest']) {
+        let eaten = api.mealZero(); const done = [];
+        for (const s of api.MEAL_SLOTS) {
+          const t = api.mealBuildTree({ tree, targets, dayType: d, stall: false, eaten, doneSlots: done, ix, swapIx, variantOf: { [`${slot}:${o.id}`]: { [from]: c.food } } });
+          const list = t.slots[s].options;
+          const opt = s === slot ? list.find((x) => x.id === o.id) : (list.find((x) => x.effort === 'mid') || list[0]);
+          eaten = api.mealAdd(eaten, opt.macros); done.push(s);
+        }
+        assert.deepEqual(api.mealInRange(api.mealTargetsFor(targets, d, false), eaten), OK, `${d} ${o.id}: ${from} -> ${c.food}: ${JSON.stringify(eaten)}`);
+      }
+    }
+  }
+  console.log(`   (${offered} swaps over ${ingredients} ingredients, ${empty} ingredients with none; by tier ${JSON.stringify(tiers)})`);
+  // Foods the database has no pairs for now get swaps too.
+  const bowl = api.MEAL_OPTIONS.lunch.find((o) => o.id === 'chicken-bites-bowl');
+  const w = api.mealBuildTree({ tree, targets, dayType: 'lift', stall: false, eaten: api.mealZero(), doneSlots: [], ix, swapIx }).slots.lunch.want;
+  assert.ok(api.mealIngredientOptions(bowl, null, 'Tyson grilled chicken bites cup', w, ix, swapIx, foods).length >= 3);
+  // Steak and shrimp fit a chicken burrito bowl even though they are not Tier 1.
+  const bb = api.MEAL_OPTIONS.lunch.find((o) => o.id === 'burrito-bowl');
+  const names = api.mealIngredientOptions(bb, null, 'Chicken breast, cooked', w, ix, swapIx, foods, 99).map((c) => c.food);
+  for (const f of ['Tilapia, cooked', 'Sirloin steak, lean cooked', 'Shrimp, cooked']) assert.ok(names.includes(f), f);
+  assert.ok(!names.includes('Tuna, canned in water') && !names.includes('Realgood lightly breaded chicken nuggets (20 oz bag)'));
+});
+
+test('eggs and bread slices come out as whole pieces, everywhere', () => {
+  for (const d of ['lift', 'cardio', 'rest']) {
+    const t = api.mealBuildTree({ tree, targets, dayType: d, stall: false, eaten: api.mealZero(), doneSlots: [], ix, swapIx });
+    for (const s of api.MEAL_SLOTS) for (const o of t.slots[s].options) for (const it of o.items) {
+      const u = api.MEAL_UNITS[it.food]; const base = api.MEAL_OPTIONS[s].find((x) => x.id === o.id).parts.find((p) => p[0] === it.food);
+      if (!u || base[2] === 'fixed' || base[2] === 'veg') continue;
+      near(it.grams / u[0], Math.round(it.grams / u[0]), 1e-9, `${d} ${o.id} ${it.food}`);
+      assert.ok(it.grams >= u[0]);
+    }
+  }
+  assert.equal(api.mealUnitText('Egg, whole boiled', 150), '3 eggs'); assert.equal(api.mealUnitText('Egg, whole boiled', 50), '1 egg'); assert.equal(api.mealUnitText('Banana', 120), '');
+});
+
+test('a swapped recipe is renamed after what is in it', () => {
+  const bb = api.MEAL_OPTIONS.lunch.find((o) => o.id === 'burrito-bowl');
+  assert.equal(api.mealApplyVariant(bb, { 'Chicken breast, cooked': 'Tilapia, cooked' }, ix, swapIx).label, 'Tilapia burrito bowl');
+  assert.equal(api.mealApplyVariant(bb, { 'Chicken breast, cooked': 'Sirloin steak, lean cooked', 'White rice, cooked': 'Brown rice, cooked' }, ix, swapIx).label, 'Steak burrito bowl, with brown rice');
+  const tacos = api.MEAL_OPTIONS.lunch.find((o) => o.id === 'turkey-tacos');
+  assert.equal(api.mealApplyVariant(tacos, { 'Ground turkey 93%, cooked': 'Ground beef 93%, cooked' }, ix, swapIx).label, 'Beef tacos');
+  assert.equal(api.mealApplyVariant(bb, { 'Avocado': 'Cheddar' }, ix, swapIx).label, 'Chicken burrito bowl');
+});
+
+test('suggestion order: favourites, then not eaten recently, then most ingredients at home', () => {
+  const o = ['a', 'b', 'c', 'd'].map((id) => ({ id }));
+  const ids = (x) => api.mealOrderOptions(o, x).map((y) => y.id).join('');
+  assert.equal(ids({}), 'abcd');
+  assert.equal(ids({ recent: ['a'] }), 'bcda');
+  assert.equal(ids({ favs: ['c'], recent: ['a'] }), 'cbda');
+  assert.equal(ids({ coverage: { d: 5, b: 2 } }), 'dbac');
+  assert.equal(ids({ favs: ['a'], recent: ['a'], coverage: { d: 9 } }), 'adbc');
+});
+
+test('stall check: needs enough weigh-ins, then flags a trend under 0.25 lb a week', () => {
+  const mk = (per) => Array.from({ length: 8 }, (_, i) => ({ date: `2026-11-${String(12 + i * 2).padStart(2, '0')}`, weight: 200 + (per / 7) * i * 2 }));
+  assert.equal(api.mealStallCheck([{ date: '2026-11-25', weight: 200 }], '2026-11-26').ready, false);
+  assert.equal(api.mealStallCheck(mk(0.1).slice(-3), '2026-11-26').ready, false);
+  const flat = api.mealStallCheck(mk(0.1), '2026-11-26'); assert.ok(flat.ready && flat.stalled); near(flat.perWeek, 0.1, 0.01);
+  const good = api.mealStallCheck(mk(0.4), '2026-11-26'); assert.ok(good.ready && !good.stalled); near(good.perWeek, 0.4, 0.01);
+  assert.equal(api.mealStallCheck(mk(0.4), '2026-12-20').ready, false, 'old weigh-ins do not count');
 });
 
 test('the tree corrects course after an off-plan meal', () => {

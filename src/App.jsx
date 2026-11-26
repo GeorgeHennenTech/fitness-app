@@ -19538,7 +19538,8 @@ const MEAL_EFFORT_SLOTS = ['breakfast', 'lunch', 'dinner', 'snack_1'];
 // 15 minutes), max (proper cooking). kind says what the solver may resize:
 // protein, carb and fat parts flex to hit the meal's share of what is left;
 // veg and fixed parts keep their grams. Variations are not written here: they
-// come from the Tier 1 pairs in the swap database (see mealTier1Chips).
+// are worked out per ingredient from fit groups and the swap database (see
+// mealIngredientOptions).
 // Seasoning in the steps (spices, herbs, garlic, lemon, soy sauce, mustard,
 // hot sauce) is not in the food table and is not counted.
 const MEAL_OPTIONS = {
@@ -19692,7 +19693,51 @@ function mealSwapIndex(tiers) {
   }
   return out;
 }
-const mealShortName = (name) => String(name).replace(/\s*\(.*\)$/, '').replace(/,[^,]*\bcooked$/i, '').replace(/,\s*(raw|plain|skinless|soft)$/i, '');
+// Kitchen names: what you would call the food out loud.
+const MEAL_NICK = {
+  'Chicken breast, cooked': 'Chicken', 'Chicken thigh, skinless, cooked': 'Chicken thigh', 'Turkey breast, cooked': 'Turkey breast', 'Sirloin steak, lean cooked': 'Steak',
+  'Pork tenderloin, cooked': 'Pork', 'Ground beef 93%, cooked': 'Beef', 'Ground beef 85%, cooked': 'Beef (85%)', 'Ground turkey 93%, cooked': 'Turkey',
+  'Salmon (farmed), cooked': 'Salmon', 'Rainbow trout, cooked': 'Trout', 'Tuna, canned in water': 'Tuna', 'Tofu, firm': 'Tofu', 'Lox / smoked salmon': 'Lox',
+  'Salmon packet, pink (Chicken of the Sea, 2.5 oz)': 'Salmon packet', 'Tyson grilled chicken bites cup': 'Grilled chicken bites',
+  'Realgood lightly breaded chicken nuggets (20 oz bag)': 'Chicken nuggets', 'Realgood lightly breaded chicken nuggets (36 oz bag)': 'Chicken nuggets (36 oz bag)',
+  'Egg, whole boiled': 'Eggs', 'Potato, baked w/ skin': 'Baked potato', 'Sweet potato, baked': 'Sweet potato', 'Potato, boiled': 'Boiled potato',
+  'Brownberry 100% Whole Wheat bread (regular slice)': 'Whole wheat toast', 'Sourdough bread, bakery loaf (generic)': 'Sourdough',
+  'Breakfast sausage, chicken or turkey (cooked)': 'Breakfast sausage', 'Greek yogurt, nonfat': 'Greek yogurt (nonfat)', 'Greek yogurt, 2%': 'Greek yogurt (2%)',
+  'Greek yogurt, whole milk 5% (Fage-style)': 'Greek yogurt (5%)', 'Milk, 2%': '2% milk', 'Milk, skim': 'Skim milk', 'Milk, whole': 'Whole milk',
+  'Bell pepper, red': 'Red pepper', 'Bell pepper, green': 'Green pepper', 'Mozzarella, part-skim': 'Mozzarella', 'Mozzarella, whole milk': 'Whole-milk mozzarella',
+};
+const mealShortName = (name) => MEAL_NICK[name] || String(name).replace(/\s*\(.*\)$/, '').replace(/,[^,]*\bcooked$/i, '').replace(/,\s*(raw|plain|skinless|soft|dry|unsweetened|canned.*)$/i, '');
+// Foods sold in pieces: [grams each, one, many]. Portions of these are
+// snapped to whole pieces and the rest of the recipe absorbs the difference.
+const MEAL_UNITS = {
+  'Egg, whole boiled': [50, 'egg', 'eggs'],
+  'Brownberry 100% Whole Wheat bread (regular slice)': [43, 'slice', 'slices'],
+};
+function mealUnitText(food, grams) {
+  const u = MEAL_UNITS[food]; if (!u) return '';
+  const n = Math.round((grams / u[0]) * 10) / 10;
+  return `${n} ${n === 1 ? u[1] : u[2]}`;
+}
+// Fit: which foods can stand in for each other inside a dish. Role alone is
+// too coarse (it puts nuggets, canned tuna and steak together) and too narrow
+// (steak and ground beef are different roles), so a few roles are merged and
+// a few foods are moved. A food may sit in more than one group.
+const MEAL_FIT_ROLE = {
+  'Lean meat/fish': 'main', 'Ground meat': 'main', 'Fattier meat/fish': 'main', 'Plant protein': 'main',
+  'Processed meat': 'deli', 'Breakfast meat': 'breakfast meat', 'Fatty fish': 'quick protein',
+  'Fruit': 'fruit', 'Berries': 'fruit',
+  'Grain/starch side': 'starch', 'Pasta/noodle': 'starch', 'Potato/tuber': 'starch',
+  'Breakfast grain': 'hot cereal', 'Hot cereal': 'hot cereal',
+  'Nuts': 'nuts', 'Seeds': 'nuts', 'Cooking oil': 'cooking fat', 'Cooking fat': 'cooking fat',
+};
+const MEAL_FIT_FOOD = {
+  'Tuna, canned in water': ['quick protein'], 'Salmon packet, pink (Chicken of the Sea, 2.5 oz)': ['quick protein'],
+  'Realgood lightly breaded chicken nuggets (20 oz bag)': ['quick protein'], 'Realgood lightly breaded chicken nuggets (36 oz bag)': ['quick protein'],
+  'Tyson grilled chicken bites cup': ['quick protein', 'main'],
+  'Lox / smoked salmon': ['deli'], 'Canadian bacon': ['breakfast meat', 'deli'], 'Bacon, cooked': ['breakfast meat'], 'Turkey bacon, cooked': ['breakfast meat'],
+  'Ham, sliced deli': ['deli', 'breakfast meat'], 'Beef jerky': ['jerky'], 'Edamame, cooked': ['Beans/lentils'], 'Oats, cooked': ['cooked oats'],
+};
+function mealFit(f) { return MEAL_FIT_FOOD[f.name] || [MEAL_FIT_ROLE[f.role] || f.role]; }
 // Variation chips for a recipe: the Tier 1 partners of its foods (vegetables
 // are left to tap-to-swap so the row stays short), a few per food.
 function mealTier1Chips(option, swapIx, ix, perFood = 4) {
@@ -19719,7 +19764,76 @@ function mealApplyVariant(option, swaps, ix, swapIx) {
     const ratio = pair ? pair.ratio : (m && ix[to][m] > 0 && ix[food][m] > 0 ? Math.min(4, Math.max(0.2, ix[food][m] / ix[to][m])) : 1);
     return [to, grams * ratio, kind];
   });
-  return { ...option, parts, swaps: map, variantLabel: picked.map(([, to]) => mealShortName(to)).join(', ') };
+  return { ...option, parts, swaps: map, label: mealRenamed(option, picked), baseLabel: option.label, variantLabel: picked.map(([, to]) => mealShortName(to)).join(', ') };
+}
+// "Chicken burrito bowl" with tilapia becomes "Tilapia burrito bowl". A swap
+// the title does not mention is added after it, for the main parts only.
+function mealRenamed(option, picked) {
+  let label = option.label; const extra = [];
+  for (const [from, to] of picked) {
+    const a = mealShortName(from), b = mealShortName(to);
+    const at = label.toLowerCase().indexOf(a.toLowerCase());
+    const edge = (ch) => !ch || !/[a-z0-9]/i.test(ch);
+    if (at >= 0 && edge(label[at - 1]) && edge(label[at + a.length])) label = label.slice(0, at) + (at === 0 ? b : b.toLowerCase()) + label.slice(at + a.length);
+    else { const kind = option.parts.find((p) => p[0] === from)?.[2]; if (kind === 'protein' || kind === 'carb') extra.push(b.toLowerCase()); }
+  }
+  return extra.length ? `${label}, with ${extra.slice(0, 2).join(' and ')}` : label;
+}
+// Every food that fits in place of one ingredient, with the recipe sized
+// again for each so the grams and the cost are real. Ranked by database tier
+// (4 = fits the dish but is not a database pair), then by how far the meal
+// moves. A swap the recipe cannot absorb is left out.
+const MEAL_SWAP_LIMIT = { protein: 8, carbs: 12, fat: 8 };
+function mealIngredientOptions(base, swaps, from, want, ix, swapIx, foods, limit = 10) {
+  const origin = ix[from]; if (!origin || !base.parts.some((p) => p[0] === from)) return [];
+  const others = { ...(swaps || {}) }; delete others[from];
+  const taken = new Set([...base.parts.map((p) => p[0]), ...Object.values(others)]);
+  const fit = mealFit(origin);
+  const ref = mealSizeOption(mealApplyVariant(base, others, ix, swapIx), want, ix);
+  const out = [];
+  for (const cand of foods) {
+    if (taken.has(cand.name) || !mealFit(cand).some((g) => fit.includes(g))) continue;
+    const sized = mealSizeOption(mealApplyVariant(base, { ...others, [from]: cand.name }, ix, swapIx), want, ix);
+    const item = sized.items.find((i) => i.food === cand.name);
+    if (!item) continue;
+    const delta = {}; for (const m of MEAL_MACROS) delta[m] = sized.macros[m] - ref.macros[m];
+    if (['protein', 'carbs', 'fat'].some((m) => Math.abs(delta[m]) > MEAL_SWAP_LIMIT[m])) continue;
+    out.push({ food: cand.name, label: mealShortName(cand.name), grams: item.grams, tier: swapIx?.[from]?.[cand.name]?.tier || 4, delta,
+      cost: Math.abs(delta.protein) * 4 + Math.abs(delta.carbs) * 4 + Math.abs(delta.fat) * 9, flagged: cand.flagged });
+  }
+  out.sort((a, b) => (a.tier - b.tier) || (a.cost - b.cost));
+  const picked = swaps?.[from];
+  const top = out.slice(0, limit);
+  if (picked && !top.some((o) => o.food === picked)) { const p = out.find((o) => o.food === picked); if (p) top.push(p); }
+  return top;
+}
+// The part of a swap's cost worth showing: "+4 g fat". Empty when it is a wash.
+function mealCostText(delta) {
+  const bits = [];
+  if (Math.abs(delta.protein) >= 2.5) bits.push(`${delta.protein > 0 ? '+' : '-'}${Math.abs(Math.round(delta.protein))} g protein`);
+  if (Math.abs(delta.carbs) >= 4) bits.push(`${delta.carbs > 0 ? '+' : '-'}${Math.abs(Math.round(delta.carbs))} g carbs`);
+  if (Math.abs(delta.fat) >= 2.5) bits.push(`${delta.fat > 0 ? '+' : '-'}${Math.abs(Math.round(delta.fat))} g fat`);
+  return bits.join(', ');
+}
+// Which recipe to show first: favourites, then ones not eaten in the last two
+// days, then the ones you have the most ingredients for, then written order.
+function mealOrderOptions(options, { favs = [], recent = [], coverage = {} } = {}) {
+  return options.map((o, i) => ({ o, i })).sort((a, b) =>
+    (favs.includes(b.o.id) - favs.includes(a.o.id)) || (recent.includes(a.o.id) - recent.includes(b.o.id))
+    || ((coverage[b.o.id] || 0) - (coverage[a.o.id] || 0)) || (a.i - b.i)).map((x) => x.o);
+}
+// Stall rule check: scale trend over the last 14 days from daily weigh-ins.
+// Needs 4 or more weigh-ins spread over 10 or more days, or it says nothing.
+const MEAL_STALL = { days: 14, minEntries: 4, minSpan: 10, targetLow: 0.25 };
+function mealStallCheck(weights, todayStr) {
+  const day = (d) => Math.round(new Date(`${d}T12:00:00`).getTime() / 86400000);
+  const t0 = day(todayStr);
+  const pts = (weights || []).map((w) => ({ x: day(w.date), y: parseFloat(w.weight) })).filter((p) => isFinite(p.y) && p.y > 0 && p.x <= t0 && p.x > t0 - MEAL_STALL.days).sort((a, b) => a.x - b.x);
+  if (pts.length < MEAL_STALL.minEntries || pts[pts.length - 1].x - pts[0].x < MEAL_STALL.minSpan) return { ready: false, entries: pts.length };
+  const n = pts.length, mx = pts.reduce((s2, p) => s2 + p.x, 0) / n, my = pts.reduce((s2, p) => s2 + p.y, 0) / n;
+  const slope = pts.reduce((s2, p) => s2 + (p.x - mx) * (p.y - my), 0) / pts.reduce((s2, p) => s2 + (p.x - mx) ** 2, 0);
+  const perWeek = slope * 7;
+  return { ready: true, entries: n, perWeek, stalled: perWeek < MEAL_STALL.targetLow };
 }
 const MEAL_SCALE = { protein: [0.5, 2.2], carb: [0.15, 2.4], fat: [0, 3] };
 
@@ -19785,14 +19899,26 @@ function mealSolveOption(option, want, ix) {
 // 4/4/9 times the grams (fibre, rounding), so a second pass moves the
 // calorie gap into fat and carbs (about two thirds fat) to keep the day's kcal in range.
 const MEAL_KCAL_FIX = { carbs: 6, fat: 6, carbShare: 0.35 };
-function mealSizeOption(option, want, ix) {
+function mealSizeFlexible(option, want, ix) {
   let kept = mealSolveOption(option, want, ix);
   const gap = want.kcal - mealMacros(kept, ix).kcal;
   if (want.kcal > 0 && Math.abs(gap) > 12) {
     const lim = (v, n) => Math.max(-n, Math.min(n, v));
     kept = mealSolveOption(option, { ...want, carbs: want.carbs + lim(gap * MEAL_KCAL_FIX.carbShare / 4, MEAL_KCAL_FIX.carbs), fat: want.fat + lim(gap * (1 - MEAL_KCAL_FIX.carbShare) / 9, MEAL_KCAL_FIX.fat) }, ix);
   }
-  return { id: option.id, label: option.label, effort: option.effort, mins: option.mins, swaps: option.swaps || null, variantLabel: option.variantLabel || null, items: kept, macros: mealMacros(kept, ix) };
+  return kept;
+}
+function mealSizeOption(option, want, ix) {
+  let kept = mealSizeFlexible(option, want, ix);
+  // Whole pieces: snap eggs and slices, hold them, and size the rest again.
+  const snapped = {};
+  for (const it of kept) { const u = MEAL_UNITS[it.food]; if (u && it.kind !== 'fixed' && it.kind !== 'veg') snapped[it.food] = Math.round(it.grams / u[0]) * u[0]; }
+  if (Object.keys(snapped).length) {
+    const kindOf = Object.fromEntries(option.parts.map((p) => [p[0], p[2]]));
+    const held = { ...option, parts: option.parts.map(([f, g, k]) => (f in snapped ? [f, snapped[f], 'fixed'] : [f, g, k])) };
+    kept = mealSizeFlexible(held, want, ix).map((it) => ({ ...it, kind: kindOf[it.food] }));
+  }
+  return { id: option.id, label: option.label, baseLabel: option.baseLabel || option.label, effort: option.effort, mins: option.mins, swaps: option.swaps || null, variantLabel: option.variantLabel || null, items: kept, macros: mealMacros(kept, ix) };
 }
 // The tree for the rest of the day: for every meal not yet eaten, each option
 // sized to that meal's share of what is left.
@@ -19873,7 +19999,7 @@ function mealResolveParsed(list, foods) {
 const MEAL_FOODS = parseFoodsCsv(MEAL_FOODS_CSV);
 const MEAL_IX = mealFoodIndex(MEAL_FOODS);
 const MEAL_SWAP_IX = mealSwapIndex([[1, MEAL_TIER1_CSV], [2, MEAL_TIER2_CSV], [3, MEAL_TIER3_CSV]]);
-const MEAL_TIER_LABEL = { 1: 'Tier 1 · same dish', 2: 'Tier 2 · same macros, different food', 3: 'Tier 3 · looser', 0: 'Not in your swap database yet · matched by role' };
+const MEAL_TIER_LABEL = { 1: 'Tier 1', 2: 'Tier 2', 3: 'Tier 3', 4: 'Fits the dish' };
 const MEAL_PARSE_PROMPT = `You turn a description of what someone ate into foods and grams.
 Use ONLY food names from the list below, copied exactly, character for character.
 Rules:
@@ -19931,7 +20057,11 @@ function MealTreeView({ day, activeDate }) {
   const [pick, setPick] = useState({});      // slot -> recipe id
   const [effort, setEffort] = useState({});  // slot -> min | mid | max
   const [variantOf, setVariantOf] = useState({}); // `${slot}:${recipeId}` -> { from: to } Tier 1 swaps
-  const [looser, setLooser] = useState(false);
+  const [browse, setBrowse] = useState(null);   // slot whose recipe list is open
+  const [favs, setFavs] = useState([]);
+  const [recent, setRecent] = useState([]);     // recipe ids eaten in the last two days
+  const [pantry, setPantry] = useState([]);
+  const [weights, setWeights] = useState([]);
   const [howOpen, setHowOpen] = useState(false);
   const [edits, setEdits] = useState({});    // `${slot}:${optionId}` -> items after swaps
   const [swapFor, setSwapFor] = useState(null);
@@ -19948,7 +20078,17 @@ function MealTreeView({ day, activeDate }) {
       setMt(m && typeof m === 'object' ? { done: {}, ...m } : { done: {} });
       setStall(!!st?.stall);
       setEffort(st?.effort && typeof st.effort === 'object' ? st.effort : {});
+      setFavs(Array.isArray(st?.favs) ? st.favs : []);
       setLoaded(true);
+      // Extras that only change the order of suggestions and the stall note.
+      const prev = await Promise.all([1, 2].map((n) => storage.get(`mealtree:${addDays(date, -n)}`)));
+      const stock = [];
+      for (const k of await storage.list('pantry:')) { const p = await storage.get(k); if (p && p.name && p.status === 'in-stock' && !p.consumedAt) stock.push(p); }
+      const ws = [];
+      for (const k of await storage.list('body:')) { const b = await storage.get(k); if (b?.date && parseFloat(b.weight) > 0) ws.push({ date: b.date, weight: b.weight }); }
+      if (cancelled) return;
+      setRecent(prev.flatMap((d) => Object.values(d?.done || {}).map((x) => x?.id).filter(Boolean)));
+      setPantry(stock); setWeights(ws);
     })();
     return () => { cancelled = true; };
   }, [date]);
@@ -19967,22 +20107,30 @@ function MealTreeView({ day, activeDate }) {
   const current = openSlot && tree.open.includes(openSlot) ? openSlot : tree.open[0] || null;
   // Meals 1 to 4 show one effort level at a time; the last snack shows everything.
   const effortOf = (slot) => (MEAL_EFFORT_SLOTS.includes(slot) ? effort[slot] || 'mid' : null);
+  // How many of each recipe's foods look like something in the kitchen.
+  const coverage = useMemo(() => {
+    const out = {};
+    if (!pantry.length) return out;
+    const has = {};
+    const inKitchen = (food) => (food in has ? has[food] : (has[food] = !!ingredientMatchesPantry(mealShortName(food), pantry)));
+    for (const s of MEAL_SLOTS) for (const o of MEAL_OPTIONS[s]) out[o.id] = o.parts.filter((p) => inKitchen(p[0])).length;
+    return out;
+  }, [pantry]);
   const optsFor = (slot) => {
     const all = tree.slots[slot].options; const e = effortOf(slot);
     const list = e ? all.filter((o) => o.effort === e) : all;
-    return list.length ? list : all;
+    return mealOrderOptions(list.length ? list : all, { favs, recent, coverage });
   };
   const optFor = (slot) => { const list = optsFor(slot); return list.find((o) => o.id === pick[slot]) || list[0]; };
   const itemsFor = (slot) => {
-    const opt = optFor(slot);
-    return edits[`${slot}:${opt.id}`] || opt.items;
+    return optFor(slot).items;
   };
   // Where the day lands if the rest of the tree is followed as shown.
   const projected = useMemo(() => {
     let t = { ...eaten };
     for (const s of tree.open) t = mealAdd(t, mealMacros(itemsFor(s), MEAL_IX));
     return t;
-  }, [tree, eaten, pick, edits, effort]);
+  }, [tree, eaten, pick, effort, favs, recent, coverage]);
   const verdict = mealInRange(tree.target, projected);
   const onTrack = MEAL_MACROS.every((m) => verdict[m] === 'ok');
 
@@ -19993,26 +20141,34 @@ function MealTreeView({ day, activeDate }) {
     setEffort(next); setPick({ ...pick, [slot]: undefined }); setSwapFor(null); setFree(null); setHowOpen(false);
     saveSettings({ effort: next });
   };
-  // Tier 1 chips toggle: one swap per original food; from = null clears them all.
+  // One swap per original ingredient; to = null puts the original back.
   const chooseVariant = (slot, optId, from, to) => {
     const key = `${slot}:${optId}`;
     const cur = { ...(variantOf[key] || {}) };
-    if (!from) { setVariantOf({ ...variantOf, [key]: undefined }); }
-    else { if (cur[from] === to) delete cur[from]; else cur[from] = to; setVariantOf({ ...variantOf, [key]: Object.keys(cur).length ? cur : undefined }); }
-    const e = { ...edits }; delete e[key]; setEdits(e); setSwapFor(null);
+    if (to) cur[from] = to; else delete cur[from];
+    setVariantOf({ ...variantOf, [key]: Object.keys(cur).length ? cur : undefined });
+    setSwapFor(null);
   };
-  const logItems = async (slot, label, items) => {
+  const nextIdea = (slot) => {
+    const list = optsFor(slot); const i = list.findIndex((o) => o.id === optFor(slot).id);
+    setPick({ ...pick, [slot]: list[(i + 1) % list.length].id }); setSwapFor(null); setHowOpen(false);
+  };
+  const toggleFav = (id) => {
+    const next = favs.includes(id) ? favs.filter((x) => x !== id) : [...favs, id];
+    setFavs(next); saveSettings({ favs: next });
+  };
+  const logItems = async (slot, label, items, recipeId) => {
     const base = Date.now();
     const added = items.map((it, i) => {
       const m = mealMacros([it], MEAL_IX);
       const r1 = (v) => Math.round(v * 10) / 10;
-      return { id: base + i, name: `${it.food} (${mealRoundGrams(it.grams)} g)`, cal: r1(m.kcal), protein: r1(m.protein), carbs: r1(m.carbs), fat: r1(m.fat), mealSlot: slot, source: 'mealtree' };
+      return { id: base + i, name: `${it.food} (${MEAL_UNITS[it.food] ? Math.round(it.grams) : mealRoundGrams(it.grams)} g)`, cal: r1(m.kcal), protein: r1(m.protein), carbs: r1(m.carbs), fat: r1(m.fat), mealSlot: slot, source: 'mealtree' };
     });
     const next = [...entries, ...added];
     await storage.set(`nutrition:${date}`, next);
     setEntries(next);
-    await saveMt({ ...mt, done: { ...mt.done, [slot]: { label, at: Date.now() } } });
-    setEdits({}); setSwapFor(null); setFree(null); setOpenSlot(null); setFlow((f) => f + 1);
+    await saveMt({ ...mt, done: { ...mt.done, [slot]: { label, at: Date.now(), ...(recipeId ? { id: recipeId } : {}) } } });
+    setEdits({}); setSwapFor(null); setFree(null); setOpenSlot(null); setBrowse(null); setHowOpen(false); setFlow((f) => f + 1);
     const nextSlot = MEAL_SLOTS.find((s) => s !== slot && !mt.done?.[s]);
     setTimeout(() => nodeRefs.current[nextSlot || slot]?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 250);
   };
@@ -20023,12 +20179,6 @@ function MealTreeView({ day, activeDate }) {
     const done = { ...mt.done }; delete done[slot];
     await saveMt({ ...mt, done });
     setFlow((f) => f + 1);
-  };
-  const applySwap = (slot, optId, index, swap) => {
-    const key = `${slot}:${optId}`;
-    const items = (edits[key] || optFor(slot).items).map((it, i) => (i === index ? { ...it, food: swap.food, grams: swap.grams } : it));
-    setEdits({ ...edits, [key]: items });
-    setSwapFor(null);
   };
   const readFree = async () => {
     setFree((f) => ({ ...f, busy: true, error: '' }));
@@ -20114,37 +20264,15 @@ function MealTreeView({ day, activeDate }) {
                 <span className="mono text-[11px] text-stone-500">about {mealFmt(node.want.kcal)} kcal · {mealFmt(node.want.protein)} P · {mealFmt(node.want.carbs)} C · {mealFmt(node.want.fat)} F</span>
               </button>
               {!isCurrent ? (
-                <button onClick={() => setOpenSlot(slot)} className="mt-1 block w-full text-left text-[12px] text-stone-500">{opts.map((o) => o.label).join(' · ')}</button>
+                <button onClick={() => setOpenSlot(slot)} className="mt-1 block w-full text-left text-[12px] text-stone-500">{opt.label}</button>
               ) : (
                 <>
-                  {slotEffort && (
-                    <div className="ios-seg mt-2" role="tablist" aria-label="How much effort">
-                      {MEAL_EFFORTS.map(([id, label]) => (
-                        <button key={id} role="tab" aria-selected={slotEffort === id} data-meal-effort={id} onClick={() => chooseEffort(slot, id)}
-                          className={`ios-seg-item ${slotEffort === id ? 'ios-seg-on shadow font-semibold text-amber-400' : 'text-stone-400'}`}>{label}</button>
-                      ))}
-                    </div>
-                  )}
-                  {/* Branches */}
-                  <div className="flex gap-2 overflow-x-auto snap-x mt-2 pb-1 -mr-4 pr-4" key={slotEffort || 'all'}>
-                    {opts.map((o, oi) => (
-                      <button key={o.id} onClick={() => { setPick({ ...pick, [slot]: o.id }); setSwapFor(null); setFree(null); setHowOpen(false); }} data-meal-option={o.id}
-                        className={`mt-opt snap-start shrink-0 w-[62%] text-left rounded-xl border p-3 ${o.id === opt.id && !free ? 'border-amber-400 bg-amber-400/10' : 'border-stone-800 bg-stone-900'}`} style={{ '--i': oi }}>
-                        <div className="text-sm font-semibold text-stone-100 leading-snug">{o.label}</div>
-                        {o.variantLabel && <div className="text-[11px] text-amber-300/80">{o.variantLabel}</div>}
-                        <div className="mono text-[11px] text-stone-400 mt-0.5">{o.mins ? `${o.mins} min · ` : ''}{mealFmt(o.macros.kcal)} kcal</div>
-                        <div className="mono text-[11px] text-stone-500">{mealFmt(o.macros.protein)} P · {mealFmt(o.macros.carbs)} C · {mealFmt(o.macros.fat)} F</div>
-                      </button>
-                    ))}
-                    <button onClick={() => setFree({ slot, text: '' })} data-meal-free-open
-                      className={`mt-opt snap-start shrink-0 w-[44%] text-left rounded-xl border border-dashed p-3 ${free ? 'border-amber-400 bg-amber-400/10' : 'border-stone-700 bg-stone-900/50'}`} style={{ '--i': opts.length }}>
-                      <div className="text-sm font-semibold text-stone-200">I ate something else</div>
-                      <div className="text-[11px] text-stone-500 mt-0.5">Type it; the rest of the tree adjusts.</div>
-                    </button>
-                  </div>
-
                   {free ? (
-                    <div className="mt-3 bg-stone-900 border border-stone-800 rounded-xl p-3 mt-node" data-meal-free>
+                    <div className="mt-2 bg-stone-900 border border-stone-800 rounded-xl p-3 mt-node" data-meal-free>
+                      <div className="flex items-baseline justify-between mb-2">
+                        <div className="text-sm font-semibold text-stone-100">What did you eat?</div>
+                        <button onClick={() => setFree(null)} data-meal-free-close className="text-[11px] mono text-stone-500 underline underline-offset-2">Back to the suggestion</button>
+                      </div>
                       <textarea rows={2} value={free.text} onChange={(e) => setFree({ ...free, text: e.target.value })} placeholder="2 eggs and 3 slices of toast" data-meal-free-text
                         className="w-full bg-stone-950 border border-stone-800 rounded-md p-2 text-sm text-stone-100 placeholder-stone-600" />
                       <button onClick={readFree} disabled={free.busy || !free.text.trim()} data-meal-free-read className="mt-2 w-full bg-stone-800 text-stone-100 text-sm font-semibold rounded-md py-2 disabled:opacity-40 flex items-center justify-center gap-2">
@@ -20179,84 +20307,101 @@ function MealTreeView({ day, activeDate }) {
                       )}
                     </div>
                   ) : (
-                    <div className="mt-3 bg-stone-900 border border-stone-800 rounded-xl p-3 mt-node" key={`${opt.id}:${opt.variantLabel || ''}`} data-meal-detail={opt.id}>
-                      <div className="flex items-baseline justify-between mb-1.5">
-                        <div className="text-sm font-semibold text-stone-100">{opt.label}</div>
-                        {opt.mins ? <div className="mono text-[11px] text-stone-500 shrink-0 ml-2">{opt.mins} min</div> : null}
+                    <div className="mt-2 bg-stone-900 border border-amber-400/50 rounded-xl p-3 mt-node" key={`${opt.id}:${opt.variantLabel || ''}`} data-meal-detail={opt.id}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="text-[15px] font-semibold text-stone-100 leading-snug" data-meal-title>{opt.label}</div>
+                          <div className="mono text-[11px] text-stone-500 mt-0.5">
+                            {[opt.mins ? `${opt.mins} min` : null, slotEffort ? MEAL_EFFORTS.find(([id]) => id === slotEffort)[1].toLowerCase() : null,
+                              pantry.length ? `${coverage[opt.id] || 0} of ${recipe.parts.length} likely in your kitchen` : null].filter(Boolean).join(' · ')}
+                          </div>
+                        </div>
+                        <button onClick={() => toggleFav(opt.id)} data-meal-fav={favs.includes(opt.id) ? 'on' : 'off'} aria-label={favs.includes(opt.id) ? 'Remove from favourites' : 'Add to favourites'} className="p-1 -m-1 shrink-0">
+                          <Star size={18} className={favs.includes(opt.id) ? 'text-amber-400 fill-amber-400' : 'text-stone-600'} />
+                        </button>
                       </div>
-                      {(() => {
-                        const chips = mealTier1Chips(recipe, MEAL_SWAP_IX, MEAL_IX);
-                        if (!chips.length) return <div className="text-[11px] text-stone-500 pb-2" data-meal-variants="none">No Tier 1 swaps in your database for these foods. Tap a food for looser ones.</div>;
-                        return (
-                          <div className="flex gap-1.5 overflow-x-auto pb-2 -mr-3 pr-3" data-meal-variants>
-                            <button data-meal-variant="base" onClick={() => chooseVariant(slot, opt.id, null)}
-                              className={`shrink-0 text-[12px] rounded-full border px-2.5 py-1 ${!opt.swaps ? 'border-amber-400 bg-amber-400/10 text-amber-300' : 'border-stone-700 text-stone-300'}`}>Original</button>
-                            {chips.map((c) => (
-                              <button key={`${c.from}>${c.to}`} data-meal-variant={c.to} onClick={() => chooseVariant(slot, opt.id, c.from, c.to)} title={`Instead of ${c.from}`}
-                                className={`shrink-0 text-[12px] rounded-full border px-2.5 py-1 ${opt.swaps?.[c.from] === c.to ? 'border-amber-400 bg-amber-400/10 text-amber-300' : 'border-stone-700 text-stone-300'}`}>{c.label}</button>
-                            ))}
-                          </div>
-                        );
-                      })()}
-                      {items.map((it, k) => {
-                        const key = `${slot}:${k}`;
-                        const swaps = swapFor === key ? mealSwaps(it.food, it.grams, MEAL_FOODS, MEAL_SWAP_IX) : null;
-                        return (
-                          <div key={k} className="py-1.5 border-b border-stone-800/70 last:border-0">
-                            <button onClick={() => { setSwapFor(swapFor === key ? null : key); setLooser(false); }} className="w-full flex items-center justify-between text-left" data-meal-item={it.food}>
-                              <span className="text-[13px] text-stone-200">{it.food}{flagged(it.food) && <span className="ml-1 mono text-[10px] text-amber-400 border border-amber-400/40 rounded px-1">check</span>}</span>
-                              <span className="flex items-center gap-2"><span className="mono text-sm text-stone-100 tabular">{mealRoundGrams(it.grams)} g</span><RefreshCw size={12} className="text-stone-500" /></span>
-                            </button>
-                            {swaps && (
-                              <div className="mt-1 mb-1 pl-2 border-l border-stone-700 mt-node" data-meal-swaps>
-                                {swaps.length === 0 && <div className="text-[11px] text-stone-500 py-1">Nothing in your swap database or with the same role matches closely enough.</div>}
-                                {(() => {
-                                  const tight = swaps.filter((sw) => sw.tier !== 3);
-                                  const loose = swaps.filter((sw) => sw.tier === 3);
-                                  const shown = looser || tight.length === 0 ? [...tight, ...loose] : tight;
-                                  let last = null;
-                                  return (
-                                    <>
-                                      {shown.slice(0, looser ? 40 : 14).map((sw) => {
-                                        const head = sw.tier !== last ? MEAL_TIER_LABEL[sw.tier] : null; last = sw.tier;
-                                        return (
-                                          <React.Fragment key={sw.food}>
-                                            {head && <div className="mono text-[10px] uppercase tracking-wider text-stone-500 pt-1.5" data-meal-tier={sw.tier}>{head}</div>}
-                                            <button onClick={() => applySwap(slot, opt.id, k, sw)} data-meal-swap={sw.food} className="w-full flex items-center justify-between text-left py-1">
-                                              <span className="text-[12px] text-stone-300">{sw.food}{sw.flagged && <span className="ml-1 mono text-[10px] text-amber-400 border border-amber-400/40 rounded px-1">check</span>}
-                                                {!sw.exact && <span className="block text-[10px] text-stone-500">{sw.off.map((m) => `${sw.delta[m] > 0 ? '+' : ''}${Math.round(sw.delta[m])} ${m === 'kcal' ? 'kcal' : `g ${m}`}`).join(', ')}</span>}
-                                              </span>
-                                              <span className="mono text-[12px] text-stone-200 tabular">{mealRoundGrams(sw.grams)} g</span>
-                                            </button>
-                                          </React.Fragment>
-                                        );
-                                      })}
-                                      {!looser && tight.length > 0 && loose.length > 0 && <button onClick={() => setLooser(true)} data-meal-looser className="text-[11px] text-stone-400 underline underline-offset-2 py-1">Show {loose.length} looser (Tier 3)</button>}
-                                    </>
-                                  );
-                                })()}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                      <div className="mt-2">
+                        {items.map((it) => {
+                          const from = Object.keys(opt.swaps || {}).find((f) => opt.swaps[f] === it.food) || it.food;
+                          const key = `${slot}:${from}`;
+                          const choices = swapFor === key ? mealIngredientOptions(recipe, opt.swaps, from, node.want, MEAL_IX, MEAL_SWAP_IX, MEAL_FOODS) : null;
+                          const unit = mealUnitText(it.food, it.grams);
+                          return (
+                            <div key={from} className="py-1.5 border-b border-stone-800/70 last:border-0">
+                              <button onClick={() => setSwapFor(swapFor === key ? null : key)} className="w-full flex items-center justify-between text-left gap-2" data-meal-item={it.food}>
+                                <span className="text-[13px] text-stone-200 min-w-0">{mealShortName(it.food)}{flagged(it.food) && <span className="ml-1 mono text-[10px] text-amber-400 border border-amber-400/40 rounded px-1">check</span>}
+                                  {from !== it.food && <span className="block text-[10px] text-stone-500">instead of {mealShortName(from).toLowerCase()}</span>}
+                                </span>
+                                <span className="flex items-center gap-2 shrink-0"><span className="mono text-sm text-stone-100 tabular">{unit ? `${unit} · ${Math.round(it.grams)} g` : `${mealRoundGrams(it.grams)} g`}</span><RefreshCw size={12} className={swapFor === key ? 'text-amber-400' : 'text-stone-500'} /></span>
+                              </button>
+                              {choices && (
+                                <div className="mt-1 mb-1 pl-2 border-l border-stone-700 mt-node" data-meal-swaps={from}>
+                                  <div className="mono text-[10px] uppercase tracking-wider text-stone-500 pt-1">Instead of {mealShortName(from).toLowerCase()}</div>
+                                  {from !== it.food && (
+                                    <button onClick={() => chooseVariant(slot, opt.id, from, null)} data-meal-swap-back className="w-full text-left py-1 text-[12px] text-amber-300">Back to {mealShortName(from).toLowerCase()}</button>
+                                  )}
+                                  {choices.length === 0 && <div className="text-[11px] text-stone-500 py-1">Nothing else in your food table fits here without throwing the meal off.</div>}
+                                  {choices.filter((c) => c.food !== it.food).map((c) => {
+                                    const cost = mealCostText(c.delta);
+                                    return (
+                                      <button key={c.food} onClick={() => chooseVariant(slot, opt.id, from, c.food)} data-meal-swap={c.food} data-meal-tier={c.tier} className="w-full flex items-center justify-between text-left py-1 gap-2">
+                                        <span className="text-[12px] text-stone-200 min-w-0">{c.label}{c.flagged && <span className="ml-1 mono text-[10px] text-amber-400 border border-amber-400/40 rounded px-1">check</span>}
+                                          <span className="block text-[10px] text-stone-500">{MEAL_TIER_LABEL[c.tier]} · {cost ? `meal ${cost}` : 'meal stays the same'}</span>
+                                        </span>
+                                        <span className="mono text-[12px] text-stone-300 tabular shrink-0">{MEAL_UNITS[c.food] ? mealUnitText(c.food, c.grams) : `${mealRoundGrams(c.grams)} g`}</span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                       <div className="mono text-[11px] text-stone-400 mt-2">{mealFmt(im.kcal)} kcal · {mealFmt(im.protein)} P · {mealFmt(im.carbs)} C · {mealFmt(im.fat)} F</div>
-                      <div className="text-[11px] text-stone-600 mt-0.5">The chips are Tier 1 swaps from your database, and you can combine them. Tap a food for every tier. Grams are rounded to 5; totals use the exact numbers.</div>
+                      <button onClick={() => logItems(slot, opt.label, items, opt.id)} data-meal-log className="mt-3 w-full bg-amber-500 text-stone-950 text-[15px] font-semibold rounded-md py-3 flex items-center justify-center gap-2"><Check size={16} /> I ate this</button>
+                      <div className="grid grid-cols-3 gap-2 mt-2">
+                        <button onClick={() => nextIdea(slot)} data-meal-next className="bg-stone-800 text-stone-200 text-[12px] font-semibold rounded-md py-2">Another idea</button>
+                        <button onClick={() => setBrowse(browse === slot ? null : slot)} data-meal-browse className={`text-[12px] font-semibold rounded-md py-2 ${browse === slot ? 'bg-amber-400/15 text-amber-300' : 'bg-stone-800 text-stone-200'}`}>All recipes</button>
+                        <button onClick={() => { setFree({ slot, text: '' }); setBrowse(null); }} data-meal-free-open className="bg-stone-800 text-stone-200 text-[12px] font-semibold rounded-md py-2">Ate other</button>
+                      </div>
                       {recipe?.how?.length > 0 && (
-                        <div className="mt-2">
+                        <div className="mt-2.5">
                           <button onClick={() => setHowOpen(!howOpen)} data-meal-how-toggle className="text-[12px] text-stone-300 underline underline-offset-2">{howOpen ? 'Hide method' : 'How to make it'}</button>
                           {howOpen && (
                             <div className="mt-node" data-meal-how>
                               <ol className="mt-1.5 space-y-1.5 list-decimal pl-4 text-[12px] text-stone-300 leading-relaxed">
                                 {recipe.how.map((h, k) => <li key={k}>{h}</li>)}
                               </ol>
-                              {opt.variantLabel && <div className="text-[11px] text-stone-500 mt-1.5">Written for the original. With {opt.variantLabel.toLowerCase()} it cooks the same way.</div>}
+                              {opt.variantLabel && <div className="text-[11px] text-stone-500 mt-1.5">Written for {opt.baseLabel.toLowerCase()}. With {opt.variantLabel.toLowerCase()} it cooks the same way.</div>}
                               <div className="text-[11px] text-stone-600 mt-1">Spices, herbs, garlic, lemon, soy sauce and hot sauce are not counted.</div>
                             </div>
                           )}
                         </div>
                       )}
-                      <button onClick={() => logItems(slot, opt.variantLabel ? `${opt.label} (${opt.variantLabel.toLowerCase()})` : opt.label, items)} data-meal-log className="mt-3 w-full bg-amber-500 text-stone-950 text-sm font-semibold rounded-md py-2.5 flex items-center justify-center gap-2"><Check size={15} /> I ate this</button>
+                      <div className="text-[11px] text-stone-600 mt-2">Tap a food to swap it; the recipe re-sizes itself.</div>
+                    </div>
+                  )}
+                  {browse === slot && !free && (
+                    <div className="mt-2 mt-node" data-meal-browser>
+                      {slotEffort && (
+                        <div className="ios-seg" role="tablist" aria-label="How much effort">
+                          {MEAL_EFFORTS.map(([id, label]) => (
+                            <button key={id} role="tab" aria-selected={slotEffort === id} data-meal-effort={id} onClick={() => chooseEffort(slot, id)}
+                              className={`ios-seg-item ${slotEffort === id ? 'ios-seg-on shadow font-semibold text-amber-400' : 'text-stone-400'}`}>{label}</button>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex gap-2 overflow-x-auto snap-x mt-2 pb-1 -mr-4 pr-4" key={slotEffort || 'all'}>
+                        {opts.map((o, oi) => (
+                          <button key={o.id} onClick={() => { setPick({ ...pick, [slot]: o.id }); setSwapFor(null); setHowOpen(false); }} data-meal-option={o.id}
+                            className={`mt-opt snap-start shrink-0 w-[58%] text-left rounded-xl border p-3 ${o.id === opt.id ? 'border-amber-400 bg-amber-400/10' : 'border-stone-800 bg-stone-900'}`} style={{ '--i': oi }}>
+                            <div className="text-sm font-semibold text-stone-100 leading-snug">{favs.includes(o.id) && <Star size={11} className="inline -mt-0.5 mr-1 text-amber-400 fill-amber-400" />}{o.label}</div>
+                            <div className="mono text-[11px] text-stone-400 mt-0.5">{o.mins ? `${o.mins} min · ` : ''}{mealFmt(o.macros.kcal)} kcal</div>
+                            <div className="mono text-[11px] text-stone-500">{mealFmt(o.macros.protein)} P · {mealFmt(o.macros.carbs)} C · {mealFmt(o.macros.fat)} F{recent.includes(o.id) ? ' · had recently' : ''}</div>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </>
@@ -20271,6 +20416,14 @@ function MealTreeView({ day, activeDate }) {
         <span>
           <span className="block text-sm text-stone-200">Stall rule: +150 kcal from carbs</span>
           <span className="block text-[11px] text-stone-500">Turn on if the scale trend has not moved for 2 weeks. Applies to every day type.</span>
+          {(() => {
+            const c = mealStallCheck(weights, date);
+            if (!c.ready) return <span className="block text-[11px] text-stone-600 mt-1" data-meal-stall-note="wait">Trend check needs 4 weigh-ins spread over 10 days in the last 14 (you have {c.entries}).</span>;
+            const rate = `${c.perWeek >= 0 ? '+' : ''}${c.perWeek.toFixed(2)} lb a week over the last 14 days`;
+            if (c.stalled && !stall) return <span className="block text-[11px] text-amber-300 mt-1" data-meal-stall-note="on">Your scale trend is {rate}, under the 0.25 target. Worth turning this on.</span>;
+            if (!c.stalled && stall && c.perWeek > 0.5) return <span className="block text-[11px] text-amber-300 mt-1" data-meal-stall-note="off">Your scale trend is {rate}, above the 0.5 target. Worth turning this off.</span>;
+            return <span className="block text-[11px] text-stone-500 mt-1" data-meal-stall-note="ok">Your scale trend is {rate}. Target is 0.25 to 0.5.</span>;
+          })()}
         </span>
       </label>
       <div className="text-[11px] text-stone-600 leading-relaxed mb-2">Meals you log here also appear in Fuel. A "check" badge marks foods whose numbers were typed from memory.</div>
