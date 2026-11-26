@@ -16,7 +16,7 @@ const code = [
   cut('function computeProgression(', 'function ExerciseCard('),
   cut('// >>> VOLUME RAMP PLANNER', '// <<< VOLUME RAMP PLANNER'),
 ].join('\n');
-const api = new Function(`${code}\nreturn { MUSCLE_MAP, MUSCLE_TARGETS, MUSCLE_ORDER, RAMP, plannedVolume, rampCandidates, defaultRampMuscles, proposeRamp, rampWeekNumber, rampLiftFlags, gateRampMuscle, placeRampSets, rampApplyChanges, buildRampWeek, computeProgression, rampCeiling, rampStep };`)();
+const api = new Function(`${code}\nreturn { MUSCLE_MAP, MUSCLE_DIRECT, muscleSetWeight, MUSCLE_TARGETS, MUSCLE_ORDER, RAMP, plannedVolume, rampCandidates, defaultRampMuscles, proposeRamp, rampWeekNumber, rampLiftFlags, gateRampMuscle, placeRampSets, rampApplyChanges, buildRampWeek, computeProgression, rampCeiling, rampStep };`)();
 const { MUSCLE_TARGETS, RAMP } = api;
 
 const ex = (name, sets, track = true) => ({ name, sets, reps: '10-12', repMin: 10, repMax: 12, track, progression: 5 });
@@ -41,6 +41,23 @@ test('planned volume sums working sets per muscle and skips warm-ups', () => {
   assert.equal(v.total['rear delts'], 6);   // face pulls + reverse pec deck; the warm-up band work is not counted
   assert.equal(v.byDay[1]['side delts'], 3);
   assert.equal(v.byDay[4].chest, undefined);
+});
+
+test('fractional counting: direct sets count 1, indirect sets 0.5', () => {
+  assert.equal(api.muscleSetWeight('Flat Barbell Bench Press', 'chest'), 1);
+  assert.equal(api.muscleSetWeight('Flat Barbell Bench Press', 'triceps'), 0.5);
+  assert.equal(api.muscleSetWeight('Some Unlisted Lift', 'chest'), 1);
+  for (const name of Object.keys(api.MUSCLE_DIRECT)) {
+    assert.ok(api.MUSCLE_MAP[name], `${name} is in MUSCLE_DIRECT but not MUSCLE_MAP`);
+    assert.ok(api.MUSCLE_DIRECT[name].length > 0);
+    for (const m of api.MUSCLE_DIRECT[name]) assert.ok(api.MUSCLE_MAP[name].includes(m), `${name}: ${m}`);
+  }
+  for (const name of Object.keys(api.MUSCLE_MAP)) assert.ok(api.MUSCLE_DIRECT[name], `${name} has no direct muscles listed`);
+  const v = api.plannedVolume(program());
+  assert.equal(v.total.triceps, 3 + (4 + 3 + 3 + 3) * 0.5);   // extension direct; bench, 2x incline, overhead press indirect
+  assert.equal(v.total.biceps, 3 + 3 + (4 + 3 + 3) * 0.5);    // curls direct; row, pulldown, pull-ups indirect
+  assert.equal(v.total.back, 4);
+  assert.equal(v.total.traps, (4 + 3) * 0.5);
 });
 
 test('propose: cut uses +1 and the middle of the range, bulk the full step and the max', () => {
@@ -135,6 +152,13 @@ test('placement: respects the per-session cap and suggests a mapped exercise whe
   assert.equal(changes[0].exercise, 'Cable Lateral Raises');
   assert.ok(api.MUSCLE_MAP[changes[0].exercise].includes('side delts'));
   assert.ok(![1, 5].includes(changes[0].day));
+  // Mid-back goes on the row, never on an exercise that only hits it indirectly.
+  const withDead = program();
+  withDead[3].blocks[1].exercises.push(ex('Deadlift', 3));
+  assert.equal(api.placeRampSets(withDead, 'back', 1).changes[0].exercise, 'Barbell Row');
+  // Traps have no direct exercise here, so a direct one is suggested before leaning on indirect work.
+  const traps = api.placeRampSets(program(), 'traps', 1).changes[0];
+  assert.equal(traps.type, 'new'); assert.equal(traps.exercise, 'Shrugs');
   // A muscle with no exercise at all gets a suggestion from the map, never an invented name.
   const core = api.placeRampSets(program(), 'core', 1).changes[0];
   assert.equal(core.type, 'new');

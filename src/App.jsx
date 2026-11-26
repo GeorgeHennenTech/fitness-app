@@ -5086,7 +5086,7 @@ function VolumePanel() {
         </div>
       )}
       <div className="mono text-[11px] text-stone-600 mt-2 leading-snug">
-        Bar = sets you logged in the last 7 days. White tick = working sets your program plans each week (warm-ups not counted). Green band = hypertrophy sweet spot per RP/Israetel. Under-min → likely under-stimulating; over-max → risking recovery.
+        Bar = sets you logged in the last 7 days. White tick = working sets your program plans each week (warm-ups not counted). A set counts 1 for the muscles an exercise trains directly and 0.5 for the ones it works indirectly. Green band = hypertrophy sweet spot per RP/Israetel. Under-min → likely under-stimulating; over-max → risking recovery.
       </div>
       {ramp.ramp ? (
         <VolumeRampCard variant="panel" />
@@ -19300,6 +19300,54 @@ const MUSCLE_MAP = {
   // Mobility / posture work isn't volume-tracked (Chin Tucks, Wall Slides, etc.)
 };
 
+// Fractional counting. A set counts 1 toward the muscles an exercise trains
+// directly and 0.5 toward the ones it only works indirectly (Pelland et al.,
+// Sports Medicine 2025 found that weighting fit the growth data best). Which
+// muscles are "direct" for each exercise is this app's judgment; edit here.
+// An exercise missing from this table counts 1 for every muscle it maps to.
+const MUSCLE_DIRECT = {
+  'Back Squat': ['quads'],
+  'Deadlift': ['glutes', 'hamstrings'],
+  'Romanian Deadlift': ['hamstrings', 'glutes'],
+  'Light RDL (empty bar)': ['hamstrings', 'glutes'],
+  'Bulgarian Split Squat': ['quads', 'glutes'],
+  'Reverse Lunges': ['quads', 'glutes'],
+  'Goblet Squat (light)': ['quads'],
+  'Hip Thrusts': ['glutes'],
+  'Leg Press': ['quads'],
+  'Hamstring Curl': ['hamstrings'],
+  'Calf Raises': ['calves'],
+  'Glute Bridge': ['glutes'],
+  'Flat Barbell Bench Press': ['chest'],
+  'Overhead Press': ['front delts'],
+  'Incline DB Press': ['chest', 'upper chest'],
+  'Barbell Row': ['back'],
+  'Lat Pulldown (med grip)': ['lats'],
+  'Assisted Pull-Ups': ['lats'],
+  'Face Pulls': ['rear delts'],
+  'Light Face Pulls': ['rear delts'],
+  'Reverse Pec Deck': ['rear delts'],
+  'Band Pull-Aparts': ['rear delts'],
+  'Shrugs': ['traps'],
+  'Overhead Tricep Extension': ['triceps'],
+  'Hammer Curls': ['biceps', 'forearms'],
+  'Incline DB Curl': ['biceps'],
+  'Wrist Curls': ['forearms'],
+  'Farmer Carry': ['forearms'],
+  'DB Lateral Raises': ['side delts'],
+  'Cable Lateral Raises': ['side delts'],
+  'Hanging Leg Raises': ['core'],
+  'Hanging Knee Raises': ['core'],
+  'Weighted Decline Crunch': ['core'],
+  'Dead Bugs': ['core'],
+  'RKC Plank': ['core'],
+};
+function muscleIsDirect(exName, muscle) {
+  const d = MUSCLE_DIRECT[exName];
+  return !d || d.includes(muscle);
+}
+function muscleSetWeight(exName, muscle) { return muscleIsDirect(exName, muscle) ? 1 : 0.5; }
+
 const MUSCLE_TARGETS = {
   'chest':       { min: 10, max: 20 },
   // Upper (clavicular) chest, fed by incline pressing. A sub-view of total
@@ -19364,7 +19412,7 @@ async function computeWeeklyVolume(endDate) {
       const muscles = MUSCLE_MAP[ex];
       if (!muscles) { untracked.add(ex); continue; }
       for (const m of muscles) {
-        if (m in counts) counts[m] += validSets;
+        if (m in counts) counts[m] += validSets * muscleSetWeight(ex, m);
       }
     }
   }
@@ -19373,7 +19421,8 @@ async function computeWeeklyVolume(endDate) {
 
 // Muscles worked in a single session, with planned and completed set counts.
 // Uses the same MUSCLE_MAP as the Body Map so the two can never disagree — an
-// exercise mapped to several muscles contributes its sets to each of them, so
+// exercise mapped to several muscles contributes its sets to each of them (in
+// full to direct muscles, half to indirect ones), so
 // these totals are "sets stimulating this muscle," not a partition of the
 // workout (they sum to more than the session's set count, by design).
 function sessionMuscleBreakdown(session, completed = {}) {
@@ -19394,8 +19443,9 @@ function sessionMuscleBreakdown(session, completed = {}) {
         continue;
       }
       for (const m of muscles) {
-        planned[m] = (planned[m] || 0) + sets;
-        if (completed[ex.name]) done[m] = (done[m] || 0) + sets;
+        const w = muscleSetWeight(ex.name, m); // indirect work counts half
+        planned[m] = (planned[m] || 0) + sets * w;
+        if (completed[ex.name]) done[m] = (done[m] || 0) + sets * w;
       }
     }
   }
@@ -19508,7 +19558,8 @@ function gateRampMuscle({ muscle, cfg, cur, plannedLast, doneLast, flags }) {
   if (plannedLast > 0 && doneLast < plannedLast * RAMP.adherence) {
     return { ok: false, code: 'adherence', msg: `Hold. Finish the sets you have first (${doneLast} of ${plannedLast} planned sets done last week).` };
   }
-  const hit = (flags || []).filter((f) => (MUSCLE_MAP[f.name] || []).includes(muscle));
+  // Only lifts that train the muscle directly can hold its ramp.
+  const hit = (flags || []).filter((f) => (MUSCLE_MAP[f.name] || []).includes(muscle) && muscleIsDirect(f.name, muscle));
   if (hit.length) {
     return { ok: false, code: 'performance', lifts: hit, msg: `Hold. ${hit.map((h) => `${h.name} is ${h.kind}`).join(', ')}.` };
   }
@@ -19521,11 +19572,11 @@ function rampExercisesFor(session, muscle) {
     if (!ex.track || !(parseInt(ex.sets) > 0) || !map) return;
     const idx = map.indexOf(muscle);
     if (idx < 0) return;
-    out.push({ bi, ei, ex, idx, breadth: map.length });
+    out.push({ bi, ei, ex, idx, breadth: map.length, direct: muscleIsDirect(ex.name, muscle) });
   }));
-  // Most direct first: the muscle listed earliest for the exercise, then the
-  // exercise that hits the fewest other muscles, then the one with fewest sets.
-  return out.sort((a, b) => a.idx - b.idx || a.breadth - b.breadth || parseInt(a.ex.sets) - parseInt(b.ex.sets));
+  // Direct exercises first, then the one that hits the fewest other muscles,
+  // then the one with fewest sets.
+  return out.sort((a, b) => (b.direct - a.direct) || a.breadth - b.breadth || a.idx - b.idx || parseInt(a.ex.sets) - parseInt(b.ex.sets));
 }
 function rampApplyChanges(schedule, changes) {
   const next = JSON.parse(JSON.stringify(schedule));
@@ -19548,46 +19599,49 @@ function rampApplyChanges(schedule, changes) {
 // Where `need` extra sets for one muscle should go. Returns changes only;
 // nothing is written. One set at a time onto the day with the fewest sets
 // for that muscle, keeping each session at RAMP.sessionCap or under.
+// Order of preference: an existing exercise that trains the muscle directly,
+// then a new direct exercise from MUSCLE_MAP, then (last resort) an existing
+// exercise that only hits it indirectly, where each set counts half.
 function placeRampSets(schedule, muscle, need) {
   let work = JSON.parse(JSON.stringify(schedule));
   const changes = [];
-  const push = (c) => {
-    const prev = changes.find((x) => x.day === c.day && x.exercise === c.exercise);
-    if (prev) prev.to = c.to; else changes.push(c);
+  const lower = (a, b) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i]; return false; };
+  const pickExisting = (byDay, direct) => {
+    const w = direct ? 1 : 0.5;
+    let best = null;
+    for (let d = 1; d <= 7; d++) {
+      const daySets = byDay[d]?.[muscle] || 0;
+      if (daySets + w > RAMP.sessionCap) continue;
+      // Prefer an exercise that keeps every muscle it hits at the cap or
+      // under; if none can, take the best one and report what goes over.
+      const over = (x) => MUSCLE_MAP[x.ex.name].filter((m2) => (byDay[d]?.[m2] || 0) + muscleSetWeight(x.ex.name, m2) > RAMP.sessionCap);
+      const all = rampExercisesFor(work[d], muscle).filter((x) => x.direct === direct);
+      const c = all.find((x) => over(x).length === 0) || all[0];
+      if (!c) continue;
+      const rank = [daySets, over(c).length, c.breadth];
+      if (!best || lower(rank, best.rank)) best = { d, c, rank, over: over(c) };
+    }
+    return best;
+  };
+  const addSet = (best, direct) => {
+    const name = best.c.ex.name;
+    const from = parseInt(best.c.ex.sets);
+    const prev = changes.find((x) => x.day === best.d && x.exercise === name);
+    if (prev) { prev.to = from + 1; prev.over = best.over; }
+    else changes.push({ muscle, type: 'add', day: best.d, dayName: work[best.d].name, exercise: name, from, to: from + 1, indirect: !direct, also: (MUSCLE_MAP[name] || []).filter((m) => m !== muscle), over: best.over });
+    work = rampApplyChanges(work, [{ type: 'add', day: best.d, exercise: name, to: from + 1 }]);
   };
   let left = need;
   while (left > 0) {
     const byDay = plannedVolume(work).byDay;
-    let best = null;
-    for (let d = 1; d <= 7; d++) {
-      const daySets = byDay[d]?.[muscle] || 0;
-      if (daySets + 1 > RAMP.sessionCap) continue;
-      // Prefer an exercise that keeps every muscle it hits at the cap or under.
-      // Compound lifts often can't (grip and glutes pile up fast when every
-      // set counts as 1), so fall back to the most direct one and say so.
-      const over = (x) => MUSCLE_MAP[x.ex.name].filter((m2) => (byDay[d]?.[m2] || 0) + 1 > RAMP.sessionCap);
-      const all = rampExercisesFor(work[d], muscle);
-      const c = all.find((x) => over(x).length === 0) || all[0];
-      if (!c) continue;
-      c.over = over(c);
-      const rank = [daySets, c.over.length, c.idx];
-      const better = !best || rank.findIndex((v, i) => v !== best.rank[i]) >= 0 && rank[rank.findIndex((v, i) => v !== best.rank[i])] < best.rank[rank.findIndex((v, i) => v !== best.rank[i])];
-      if (better) best = { d, daySets, c, rank };
-    }
-    if (best) {
-      const from = parseInt(best.c.ex.sets);
-      const first = changes.find((x) => x.day === best.d && x.exercise === best.c.ex.name);
-      push({ muscle, type: 'add', day: best.d, dayName: work[best.d].name, exercise: best.c.ex.name, from: first ? first.from : from, to: from + 1, also: (MUSCLE_MAP[best.c.ex.name] || []).filter((m) => m !== muscle), over: best.c.over });
-      work = rampApplyChanges(work, [{ type: 'add', day: best.d, exercise: best.c.ex.name, to: from + 1 }]);
-      left -= 1;
-      continue;
-    }
-    // No existing exercise has room: suggest one from MUSCLE_MAP.
+    const direct = pickExisting(byDay, true);
+    if (direct) { addSet(direct, true); left -= 1; continue; }
+    // No direct exercise has room: suggest one from MUSCLE_MAP.
     const inProgram = new Set();
     for (let d = 1; d <= 7; d++) (work[d]?.blocks || []).forEach((b) => (b.exercises || []).forEach((ex) => { if (ex.track) inProgram.add(ex.name); }));
     const name = Object.keys(MUSCLE_MAP)
-      .filter((n) => MUSCLE_MAP[n].includes(muscle) && !inProgram.has(n) && !/\blight\b|band|bridge|assisted/i.test(n))
-      .sort((a, b) => MUSCLE_MAP[a].indexOf(muscle) - MUSCLE_MAP[b].indexOf(muscle) || MUSCLE_MAP[a].length - MUSCLE_MAP[b].length)[0];
+      .filter((n) => MUSCLE_MAP[n].includes(muscle) && muscleIsDirect(n, muscle) && !inProgram.has(n) && !/\blight\b|band|bridge|assisted/i.test(n))
+      .sort((a, b) => MUSCLE_MAP[a].length - MUSCLE_MAP[b].length || MUSCLE_MAP[a].indexOf(muscle) - MUSCLE_MAP[b].indexOf(muscle))[0];
     let day = null;
     for (let d = 1; d <= 7; d++) {
       if (work[d]?.type !== 'lift' || !(work[d].blocks || []).some((b) => (b.exercises || []).some((ex) => ex.track))) continue;
@@ -19596,11 +19650,17 @@ function placeRampSets(schedule, muscle, need) {
       const load = Object.values(byDay[d] || {}).reduce((a, b) => a + b, 0);
       if (!day || daySets < day.daySets || (daySets === day.daySets && load < day.load)) day = { d, daySets, load };
     }
-    if (!name || !day) { changes.push({ muscle, type: 'none', msg: `No room to add ${muscle} sets without going over ${RAMP.sessionCap} a session.` }); break; }
-    const c = { muscle, type: 'new', day: day.d, dayName: work[day.d].name, exercise: name, from: 0, to: RAMP.newExerciseSets, also: MUSCLE_MAP[name].filter((m) => m !== muscle) };
-    changes.push(c);
-    work = rampApplyChanges(work, [c]);
-    left -= RAMP.newExerciseSets;
+    if (name && day) {
+      const c = { muscle, type: 'new', day: day.d, dayName: work[day.d].name, exercise: name, from: 0, to: RAMP.newExerciseSets, also: MUSCLE_MAP[name].filter((m) => m !== muscle) };
+      changes.push(c);
+      work = rampApplyChanges(work, [c]);
+      left -= RAMP.newExerciseSets;
+      continue;
+    }
+    const indirect = pickExisting(byDay, false);
+    if (indirect) { addSet(indirect, false); left -= 0.5; continue; }
+    changes.push({ muscle, type: 'none', msg: `No room to add ${muscle} sets without going over ${RAMP.sessionCap} a session.` });
+    break;
   }
   return { schedule: work, changes };
 }
@@ -19772,7 +19832,7 @@ const RAMP_SOURCES = [
   {
     cite: 'Pelland et al., Sports Medicine, 2025',
     url: 'https://doi.org/10.1007/s40279-025-02344-w',
-    says: 'A meta-regression of 67 studies (2,058 people) found muscle growth keeps rising as weekly sets rise, but each extra set adds less than the one before. It also found that counting indirect sets as half a set fit the data best. This app counts every set as 1, so its totals run higher than that method would give.',
+    says: 'A meta-regression of 67 studies (2,058 people) found muscle growth keeps rising as weekly sets rise, but each extra set adds less than the one before. It also found that counting indirect sets as half a set fit the data best, so that is how this app counts. Which muscles count as direct for each exercise is a judgment call made in this app.',
   },
   {
     cite: 'Schoenfeld, Ogborn and Krieger, Journal of Sports Sciences, 2017',
@@ -19935,7 +19995,7 @@ function VolumeRampCard({ variant = 'panel' }) {
               <span>
                 <span className="block text-[13px] text-stone-100 mono">{line(c)}</span>
                 <span className="block text-[11px] text-stone-500">
-                  For {rampLabel(c.muscle)}{c.type === 'new' ? '. Not in your program yet; suggested from the exercise list' : ''}{c.also?.length ? `. Also counts toward ${c.also.map(rampLabel).join(', ')}` : ''}{c.over?.length ? `. Puts ${c.over.map(rampLabel).join(', ')} above ${RAMP.sessionCap} sets that session` : ''}.
+                  For {rampLabel(c.muscle)}{c.type === 'new' ? '. Not in your program yet; suggested from the exercise list' : ''}{c.indirect ? '. Only indirect work for it, so each set counts half' : ''}{c.also?.length ? `. Also counts toward ${c.also.map(rampLabel).join(', ')}` : ''}{c.over?.length ? `. Puts ${c.over.map(rampLabel).join(', ')} above ${RAMP.sessionCap} sets that session` : ''}.
                 </span>
               </span>
             </label>
