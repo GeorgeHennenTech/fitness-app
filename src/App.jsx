@@ -20331,8 +20331,311 @@ function BodyView() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Apple Health import (manual). A website can't read Health directly, so an
+// iPhone Shortcut copies recent samples as text lines and this parses them.
+// Expected line: "type | date | value", e.g.
+//   weight | Nov 25, 2026 at 7:02 AM | 210.4 lb
+// It is deliberately forgiving about separators, date formats and units
+// because the exact text Shortcuts produces varies with region settings.
+// ---------------------------------------------------------------------------
+const HEALTH_MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+function healthTypeOf(str) {
+  const t = String(str || '').toLowerCase();
+  if (/body\s*fat|bodyfat|\bbf\b|fat\s*(%|percent)/.test(t)) return 'bf';
+  if (/lean/.test(t)) return 'lean';
+  if (/step/.test(t)) return 'steps';
+  if (/active|energy\s*burn/.test(t)) return 'activeCal';
+  if (/weight|body\s*mass/.test(t)) return 'weight';
+  return null;
+}
+// Returns { date: 'YYYY-MM-DD', mins } or null. Never leans on Date.parse,
+// which Safari handles differently from Chrome.
+function parseHealthDate(str) {
+  const src = String(str || '').replace(/[  ]/g, ' ');
+  let y, mo, d, rest = src, m;
+  if ((m = src.match(/(\d{4})-(\d{1,2})-(\d{1,2})/))) { y = +m[1]; mo = +m[2]; d = +m[3]; }
+  else if ((m = src.match(/([A-Za-z]{3,9})\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})/)) && HEALTH_MONTHS[m[1].slice(0, 3).toLowerCase()]) { mo = HEALTH_MONTHS[m[1].slice(0, 3).toLowerCase()]; d = +m[2]; y = +m[3]; }
+  else if ((m = src.match(/(\d{1,2})\.?\s+([A-Za-z]{3,9})\.?,?\s+(\d{4})/)) && HEALTH_MONTHS[m[2].slice(0, 3).toLowerCase()]) { d = +m[1]; mo = HEALTH_MONTHS[m[2].slice(0, 3).toLowerCase()]; y = +m[3]; }
+  else if ((m = src.match(/(\d{1,2})[\/.](\d{1,2})[\/.](\d{2,4})/))) {
+    let a = +m[1], b = +m[2]; y = +m[3]; if (y < 100) y += 2000;
+    if (a > 12) { d = a; mo = b; } else { mo = a; d = b; } // US order unless the first number can't be a month
+  } else return null;
+  if (!(y > 2000 && y < 2100 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31)) return null;
+  rest = src.slice(m.index + m[0].length);
+  let mins = 0;
+  const t = rest.match(/(\d{1,2})[:.](\d{2})(?:[:.]\d{2})?\s*([AaPp])?/);
+  if (t) {
+    let h = +t[1];
+    if (t[3]) { const pm = /p/i.test(t[3]); if (pm && h < 12) h += 12; if (!pm && h === 12) h = 0; }
+    mins = h * 60 + +t[2];
+  }
+  return { date: `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`, mins };
+}
+function parseHealthValue(str) {
+  const src = String(str || '').replace(/(\d),(?=\d{3}\b)/g, '$1');
+  const m = src.match(/-?\d+(?:[.,]\d+)?/);
+  if (!m) return null;
+  const num = parseFloat(m[0].replace(',', '.'));
+  if (!isFinite(num)) return null;
+  const tail = src.slice(m.index + m[0].length).toLowerCase();
+  const unit = /kg|kilo/.test(tail) ? 'kg' : /lb|pound/.test(tail) ? 'lb' : /kj/.test(tail) ? 'kj' : /%/.test(tail) ? '%' : null;
+  return { num, unit };
+}
+// text -> { days: { [date]: { weight, bf, lean, steps, activeCal } }, read, skipped, weightUnits }
+function parseHealthText(text, { assumeKg = false } = {}) {
+  const acc = {};
+  let read = 0, skipped = 0, current = null;
+  const weightUnits = { lb: 0, kg: 0, none: 0 };
+  const lines = String(text || '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  for (const line of lines) {
+    let parts;
+    if (line.includes('|')) parts = line.split('|');
+    else if (line.includes('\t')) parts = line.split('\t');
+    else if (line.includes(';')) parts = line.split(';');
+    else {
+      const c = line.split(',');
+      parts = c.length >= 3 ? [c[0], c.slice(1, -1).join(','), c[c.length - 1]] : c;
+    }
+    parts = parts.map((x) => x.trim()).filter(Boolean);
+    let type = healthTypeOf(parts[0]);
+    if (parts.length === 1 && type) { current = type; continue; } // a heading line such as "weight"
+    let dateStr, valStr;
+    if (type && parts.length >= 3) { dateStr = parts[1]; valStr = parts.slice(2).join(' '); }
+    else if (!type && current && parts.length >= 2) { type = current; dateStr = parts[0]; valStr = parts.slice(1).join(' '); }
+    else { skipped++; continue; }
+    const when = parseHealthDate(dateStr);
+    const v = parseHealthValue(valStr);
+    if (!when || !v) { skipped++; continue; }
+    let num = v.num;
+    if (type === 'weight' || type === 'lean') {
+      if (type === 'weight') weightUnits[v.unit === 'kg' || v.unit === 'lb' ? v.unit : 'none']++;
+      if (v.unit === 'kg' || (!v.unit && assumeKg)) num *= LB_PER_KG;
+      if (!(num >= 60 && num <= 700)) { skipped++; continue; }
+      num = Math.round(num * 10) / 10;
+    } else if (type === 'bf') {
+      if (num > 0 && num <= 1) num *= 100; // Health stores body fat as a fraction
+      if (!(num >= 2 && num <= 70)) { skipped++; continue; }
+      num = Math.round(num * 10) / 10;
+    } else if (type === 'activeCal') {
+      if (v.unit === 'kj') num /= 4.184;
+      if (!(num >= 0 && num < 20000)) { skipped++; continue; }
+    } else if (type === 'steps') {
+      if (!(num >= 0 && num < 200000)) { skipped++; continue; }
+    }
+    read++;
+    const day = acc[when.date] || (acc[when.date] = {});
+    if (type === 'steps' || type === 'activeCal') day[type] = { num: (day[type]?.num || 0) + num };
+    else if (!day[type] || when.mins >= day[type].mins) day[type] = { num, mins: when.mins }; // newest reading of the day wins
+  }
+  const days = {};
+  for (const [date, d] of Object.entries(acc)) {
+    days[date] = {};
+    for (const k of Object.keys(d)) days[date][k] = (k === 'steps' || k === 'activeCal') ? Math.round(d[k].num) : d[k].num;
+  }
+  return { days, read, skipped, weightUnits };
+}
+// Works out what saving would do, without writing. Hand-entered weigh-ins are
+// never overwritten; a missing body-fat % on one is filled in.
+async function planHealthImport(days) {
+  const plan = { add: [], update: [], fill: [], kept: [], bfOnly: [], activity: [] };
+  for (const date of Object.keys(days).sort()) {
+    const d = days[date];
+    if (d.steps != null || d.activeCal != null || d.lean != null) plan.activity.push(date);
+    if (d.weight == null && d.bf == null) continue;
+    const ex = await storage.get(`body:${date}`);
+    if (!ex) { if (d.weight != null) plan.add.push(date); else plan.bfOnly.push(date); }
+    else if (ex.source === 'health') {
+      const w = d.weight ?? ex.weight, bf = d.bf ?? ex.bf ?? null;
+      if (w !== ex.weight || bf !== (ex.bf ?? null)) plan.update.push(date); else plan.kept.push(date);
+    } else if (d.bf != null && !(parseFloat(ex.bf) > 0)) plan.fill.push(date);
+    else plan.kept.push(date);
+  }
+  return plan;
+}
+async function saveHealthImport(days) {
+  const plan = await planHealthImport(days);
+  for (const date of plan.add) {
+    const d = days[date];
+    await storage.set(`body:${date}`, { date, weight: d.weight, bf: d.bf ?? null, neck: '', chest: '', waist: '', hips: '', arm: '', thigh: '', source: 'health' });
+  }
+  for (const date of plan.update) {
+    const ex = await storage.get(`body:${date}`); const d = days[date];
+    await storage.set(`body:${date}`, { ...ex, weight: d.weight ?? ex.weight, bf: d.bf ?? ex.bf ?? null });
+  }
+  for (const date of plan.fill) {
+    const ex = await storage.get(`body:${date}`);
+    await storage.set(`body:${date}`, { ...ex, bf: days[date].bf });
+  }
+  for (const date of plan.activity) {
+    const d = days[date]; const ex = (await storage.get(`health:${date}`)) || { date };
+    const next = { ...ex };
+    for (const k of ['steps', 'activeCal', 'lean']) if (d[k] != null) next[k] = d[k];
+    await storage.set(`health:${date}`, next);
+  }
+  await storage.set('healthImport:last', { at: new Date().toISOString(), added: plan.add.length, updated: plan.update.length + plan.fill.length });
+  bustBodyComp();
+  return plan;
+}
+
+function HealthImportPanel({ onDone, onClose }) {
+  const [text, setText] = useState('');
+  const [assumeKg, setAssumeKg] = useState(false);
+  const [plan, setPlan] = useState(null);
+  const [msg, setMsg] = useState('');
+  const [saved, setSaved] = useState(null);
+  const [showSetup, setShowSetup] = useState(false);
+  const [last, setLast] = useState(null);
+  const [recent, setRecent] = useState([]);
+
+  const loadMeta = useCallback(async () => {
+    setLast(await storage.get('healthImport:last'));
+    const rows = [];
+    for (let i = 0; i < 7; i++) {
+      const dt = addDays(today(), -i);
+      const h = await storage.get(`health:${dt}`);
+      if (h && (h.steps != null || h.activeCal != null)) rows.push({ ...h, date: dt });
+    }
+    setRecent(rows);
+  }, []);
+  useEffect(() => { loadMeta(); }, [loadMeta]);
+
+  const parsed = useMemo(() => (text.trim() ? parseHealthText(text, { assumeKg }) : null), [text, assumeKg]);
+  useEffect(() => {
+    let live = true;
+    if (!parsed) { setPlan(null); return; }
+    planHealthImport(parsed.days).then((p) => { if (live) setPlan(p); });
+    return () => { live = false; };
+  }, [parsed]);
+
+  const paste = async () => {
+    setMsg(''); setSaved(null);
+    try {
+      const t = await navigator.clipboard.readText();
+      if (!t || !t.trim()) { setMsg('The clipboard is empty. Run the Shortcut first.'); return; }
+      setText(t);
+    } catch (e) {
+      setMsg('Could not read the clipboard. Tap in the box below and paste instead.');
+    }
+  };
+  const save = async () => {
+    if (!parsed) return;
+    const p = await saveHealthImport(parsed.days);
+    setSaved(p); setText(''); setPlan(null);
+    await loadMeta();
+    onDone && onDone();
+  };
+
+  const weighDates = parsed ? Object.keys(parsed.days).filter((d) => parsed.days[d].weight != null).sort() : [];
+  const newest = weighDates.length ? parsed.days[weighDates[weighDates.length - 1]] : null;
+  const changes = plan ? plan.add.length + plan.update.length + plan.fill.length + plan.activity.length : 0;
+  const noUnits = parsed && parsed.weightUnits.none > 0 && parsed.weightUnits.kg === 0 && parsed.weightUnits.lb === 0;
+
+  return (
+    <div className="bg-stone-900 border border-stone-800 rounded-lg p-4 mb-3" data-health-import>
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-sm font-semibold text-stone-100 flex items-center gap-2"><Activity size={14} className="text-amber-400" /> Import from Apple Health</div>
+        <button onClick={onClose} className="text-stone-500 hover:text-stone-300" aria-label="Close"><X size={16} /></button>
+      </div>
+      <div className="text-xs text-stone-400 mb-3">
+        Run the "Health to Tracker" Shortcut on your iPhone, then tap Paste. Weigh-ins you typed in yourself are never overwritten.
+      </div>
+      <div className="flex gap-2 mb-2">
+        <button onClick={paste} data-health-paste className="flex-1 bg-amber-500 text-stone-950 text-sm font-semibold rounded-md py-2 flex items-center justify-center gap-2">
+          <Copy size={14} /> Paste from clipboard
+        </button>
+      </div>
+      <textarea
+        value={text}
+        onChange={(e) => { setText(e.target.value); setSaved(null); setMsg(''); }}
+        data-health-text
+        rows={3}
+        placeholder={'or paste here\nweight | Nov 25, 2026 at 7:02 AM | 210.4 lb'}
+        className="w-full bg-stone-950 border border-stone-800 rounded-md p-2 text-xs mono text-stone-200 placeholder-stone-600"
+      />
+      {msg && <div className="text-xs text-amber-300 mt-2 flex items-start gap-1"><AlertCircle size={12} className="mt-0.5 shrink-0" /> {msg}</div>}
+
+      {parsed && (
+        <div className="mt-3 border-t border-stone-800 pt-3 text-xs text-stone-300 space-y-1" data-health-preview>
+          {parsed.read === 0 ? (
+            <div className="text-amber-300">Nothing here looks like Health data. Each line should read like: weight | date | number.</div>
+          ) : (
+            <>
+              {weighDates.length > 0 && (
+                <div>
+                  <span className="text-stone-100 font-semibold">{weighDates.length} day{weighDates.length === 1 ? '' : 's'} with a weight</span>
+                  {' '}({fmtDate(weighDates[0])} to {fmtDate(weighDates[weighDates.length - 1])}), newest {newest.weight} lb{newest.bf != null ? ` at ${newest.bf}%` : ''}
+                </div>
+              )}
+              {plan && (
+                <>
+                  {plan.add.length > 0 && <div>{plan.add.length} new weigh-in{plan.add.length === 1 ? '' : 's'} will be added</div>}
+                  {plan.update.length > 0 && <div>{plan.update.length} earlier import{plan.update.length === 1 ? '' : 's'} will be updated</div>}
+                  {plan.fill.length > 0 && <div>{plan.fill.length} of your own weigh-ins will get a body fat % filled in</div>}
+                  {plan.kept.length > 0 && <div className="text-stone-500">{plan.kept.length} day{plan.kept.length === 1 ? '' : 's'} already logged and left alone</div>}
+                  {plan.bfOnly.length > 0 && <div className="text-stone-500">{plan.bfOnly.length} body fat reading{plan.bfOnly.length === 1 ? '' : 's'} skipped (no weight that day)</div>}
+                  {plan.activity.length > 0 && <div>{plan.activity.length} day{plan.activity.length === 1 ? '' : 's'} of steps or active calories (saved; nothing else in the app uses them yet)</div>}
+                </>
+              )}
+              {parsed.skipped > 0 && <div className="text-stone-500">{parsed.skipped} line{parsed.skipped === 1 ? '' : 's'} could not be read and will be ignored</div>}
+              {noUnits && (
+                <label className="flex items-center gap-2 text-stone-400 pt-1">
+                  <input type="checkbox" checked={assumeKg} onChange={(e) => setAssumeKg(e.target.checked)} data-health-kg />
+                  The weights have no unit. Tick if they are in kg (otherwise read as lb).
+                </label>
+              )}
+              <button
+                onClick={save}
+                disabled={!plan || changes === 0}
+                data-health-save
+                className="w-full mt-2 bg-stone-100 text-stone-950 text-sm font-semibold rounded-md py-2 disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                <Check size={14} /> {plan && changes === 0 ? 'Nothing new to save' : 'Save to my log'}
+              </button>
+            </>
+          )}
+        </div>
+      )}
+      {saved && (
+        <div className="mt-3 text-xs text-emerald-400" data-health-saved>
+          Saved. {saved.add.length} added, {saved.update.length + saved.fill.length} updated, {saved.kept.length} left alone.
+        </div>
+      )}
+      {recent.length > 0 && (
+        <div className="mt-3 border-t border-stone-800 pt-2" data-health-recent>
+          <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-1">Last 7 days from Health</div>
+          {recent.map((r) => (
+            <div key={r.date} className="flex justify-between text-xs text-stone-400 mono py-0.5">
+              <span>{fmtDate(r.date)}</span>
+              <span>{r.steps != null ? `${r.steps.toLocaleString()} steps` : ''}{r.steps != null && r.activeCal != null ? ' · ' : ''}{r.activeCal != null ? `${r.activeCal.toLocaleString()} active kcal` : ''}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {last?.at && <div className="text-[11px] text-stone-500 mt-2">Last import {new Date(last.at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>}
+
+      <button onClick={() => setShowSetup(!showSetup)} data-health-setup-toggle className="mt-3 text-xs text-amber-400 flex items-center gap-1">
+        <ChevronDown size={12} className={showSetup ? 'rotate-180' : ''} /> Set up the Shortcut (once)
+      </button>
+      {showSetup && (
+        <ol className="mt-2 text-xs text-stone-400 space-y-1.5 list-decimal pl-4" data-health-setup>
+          <li>Open the Shortcuts app, tap +, and name the shortcut "Health to Tracker".</li>
+          <li>Add the action <span className="text-stone-200">Find Health Samples</span>. Set the type to <span className="text-stone-200">Weight</span>, then add a filter: Start Date is in the last 30 days.</li>
+          <li>Add <span className="text-stone-200">Repeat with Each</span>. It picks up the health samples by itself.</li>
+          <li>Inside the repeat, add a <span className="text-stone-200">Text</span> action. Type <span className="mono text-stone-200">weight | </span>, insert Repeat Item and change it to Start Date, type <span className="mono text-stone-200"> | </span>, then insert Repeat Item again and change it to Value.</li>
+          <li>Still inside the repeat, add <span className="text-stone-200">Add to Variable</span> and name the variable <span className="mono text-stone-200">out</span>.</li>
+          <li>For body fat, repeat steps 2 to 5 below End Repeat with the type Body Fat Percentage and the word <span className="mono text-stone-200">bodyfat</span>. Use the same variable, out. Steps and Active Energy work the same way with the words <span className="mono text-stone-200">steps</span> and <span className="mono text-stone-200">active</span>.</li>
+          <li>At the very end add <span className="text-stone-200">Copy to Clipboard</span> and set it to the variable out.</li>
+          <li>Run it once and allow Health access. Then come back here and tap Paste.</li>
+        </ol>
+      )}
+    </div>
+  );
+}
+
 function MeasurementsView() {
   const goals = useGoals();
+  const [showHealth, setShowHealth] = useState(false);
   const [entries, setEntries] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({
@@ -20505,13 +20808,24 @@ function MeasurementsView() {
       {/* Entries list */}
       <div className="flex items-center justify-between mb-2 mt-5">
         <div className="text-[11px] uppercase tracking-wider text-stone-500 mono">Log</div>
-        <button
-          onClick={() => setShowAdd(!showAdd)}
-          className="text-xs mono text-amber-400 flex items-center gap-1 hover:text-amber-300"
-        >
-          <Plus size={12} /> Entry
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setShowHealth(!showHealth)}
+            data-health-open
+            className="text-xs mono text-amber-400 flex items-center gap-1 hover:text-amber-300"
+          >
+            <Activity size={12} /> Health
+          </button>
+          <button
+            onClick={() => setShowAdd(!showAdd)}
+            className="text-xs mono text-amber-400 flex items-center gap-1 hover:text-amber-300"
+          >
+            <Plus size={12} /> Entry
+          </button>
+        </div>
       </div>
+
+      {showHealth && <HealthImportPanel onDone={load} onClose={() => setShowHealth(false)} />}
 
       {showAdd && (
         <div className="bg-stone-900 border border-stone-800 rounded-lg p-4 mb-3">
