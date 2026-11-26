@@ -19303,18 +19303,22 @@ const MUSCLE_MAP = {
 // Fractional counting. A set counts 1 toward the muscles an exercise trains
 // directly and 0.5 toward the ones it only works indirectly (Pelland et al.,
 // Sports Medicine 2025 found that weighting fit the growth data best). Which
-// muscles are "direct" for each exercise is this app's judgment; edit here.
+// muscles are "direct" for each exercise follows training trials where they
+// exist (see RAMP_COUNT_SOURCES): squats and leg press grow the glutes about
+// as well as hip thrusts, so they are direct; rows grow the biceps about half
+// as much as curls and bench alone did not grow the triceps as a whole, so
+// those are indirect. The rest follow the same pattern without a trial each.
 // An exercise missing from this table counts 1 for every muscle it maps to.
 const MUSCLE_DIRECT = {
-  'Back Squat': ['quads'],
+  'Back Squat': ['quads', 'glutes'],
   'Deadlift': ['glutes', 'hamstrings'],
   'Romanian Deadlift': ['hamstrings', 'glutes'],
   'Light RDL (empty bar)': ['hamstrings', 'glutes'],
   'Bulgarian Split Squat': ['quads', 'glutes'],
   'Reverse Lunges': ['quads', 'glutes'],
-  'Goblet Squat (light)': ['quads'],
+  'Goblet Squat (light)': ['quads', 'glutes'],
   'Hip Thrusts': ['glutes'],
-  'Leg Press': ['quads'],
+  'Leg Press': ['quads', 'glutes'],
   'Hamstring Curl': ['hamstrings'],
   'Calf Raises': ['calves'],
   'Glute Bridge': ['glutes'],
@@ -19845,6 +19849,34 @@ const RAMP_SOURCES = [
     says: 'A review of 7 trials in trained young men suggested 12 to 20 weekly sets per muscle as a reasonable standard. Going above 20 did not beat 12 to 20 for quads or biceps, though it did for triceps. Seven trials is not many.',
   },
 ];
+// Trials behind the direct / indirect split.
+const RAMP_COUNT_SOURCES = [
+  {
+    cite: 'Plotkin et al., Frontiers in Physiology, 2023',
+    url: 'https://doi.org/10.3389/fphys.2023.1279170',
+    says: 'Squats count in full for glutes. In a 9-week trial (34 untrained people, MRI), squats and hip thrusts grew the glutes about equally. Neither grew the hamstrings much.',
+  },
+  {
+    cite: 'Kubo et al., European Journal of Applied Physiology, 2019',
+    url: 'https://doi.org/10.1007/s00421-019-04181-y',
+    says: 'Ten weeks of full squats grew the glutes 6.7% and the front of the thigh 4.9%, with no change in the hamstrings. That is why squats count for quads and glutes and not for hamstrings.',
+  },
+  {
+    cite: 'Krause Neto et al., Frontiers in Physiology, 2025',
+    url: 'https://doi.org/10.3389/fphys.2025.1542334',
+    says: 'A review of 12 studies concluded squats to parallel or deeper and the leg press both grow the glutes, so leg press counts in full for glutes too.',
+  },
+  {
+    cite: 'Mannarino et al., Journal of Strength and Conditioning Research, 2021',
+    url: 'https://doi.org/10.1519/JSC.0000000000003234',
+    says: 'Rows count half for biceps. Over 8 weeks in 10 untrained men, curls grew the elbow flexors 11.1% and dumbbell rows 5.2%.',
+  },
+  {
+    cite: 'Brandão et al., Journal of Strength and Conditioning Research, 2020',
+    url: 'https://doi.org/10.1519/JSC.0000000000003550',
+    says: 'Bench press counts half for triceps. In 43 young men, bench press alone did not significantly grow the triceps as a whole (the lateral head grew, the long head needed a triceps exercise).',
+  },
+];
 function RampWhy() {
   const [open, setOpen] = useState(false);
   return (
@@ -19859,6 +19891,15 @@ function RampWhy() {
             <span className="text-stone-200">Not trial-tested:</span> adding 1 to 2 sets a week is coaching practice. No study has tested that ramp speed. The same goes for the 20% step limit, the 90% "finish what you have" gate, the cap of about {RAMP.sessionCap} sets per muscle per session, the 4 to 6 week block, and the lower ceiling on a cut. They are judgment calls.
           </div>
           {RAMP_SOURCES.map((src) => (
+            <div key={src.url} className="text-xs text-stone-400 leading-relaxed">
+              {src.says}{' '}
+              <a href={src.url} target="_blank" rel="noopener noreferrer" className="text-amber-400 underline underline-offset-2">{src.cite}</a>
+            </div>
+          ))}
+          <div className="text-xs text-stone-400 leading-relaxed pt-1" data-ramp-counting>
+            <span className="text-stone-200">How sets are counted:</span> 1 for muscles an exercise trains directly, 0.5 for muscles it works indirectly. The trials below are where that split has been tested. Every other exercise (pulldowns for biceps, overhead press for triceps, deadlifts for mid-back and grip, and so on) follows the same pattern without a trial of its own.
+          </div>
+          {RAMP_COUNT_SOURCES.map((src) => (
             <div key={src.url} className="text-xs text-stone-400 leading-relaxed">
               {src.says}{' '}
               <a href={src.url} target="_blank" rel="noopener noreferrer" className="text-amber-400 underline underline-offset-2">{src.cite}</a>
