@@ -4860,27 +4860,23 @@ function CompositionProjection() {
 // ============================================================================
 function VolumePanel() {
   const [data, setData] = useState(null);
+  const [ramp, setRamp] = useState(null);
+  const [showSetup, setShowSetup] = useState(false);
+  const rampBust = useRampBust();
 
   useEffect(() => {
     let cancelled = false;
     computeWeeklyVolume().then((d) => { if (!cancelled) setData(d); });
     return () => { cancelled = true; };
   }, []);
+  useEffect(() => {
+    let cancelled = false;
+    loadRampState().then((x) => { if (!cancelled) setRamp(x); }).catch((e) => console.error('volume ramp failed', e));
+    return () => { cancelled = true; };
+  }, [rampBust]);
 
-  if (!data) return null;
-  const hasAny = Object.values(data.counts).some((v) => v > 0);
-
-  if (!hasAny) {
-    return (
-      <div className="bg-stone-900 border border-stone-800 rounded-lg p-3 mb-5">
-        <div className="flex items-center gap-2 mb-1">
-          <Dumbbell size={12} className="text-stone-600" />
-          <div className="mono text-[11px] uppercase tracking-wider text-stone-500">Weekly Volume</div>
-        </div>
-        <div className="text-xs text-stone-500 leading-relaxed">Log some lifts this week to see your sets-per-muscle breakdown vs hypertrophy targets.</div>
-      </div>
-    );
-  }
+  if (!data || !ramp) return null;
+  const plannedSets = ramp.planned.total;
 
   return (
     <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-5">
@@ -4889,11 +4885,12 @@ function VolumePanel() {
           <Dumbbell size={12} className="text-amber-400" />
           <div className="mono text-[11px] uppercase tracking-wider text-amber-400">Weekly Volume</div>
         </div>
-        <div className="mono text-[11px] text-stone-600">Last 7 days · working sets</div>
+        <div className="mono text-[11px] text-stone-600">Done last 7 days · planned per week</div>
       </div>
       <div className="space-y-2">
         {MUSCLE_ORDER.map((m) => {
           const sets = data.counts[m] || 0;
+          const planned = plannedSets[m] || 0;
           const target = MUSCLE_TARGETS[m];
           const status = sets < target.min ? 'low' : sets > target.max ? 'high' : 'ok';
           const fillPct = Math.min(100, (sets / target.max) * 100);
@@ -4911,8 +4908,8 @@ function VolumePanel() {
             <div key={m}>
               <div className="flex items-center justify-between text-[12px] mb-1">
                 <span className="mono text-stone-300 capitalize">{MUSCLE_LABELS[m] || m}</span>
-                <span className={`mono tabular ${labelColor}`}>
-                  {sets} <span className="text-stone-600 text-[11px]">/ {target.min}–{target.max}</span>
+                <span className={`mono tabular ${labelColor}`} data-volume-row={m}>
+                  {sets} <span className="text-stone-500 text-[11px]">done</span> <span className="text-stone-300">· {planned}</span> <span className="text-stone-500 text-[11px]">planned</span> <span className="text-stone-600 text-[11px]">/ {target.min}–{target.max}</span>
                 </span>
               </div>
               <div className="h-1.5 bg-stone-800 rounded-full overflow-hidden relative">
@@ -4926,6 +4923,8 @@ function VolumePanel() {
                   className={`h-full ${barColor} relative`}
                   style={{ width: `${fillPct}%` }}
                 />
+                {/* Tick showing what the program plans */}
+                <div className="absolute top-0 h-full w-0.5 bg-stone-100" style={{ left: `${Math.min(99, (planned / target.max) * 100)}%` }} />
               </div>
             </div>
           );
@@ -4937,8 +4936,17 @@ function VolumePanel() {
         </div>
       )}
       <div className="mono text-[11px] text-stone-600 mt-2 leading-snug">
-        Green band = hypertrophy sweet spot per RP/Israetel. Under-min → likely under-stimulating; over-max → risking recovery. Adjust by ~2 sets/week.
+        Bar = sets you logged in the last 7 days. White tick = working sets your program plans each week (warm-ups not counted). Green band = hypertrophy sweet spot per RP/Israetel. Under-min → likely under-stimulating; over-max → risking recovery.
       </div>
+      {ramp.ramp ? (
+        <VolumeRampCard variant="panel" />
+      ) : showSetup ? (
+        <RampSetup st={ramp} onClose={() => setShowSetup(false)} />
+      ) : (
+        <button onClick={() => setShowSetup(true)} data-ramp-open className="mt-3 w-full border border-amber-500/50 text-amber-400 text-sm font-semibold rounded-md py-2 flex items-center justify-center gap-2">
+          <TrendingUp size={14} /> Ramp volume
+        </button>
+      )}
     </div>
   );
 }
@@ -15201,6 +15209,7 @@ function TodayView({ day, setDay, reassignDay, activeDate, setActiveDate, cycleV
       )}
 
       {activeDate === today() && <DeloadCheck variant="alert" />}
+      {activeDate === today() && <VolumeRampCard variant="today" />}
 
       {/* Session header */}
       {(() => {
@@ -19164,8 +19173,9 @@ const MUSCLE_LABELS = {
   'forearms': 'Forearms / Grip',
 };
 
-async function computeWeeklyVolume() {
-  const startDate = addDays(today(), -6); // rolling 7-day window
+async function computeWeeklyVolume(endDate) {
+  const end = endDate || today();
+  const startDate = addDays(end, -6); // rolling 7-day window
   const keys = await storage.list('workout:');
   const counts = {};
   const untracked = new Set();
@@ -19173,7 +19183,7 @@ async function computeWeeklyVolume() {
 
   for (const k of keys) {
     const date = k.split(':')[1];
-    if (!date || date < startDate) continue;
+    if (!date || date < startDate || date > end) continue;
     const entry = await storage.get(k);
     if (!entry) continue;
     const sets = entry.sets || entry;
@@ -19227,6 +19237,580 @@ function sessionMuscleBreakdown(session, completed = {}) {
     .sort((a, b) => b.planned - a.planned || a.muscle.localeCompare(b.muscle));
 
   return { rows, untracked: Array.from(untracked) };
+}
+
+// >>> VOLUME RAMP PLANNER
+// Pure functions, no storage and no React, so tests/volume-ramp.test.mjs can
+// lift this block out of the file and run it under node.
+//
+// None of the numbers below come from a trial. +1 to 2 sets a week, the 20%
+// step limit, the 90% adherence gate, the 10-set session cap, the 4 to 6 week
+// block and the per-phase ceilings are coaching practice.
+const RAMP = { adherence: 0.9, sessionCap: 10, minWeeks: 4, maxWeeks: 6, newExerciseSets: 2 };
+// ceil: how far from the middle of the target range toward its max a phase goes.
+const RAMP_PHASE = {
+  bulk:     { stepPct: 0.20, maxStep: 2, ceil: 1 },
+  recomp:   { stepPct: 0.15, maxStep: 2, ceil: 0.5 },
+  maintain: { stepPct: 0.15, maxStep: 2, ceil: 0.5 },
+  cut:      { stepPct: 0.20, maxStep: 1, ceil: 0 },
+};
+function rampPhase(phase) { return RAMP_PHASE[phase] || RAMP_PHASE.recomp; }
+
+// Working sets only: warm-ups (track: false) are never logged as sets, so
+// counting them as planned would make the adherence gate impossible to pass.
+function rampWorkingSession(session) {
+  if (!session?.blocks) return null;
+  return { ...session, blocks: session.blocks.map((b) => ({ ...b, exercises: (b.exercises || []).filter((ex) => ex.track) })) };
+}
+// PLANNED weekly sets per muscle from a program: { total: {muscle: n}, byDay: {1..7: {muscle: n}} }
+function plannedVolume(schedule) {
+  const total = {}; const byDay = {};
+  for (const m of MUSCLE_ORDER) total[m] = 0;
+  for (let d = 1; d <= 7; d++) {
+    byDay[d] = {};
+    const ws = rampWorkingSession(schedule?.[d]);
+    if (!ws) continue;
+    for (const r of sessionMuscleBreakdown(ws).rows) {
+      byDay[d][r.muscle] = r.planned;
+      if (r.muscle in total) total[r.muscle] += r.planned;
+    }
+  }
+  return { total, byDay };
+}
+function rampCeiling(muscle, phase) {
+  const t = MUSCLE_TARGETS[muscle]; const mid = (t.min + t.max) / 2;
+  return Math.round(mid + (t.max - mid) * rampPhase(phase).ceil);
+}
+// +1 or +2, never above ~20% of current planned sets (but at least 1, or
+// nothing could ever be added to a muscle with fewer than 5 sets).
+function rampStep(cur, phase) {
+  const p = rampPhase(phase);
+  return Math.max(1, Math.min(p.maxStep, Math.floor(cur * p.stepPct)));
+}
+function rampCandidates(planned, phase) {
+  return MUSCLE_ORDER.map((muscle) => {
+    const t = MUSCLE_TARGETS[muscle];
+    const cur = planned[muscle] || 0;
+    const ceiling = rampCeiling(muscle, phase);
+    const step = rampStep(cur, phase);
+    const target = Math.min(ceiling, cur + step * RAMP.maxWeeks);
+    const status = cur >= ceiling ? 'atCeiling' : cur < t.min ? 'below' : 'mid';
+    return { muscle, cur, min: t.min, max: t.max, ceiling, step, target, status, weeksNeeded: status === 'atCeiling' ? 0 : Math.ceil((target - cur) / step) };
+  });
+}
+// Below-minimum muscles first. If none are below, the three in-range muscles
+// sitting lowest in their range.
+function defaultRampMuscles(cands) {
+  const below = cands.filter((c) => c.status === 'below');
+  if (below.length) return below.map((c) => c.muscle);
+  return cands.filter((c) => c.status === 'mid')
+    .sort((a, b) => (a.cur - a.min) / Math.max(1, a.max - a.min) - (b.cur - b.min) / Math.max(1, b.max - b.min))
+    .slice(0, 3).map((c) => c.muscle);
+}
+function proposeRamp(planned, phase, muscles, startDate, weekStart) {
+  const cands = rampCandidates(planned, phase).filter((c) => muscles.includes(c.muscle) && c.status !== 'atCeiling');
+  const out = { startDate, weekStart: weekStart || startDate, phase, blockWeeks: RAMP.minWeeks, muscles: {}, weeks: [] };
+  let longest = 0;
+  for (const c of cands) {
+    out.muscles[c.muscle] = { startSets: c.cur, targetSets: c.target, step: c.step };
+    longest = Math.max(longest, c.weeksNeeded);
+  }
+  out.blockWeeks = Math.max(RAMP.minWeeks, Math.min(RAMP.maxWeeks, longest));
+  return out;
+}
+// Which week of the block a cycle week is (1-based).
+function rampWeekNumber(ramp, weekStart) {
+  const a = new Date((ramp.weekStart || ramp.startDate) + 'T12:00:00'); const b = new Date(weekStart + 'T12:00:00');
+  return Math.floor(Math.round((b - a) / 86400000) / 7) + 1;
+}
+// Lifts that should hold a ramp. `lifts` is computeDeloadSignal().lifts;
+// `earned` holds lifts computeProgression says are due a load increase (their
+// estimated max is flat only because the weight has not been raised yet).
+// On a cut or at maintenance, holding a lift steady is the goal, so only a
+// real drop counts there.
+function rampLiftFlags(lifts, phase, earned) {
+  const holdIsWin = getPhaseProfile(phase).holdIsWin;
+  const ok = earned || new Set();
+  return (lifts || [])
+    .filter((l) => l.dropped || (l.stalled && !holdIsWin && !ok.has(l.name)))
+    .map((l) => ({ name: l.name, pct: l.pct, kind: l.dropped ? 'regressing' : 'stalled' }));
+}
+function gateRampMuscle({ muscle, cfg, cur, plannedLast, doneLast, flags }) {
+  if (cur >= cfg.targetSets) return { ok: false, code: 'reached', msg: `Target reached at ${cur} sets a week.` };
+  if (plannedLast > 0 && doneLast < plannedLast * RAMP.adherence) {
+    return { ok: false, code: 'adherence', msg: `Hold. Finish the sets you have first (${doneLast} of ${plannedLast} planned sets done last week).` };
+  }
+  const hit = (flags || []).filter((f) => (MUSCLE_MAP[f.name] || []).includes(muscle));
+  if (hit.length) {
+    return { ok: false, code: 'performance', lifts: hit, msg: `Hold. ${hit.map((h) => `${h.name} is ${h.kind}`).join(', ')}.` };
+  }
+  return { ok: true, code: 'go', need: Math.min(cfg.step, cfg.targetSets - cur) };
+}
+function rampExercisesFor(session, muscle) {
+  const out = [];
+  (session?.blocks || []).forEach((b, bi) => (b.exercises || []).forEach((ex, ei) => {
+    const map = MUSCLE_MAP[ex.name];
+    if (!ex.track || !(parseInt(ex.sets) > 0) || !map) return;
+    const idx = map.indexOf(muscle);
+    if (idx < 0) return;
+    out.push({ bi, ei, ex, idx, breadth: map.length });
+  }));
+  // Most direct first: the muscle listed earliest for the exercise, then the
+  // exercise that hits the fewest other muscles, then the one with fewest sets.
+  return out.sort((a, b) => a.idx - b.idx || a.breadth - b.breadth || parseInt(a.ex.sets) - parseInt(b.ex.sets));
+}
+function rampApplyChanges(schedule, changes) {
+  const next = JSON.parse(JSON.stringify(schedule));
+  for (const c of changes || []) {
+    const session = next[c.day];
+    if (!session?.blocks) continue;
+    if (c.type === 'add') {
+      for (const b of session.blocks) for (const ex of b.exercises || []) if (ex.name === c.exercise && ex.track) ex.sets = c.to;
+    } else if (c.type === 'new') {
+      const exists = session.blocks.some((b) => (b.exercises || []).some((ex) => ex.name === c.exercise && ex.track));
+      if (exists) continue;
+      let bi = -1;
+      session.blocks.forEach((b, i) => { if ((b.exercises || []).some((ex) => ex.track)) bi = i; });
+      if (bi < 0) continue;
+      session.blocks[bi].exercises.push({ name: c.exercise, sets: c.to, reps: '10-12', repMin: 10, repMax: 12, track: true, rpe: '8', progression: 5 });
+    }
+  }
+  return next;
+}
+// Where `need` extra sets for one muscle should go. Returns changes only;
+// nothing is written. One set at a time onto the day with the fewest sets
+// for that muscle, keeping each session at RAMP.sessionCap or under.
+function placeRampSets(schedule, muscle, need) {
+  let work = JSON.parse(JSON.stringify(schedule));
+  const changes = [];
+  const push = (c) => {
+    const prev = changes.find((x) => x.day === c.day && x.exercise === c.exercise);
+    if (prev) prev.to = c.to; else changes.push(c);
+  };
+  let left = need;
+  while (left > 0) {
+    const byDay = plannedVolume(work).byDay;
+    let best = null;
+    for (let d = 1; d <= 7; d++) {
+      const daySets = byDay[d]?.[muscle] || 0;
+      if (daySets + 1 > RAMP.sessionCap) continue;
+      // Prefer an exercise that keeps every muscle it hits at the cap or under.
+      // Compound lifts often can't (grip and glutes pile up fast when every
+      // set counts as 1), so fall back to the most direct one and say so.
+      const over = (x) => MUSCLE_MAP[x.ex.name].filter((m2) => (byDay[d]?.[m2] || 0) + 1 > RAMP.sessionCap);
+      const all = rampExercisesFor(work[d], muscle);
+      const c = all.find((x) => over(x).length === 0) || all[0];
+      if (!c) continue;
+      c.over = over(c);
+      const rank = [daySets, c.over.length, c.idx];
+      const better = !best || rank.findIndex((v, i) => v !== best.rank[i]) >= 0 && rank[rank.findIndex((v, i) => v !== best.rank[i])] < best.rank[rank.findIndex((v, i) => v !== best.rank[i])];
+      if (better) best = { d, daySets, c, rank };
+    }
+    if (best) {
+      const from = parseInt(best.c.ex.sets);
+      const first = changes.find((x) => x.day === best.d && x.exercise === best.c.ex.name);
+      push({ muscle, type: 'add', day: best.d, dayName: work[best.d].name, exercise: best.c.ex.name, from: first ? first.from : from, to: from + 1, also: (MUSCLE_MAP[best.c.ex.name] || []).filter((m) => m !== muscle), over: best.c.over });
+      work = rampApplyChanges(work, [{ type: 'add', day: best.d, exercise: best.c.ex.name, to: from + 1 }]);
+      left -= 1;
+      continue;
+    }
+    // No existing exercise has room: suggest one from MUSCLE_MAP.
+    const inProgram = new Set();
+    for (let d = 1; d <= 7; d++) (work[d]?.blocks || []).forEach((b) => (b.exercises || []).forEach((ex) => { if (ex.track) inProgram.add(ex.name); }));
+    const name = Object.keys(MUSCLE_MAP)
+      .filter((n) => MUSCLE_MAP[n].includes(muscle) && !inProgram.has(n) && !/\blight\b|band|bridge|assisted/i.test(n))
+      .sort((a, b) => MUSCLE_MAP[a].indexOf(muscle) - MUSCLE_MAP[b].indexOf(muscle) || MUSCLE_MAP[a].length - MUSCLE_MAP[b].length)[0];
+    let day = null;
+    for (let d = 1; d <= 7; d++) {
+      if (work[d]?.type !== 'lift' || !(work[d].blocks || []).some((b) => (b.exercises || []).some((ex) => ex.track))) continue;
+      const daySets = byDay[d]?.[muscle] || 0;
+      if (daySets + RAMP.newExerciseSets > RAMP.sessionCap) continue;
+      const load = Object.values(byDay[d] || {}).reduce((a, b) => a + b, 0);
+      if (!day || daySets < day.daySets || (daySets === day.daySets && load < day.load)) day = { d, daySets, load };
+    }
+    if (!name || !day) { changes.push({ muscle, type: 'none', msg: `No room to add ${muscle} sets without going over ${RAMP.sessionCap} a session.` }); break; }
+    const c = { muscle, type: 'new', day: day.d, dayName: work[day.d].name, exercise: name, from: 0, to: RAMP.newExerciseSets, also: MUSCLE_MAP[name].filter((m) => m !== muscle) };
+    changes.push(c);
+    work = rampApplyChanges(work, [c]);
+    left -= RAMP.newExerciseSets;
+  }
+  return { schedule: work, changes };
+}
+// One week's proposal across every muscle in the ramp. Muscles are handled
+// one after another on a working copy, because a set added for one muscle
+// often counts toward another (an incline press is chest and upper chest).
+function buildRampWeek(schedule, ramp, gates) {
+  let work = schedule;
+  const changes = []; const holds = {}; const covered = [];
+  const order = Object.keys(ramp.muscles).sort((a, b) => MUSCLE_ORDER.indexOf(a) - MUSCLE_ORDER.indexOf(b));
+  for (const m of order) {
+    const g = gates[m];
+    if (!g || !g.ok) { if (g) holds[m] = g; continue; }
+    const cur = plannedVolume(work).total[m] || 0;
+    const need = Math.min(g.need, ramp.muscles[m].targetSets - cur);
+    if (need <= 0) { covered.push(m); continue; }
+    const res = placeRampSets(work, m, need);
+    work = res.schedule;
+    for (const c of res.changes) {
+      const prev = c.type !== 'none' && changes.find((x) => x.day === c.day && x.exercise === c.exercise);
+      if (prev) prev.to = c.to; else changes.push(c);
+    }
+  }
+  return { schedule: work, changes, holds, covered };
+}
+// <<< VOLUME RAMP PLANNER
+
+// ── Volume ramp: storage, weekly check-in, apply and undo ────────────────────
+// volumeRamp:active = { startDate, weekStart, phase, blockWeeks,
+//   muscles: { [m]: { startSets, targetSets, step } }, weeks: [] }
+// volumeRamp:undo holds the program as it was before the last Apply.
+let _rampBust = 0;
+const _rampListeners = new Set();
+function bustRamp() { _rampBust++; _rampListeners.forEach((fn) => fn(_rampBust)); }
+function useRampBust() {
+  const [b, setB] = useState(_rampBust);
+  useEffect(() => { _rampListeners.add(setB); return () => _rampListeners.delete(setB); }, []);
+  return b;
+}
+async function loadActiveProgram() {
+  const id = (await storage.get('schedule:active')) || DEFAULT_SCHEDULE_ID;
+  if (id !== DEFAULT_SCHEDULE_ID) {
+    const entry = await storage.get(`schedule:saved:${id}`);
+    if (entry?.data) return { id, name: entry.name || 'Program', data: entry.data };
+  }
+  return { id: DEFAULT_SCHEDULE_ID, name: DEFAULT_SCHEDULE_NAME, data: DEFAULT_SCHEDULE };
+}
+// Lifts whose estimated max is flat but which computeProgression says have
+// earned more weight. Those are not stalls.
+async function rampEarnedLifts(program, names, phase) {
+  const earned = new Set();
+  if (!names.length) return earned;
+  const defs = {};
+  for (let d = 1; d <= 7; d++) (program.data[d]?.blocks || []).forEach((b) => (b.exercises || []).forEach((ex) => { if (ex.track && !defs[ex.name]) defs[ex.name] = ex; }));
+  const hist = {};
+  for (const k of await storage.list('workout:')) {
+    const date = k.split(':')[1];
+    const entry = await storage.get(k);
+    if (!entry || !date) continue;
+    const sets = entry.sets || entry;
+    for (const n of names) {
+      if (Array.isArray(sets[n]) && sets[n].some((x) => parseInt(x.reps) > 0)) (hist[n] = hist[n] || []).push({ date, sets: sets[n] });
+    }
+  }
+  for (const n of names) {
+    if (!defs[n] || !hist[n]) continue;
+    hist[n].sort((a, b) => b.date.localeCompare(a.date));
+    const prog = computeProgression(defs[n], hist[n], phase);
+    if (prog && (prog.type === 'increase' || prog.type === 'increase-reset')) earned.add(n);
+  }
+  return earned;
+}
+async function loadRampState() {
+  const [ramp, program, phaseRaw, anchor, undo] = await Promise.all([
+    storage.get('volumeRamp:active'), loadActiveProgram(), storage.get('training:phase'), storage.get('cycle:anchor'), storage.get('volumeRamp:undo'),
+  ]);
+  const phase = phaseRaw || 'recomp';
+  const weekStart = dateForScheduleDay(1, today(), anchor); // the D1 that opened this cycle week
+  const planned = plannedVolume(program.data);
+  const base = { ramp: null, program, phase, planned, weekStart };
+  if (!ramp?.muscles) return base;
+  const weekNo = rampWeekNumber(ramp, weekStart);
+  const resolved = (ramp.weeks || []).find((w) => w.weekStart === weekStart) || null;
+  const deload = await computeDeloadSignal();
+  const done = (await computeWeeklyVolume(addDays(weekStart, -1))).counts; // the cycle week that just ended
+  const flat = (deload.lifts || []).filter((l) => l.stalled && !l.dropped).map((l) => l.name);
+  const flags = rampLiftFlags(deload.lifts, phase, await rampEarnedLifts(program, flat, phase));
+  const gates = {};
+  for (const m of Object.keys(ramp.muscles)) {
+    gates[m] = gateRampMuscle({ muscle: m, cfg: ramp.muscles[m], cur: planned.total[m] || 0, plannedLast: planned.total[m] || 0, doneLast: done[m] || 0, flags });
+  }
+  const week = buildRampWeek(program.data, ramp, gates);
+  let finished = null;
+  if (deload.status === 'suggest') finished = 'deload';
+  else if (Object.values(gates).every((g) => g.code === 'reached')) finished = 'reached';
+  else if (weekNo > ramp.blockWeeks) finished = 'block';
+  return { ...base, ramp, weekNo, resolved, deload, done, gates, week, finished, undo: undo && undo.weekStart === weekStart ? undo : null };
+}
+async function startRamp(muscles) {
+  const st = await loadRampState();
+  const ramp = proposeRamp(st.planned.total, st.phase, muscles, today(), st.weekStart);
+  if (Object.keys(ramp.muscles).length === 0) return false;
+  await storage.set('volumeRamp:active', ramp);
+  await storage.delete('volumeRamp:undo');
+  bustRamp();
+  return true;
+}
+// The only place the ramp writes to the program, and only from a tap.
+async function applyRampWeek(st, changes) {
+  const picked = changes.filter((c) => c.type !== 'none');
+  if (picked.length === 0) return;
+  const next = rampApplyChanges(st.program.data, picked);
+  const undo = { weekStart: st.weekStart, scheduleId: st.program.id, data: st.program.data, createdId: null };
+  if (st.program.id === DEFAULT_SCHEDULE_ID) {
+    // The built-in program lives in code, so the change is saved as a copy.
+    const id = `s_${Date.now()}_ramp`;
+    const ok = await storage.set(`schedule:saved:${id}`, { id, name: `${DEFAULT_SCHEDULE_NAME.replace(' (default)', '')} + volume ramp`, createdAt: Date.now(), data: next });
+    if (!ok) throw new Error(storage.lastError || 'Could not save the program');
+    await storage.set('schedule:active', id);
+    undo.createdId = id;
+  } else {
+    const entry = await storage.get(`schedule:saved:${st.program.id}`);
+    const ok = await storage.set(`schedule:saved:${st.program.id}`, { ...entry, data: next });
+    if (!ok) throw new Error(storage.lastError || 'Could not save the program');
+  }
+  await storage.set('volumeRamp:undo', undo);
+  const holds = {};
+  for (const m of Object.keys(st.week.holds)) holds[m] = st.week.holds[m].code;
+  const ramp = { ...st.ramp, weeks: [...(st.ramp.weeks || []), { weekStart: st.weekStart, appliedAt: today(), changes: picked, holds }] };
+  await storage.set('volumeRamp:active', ramp);
+  setActiveSchedule(next);
+  bustRamp();
+}
+async function holdRampWeek(st) {
+  const holds = {};
+  for (const m of Object.keys(st.week.holds)) holds[m] = st.week.holds[m].code;
+  const ramp = { ...st.ramp, weeks: [...(st.ramp.weeks || []), { weekStart: st.weekStart, heldAt: today(), changes: [], holds }] };
+  await storage.set('volumeRamp:active', ramp);
+  bustRamp();
+}
+async function undoRampWeek() {
+  const u = await storage.get('volumeRamp:undo');
+  if (!u) return 'Nothing to undo.';
+  const activeId = (await storage.get('schedule:active')) || DEFAULT_SCHEDULE_ID;
+  if (activeId !== (u.createdId || u.scheduleId)) return 'You switched programs since this was applied, so it can no longer be undone here.';
+  if (u.createdId) {
+    await storage.set('schedule:active', u.scheduleId);
+    await storage.delete(`schedule:saved:${u.createdId}`);
+  } else {
+    const entry = await storage.get(`schedule:saved:${u.scheduleId}`);
+    await storage.set(`schedule:saved:${u.scheduleId}`, { ...entry, data: u.data });
+  }
+  const ramp = await storage.get('volumeRamp:active');
+  if (ramp) await storage.set('volumeRamp:active', { ...ramp, weeks: (ramp.weeks || []).filter((w) => w.weekStart !== u.weekStart) });
+  await storage.delete('volumeRamp:undo');
+  setActiveSchedule(u.data);
+  bustRamp();
+  return null;
+}
+async function endRamp() {
+  const ramp = await storage.get('volumeRamp:active');
+  if (ramp) await storage.set('volumeRamp:last', { ...ramp, endedAt: today() });
+  await storage.delete('volumeRamp:active');
+  await storage.delete('volumeRamp:undo');
+  bustRamp();
+}
+
+const RAMP_SOURCES = [
+  {
+    cite: 'Pelland et al., Sports Medicine, 2025',
+    url: 'https://doi.org/10.1007/s40279-025-02344-w',
+    says: 'A meta-regression of 67 studies (2,058 people) found muscle growth keeps rising as weekly sets rise, but each extra set adds less than the one before. It also found that counting indirect sets as half a set fit the data best. This app counts every set as 1, so its totals run higher than that method would give.',
+  },
+  {
+    cite: 'Schoenfeld, Ogborn and Krieger, Journal of Sports Sciences, 2017',
+    url: 'https://doi.org/10.1080/02640414.2016.1210197',
+    says: 'An earlier meta-analysis of 15 studies found a graded dose-response: each added weekly set went with roughly 0.37% more growth.',
+  },
+  {
+    cite: 'Baz-Valle et al., Journal of Human Kinetics, 2022',
+    url: 'https://doi.org/10.2478/hukin-2022-0017',
+    says: 'A review of 7 trials in trained young men suggested 12 to 20 weekly sets per muscle as a reasonable standard. Going above 20 did not beat 12 to 20 for quads or biceps, though it did for triceps. Seven trials is not many.',
+  },
+];
+function RampWhy() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-3 pt-3 border-t border-stone-800" data-ramp-why={open ? 'open' : 'closed'}>
+      <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex items-center gap-1 text-[12px] mono text-amber-400">
+        Why
+        <ChevronDown size={12} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="mt-2 space-y-3">
+          <div className="text-xs text-stone-400 leading-relaxed">
+            <span className="text-stone-200">Not trial-tested:</span> adding 1 to 2 sets a week is coaching practice. No study has tested that ramp speed. The same goes for the 20% step limit, the 90% "finish what you have" gate, the cap of about {RAMP.sessionCap} sets per muscle per session, the 4 to 6 week block, and the lower ceiling on a cut. They are judgment calls.
+          </div>
+          {RAMP_SOURCES.map((src) => (
+            <div key={src.url} className="text-xs text-stone-400 leading-relaxed">
+              {src.says}{' '}
+              <a href={src.url} target="_blank" rel="noopener noreferrer" className="text-amber-400 underline underline-offset-2">{src.cite}</a>
+            </div>
+          ))}
+          <div className="text-[11px] text-stone-500 leading-relaxed">Study details from PubMed.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+const rampLabel = (m) => MUSCLE_LABELS[m] || m;
+const rampChangeKey = (c) => `${c.day}|${c.exercise}`;
+
+function RampSetup({ st, onClose }) {
+  const cands = useMemo(() => rampCandidates(st.planned.total, st.phase), [st]);
+  const [picked, setPicked] = useState(() => new Set(defaultRampMuscles(cands)));
+  const preview = proposeRamp(st.planned.total, st.phase, [...picked], today(), st.weekStart);
+  const order = { below: 0, mid: 1, atCeiling: 2 };
+  const rows = [...cands].sort((a, b) => order[a.status] - order[b.status] || MUSCLE_ORDER.indexOf(a.muscle) - MUSCLE_ORDER.indexOf(b.muscle));
+  const toggle = (m) => setPicked((p) => { const n = new Set(p); if (n.has(m)) n.delete(m); else n.add(m); return n; });
+  return (
+    <div className="mt-4 pt-4 border-t border-stone-800" data-ramp-setup>
+      <div className="flex items-center justify-between mb-1">
+        <div className="text-sm font-semibold text-stone-100">Ramp volume</div>
+        <button onClick={onClose} className="text-stone-500" aria-label="Close"><X size={16} /></button>
+      </div>
+      <div className="text-xs text-stone-400 leading-relaxed mb-3">
+        Pick the muscles to build up. Phase: <span className="text-stone-200">{getPhaseProfile(st.phase).label}</span>
+        {st.phase === 'cut' ? ', so steps are +1 a week and targets stop at the middle of each range.' : st.phase === 'bulk' ? ', so steps go up to +2 a week and targets can reach the top of each range.' : ', so steps and targets sit between a cut and a bulk.'}
+      </div>
+      <div className="space-y-1">
+        {rows.map((c) => {
+          const off = c.status === 'atCeiling';
+          return (
+            <label key={c.muscle} data-ramp-pick={c.muscle} className={`flex items-center gap-2 text-[12px] py-1 ${off ? 'opacity-40' : ''}`}>
+              <input type="checkbox" disabled={off} checked={picked.has(c.muscle)} onChange={() => toggle(c.muscle)} />
+              <span className="mono text-stone-300 capitalize flex-1">{rampLabel(c.muscle)}</span>
+              <span className="mono tabular text-stone-400">
+                {off ? `${c.cur} planned · at this phase's ceiling` : `${c.cur} → ${c.target} · +${c.step}/wk`}
+              </span>
+              {c.status === 'below' && <span className="mono text-[10px] text-amber-400">below min</span>}
+            </label>
+          );
+        })}
+      </div>
+      <div className="text-[11px] text-stone-500 mt-3 leading-relaxed">
+        Block: {preview.blockWeeks} weeks, then the deload check takes over. Starting a ramp does not change your program. Each week you see the exact sets and tap to apply them.
+      </div>
+      <button
+        onClick={async () => { if (await startRamp([...picked])) onClose(); }}
+        disabled={Object.keys(preview.muscles).length === 0}
+        data-ramp-start
+        className="w-full mt-3 bg-amber-500 text-stone-950 text-sm font-semibold rounded-md py-2 disabled:opacity-40"
+      >
+        Start ramp
+      </button>
+      <RampWhy />
+    </div>
+  );
+}
+
+// variant="today": only when this cycle week's check-in is waiting, or the ramp has finished.
+// variant="panel": always shows where the ramp stands (inside Weekly Volume).
+function VolumeRampCard({ variant = 'panel' }) {
+  const bust = useRampBust();
+  const [st, setSt] = useState(null);
+  const [off, setOff] = useState({});
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    loadRampState().then((x) => { if (!cancelled) { setSt(x); setOff({}); } }).catch((e) => console.error('volume ramp failed', e));
+    return () => { cancelled = true; };
+  }, [bust]);
+  if (!st?.ramp) return null;
+  if (variant === 'today' && st.resolved && !st.finished) return null;
+
+  const run = async (fn) => {
+    setBusy(true); setErr('');
+    try { const msg = await fn(); if (typeof msg === 'string') setErr(msg); } catch (e) { setErr(e.message || String(e)); }
+    setBusy(false);
+  };
+  const real = st.week.changes.filter((c) => c.type !== 'none');
+  const picked = real.filter((c) => !off[rampChangeKey(c)]);
+  const line = (c) => (c.type === 'new'
+    ? `Day ${c.day} · add ${c.exercise}, ${c.to} sets`
+    : `Day ${c.day} · ${c.exercise} ${c.from}→${c.to} sets`);
+  const wrap = variant === 'today'
+    ? 'bg-stone-900 border border-amber-500/40 rounded-xl p-4 mb-4'
+    : 'mt-4 pt-4 border-t border-stone-800';
+
+  return (
+    <div className={wrap} data-ramp-card={variant} data-ramp-state={st.finished || (st.resolved ? 'resolved' : 'checkin')}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <TrendingUp size={12} className="text-amber-400" />
+          <div className="mono text-[11px] uppercase tracking-wider text-amber-400">Volume ramp</div>
+        </div>
+        <div className="mono text-[11px] text-stone-500">Week {Math.min(st.weekNo, st.ramp.blockWeeks)} of {st.ramp.blockWeeks} · {getPhaseProfile(st.phase).label}</div>
+      </div>
+
+      {st.phase !== st.ramp.phase && (
+        <div className="text-[11px] text-stone-500 mb-2">This ramp was planned on a {getPhaseProfile(st.ramp.phase).label.toLowerCase()}. Your phase is now {getPhaseProfile(st.phase).label.toLowerCase()}; end it and start a new one to get targets for the new phase.</div>
+      )}
+
+      {st.finished ? (
+        <div data-ramp-finished={st.finished}>
+          <div className="text-sm text-stone-200 leading-relaxed">
+            {st.finished === 'deload' && 'Several lifts have stalled, so the ramp stops here. Do not add sets this week. Open the deload check on Body → Measure.'}
+            {st.finished === 'reached' && 'Every muscle in this ramp is at its target. Hold this volume, and let the deload check on Body → Measure tell you when to back off.'}
+            {st.finished === 'block' && `This block has run its ${st.ramp.blockWeeks} weeks. Hold the volume you have now; the deload check on Body → Measure takes over from here.`}
+          </div>
+          <button disabled={busy} onClick={() => run(endRamp)} data-ramp-end className="mt-3 w-full bg-stone-100 text-stone-950 text-sm font-semibold rounded-md py-2">End ramp</button>
+        </div>
+      ) : st.resolved ? (
+        <div data-ramp-resolved>
+          {st.resolved.changes.length > 0 ? (
+            <>
+              <div className="text-xs text-stone-400 mb-1">Applied this week:</div>
+              {st.resolved.changes.map((c) => <div key={rampChangeKey(c)} className="text-[13px] text-stone-200 mono">{line(c)}</div>)}
+              {st.undo && <button disabled={busy} onClick={() => run(undoRampWeek)} data-ramp-undo className="mt-3 text-xs mono text-amber-400 flex items-center gap-1"><RefreshCw size={12} /> Undo, put my program back</button>}
+            </>
+          ) : (
+            <div className="text-xs text-stone-400">Held this week. No sets added. The next check-in is when your next cycle week starts (D1).</div>
+          )}
+        </div>
+      ) : (
+        <div data-ramp-checkin>
+          <div className="text-xs text-stone-400 mb-2">{real.length > 0 ? "This week's proposed additions. Nothing changes until you tap Apply." : 'No sets to add this week.'}</div>
+          {real.map((c) => (
+            <label key={rampChangeKey(c)} className="flex items-start gap-2 py-1" data-ramp-change={rampChangeKey(c)}>
+              <input type="checkbox" className="mt-1" checked={!off[rampChangeKey(c)]} onChange={() => setOff((o) => ({ ...o, [rampChangeKey(c)]: !o[rampChangeKey(c)] }))} />
+              <span>
+                <span className="block text-[13px] text-stone-100 mono">{line(c)}</span>
+                <span className="block text-[11px] text-stone-500">
+                  For {rampLabel(c.muscle)}{c.type === 'new' ? '. Not in your program yet; suggested from the exercise list' : ''}{c.also?.length ? `. Also counts toward ${c.also.map(rampLabel).join(', ')}` : ''}{c.over?.length ? `. Puts ${c.over.map(rampLabel).join(', ')} above ${RAMP.sessionCap} sets that session` : ''}.
+                </span>
+              </span>
+            </label>
+          ))}
+          {st.week.changes.filter((c) => c.type === 'none').map((c) => (
+            <div key={c.muscle} className="text-[12px] text-stone-400 py-1"><span className="capitalize text-stone-300">{rampLabel(c.muscle)}:</span> {c.msg}</div>
+          ))}
+          {Object.keys(st.week.holds).filter((m) => st.week.holds[m].code !== 'reached').map((m) => (
+            <div key={m} className="text-[12px] text-stone-400 py-1" data-ramp-hold={m}><span className="capitalize text-stone-300">{rampLabel(m)}:</span> {st.week.holds[m].msg}</div>
+          ))}
+          {st.week.covered.length > 0 && (
+            <div className="text-[11px] text-stone-500 py-1">{st.week.covered.map(rampLabel).join(', ')}: already covered by the sets above.</div>
+          )}
+          <div className="flex gap-2 mt-3">
+            {real.length > 0 && (
+              <button disabled={busy || picked.length === 0} onClick={() => run(() => applyRampWeek(st, picked))} data-ramp-apply className="flex-1 bg-amber-500 text-stone-950 text-sm font-semibold rounded-md py-2 disabled:opacity-40">Apply to program</button>
+            )}
+            <button disabled={busy} onClick={() => run(() => holdRampWeek(st))} data-ramp-hold-week className="flex-1 bg-stone-800 text-stone-200 text-sm font-semibold rounded-md py-2">{real.length > 0 ? 'Hold this week' : 'OK, hold'}</button>
+          </div>
+          <div className="text-[11px] text-stone-500 mt-2 leading-relaxed">Sessions are kept to about {RAMP.sessionCap} sets per muscle. That cap is a coaching rule of thumb, not a research finding.</div>
+        </div>
+      )}
+      {err && <div className="text-xs text-amber-300 mt-2">{err}</div>}
+
+      {variant === 'panel' && (
+        <>
+          <div className="mt-3 space-y-1" data-ramp-progress>
+            {Object.keys(st.ramp.muscles).map((m) => {
+              const cfg = st.ramp.muscles[m];
+              return (
+                <div key={m} className="flex items-center justify-between text-[12px]">
+                  <span className="mono text-stone-300 capitalize">{rampLabel(m)}</span>
+                  <span className="mono tabular text-stone-400">started {cfg.startSets} · now {st.planned.total[m] || 0} · target {cfg.targetSets}</span>
+                </div>
+              );
+            })}
+          </div>
+          {!st.finished && <button disabled={busy} onClick={() => run(endRamp)} data-ramp-end className="mt-3 text-xs mono text-stone-500 underline underline-offset-2">End ramp</button>}
+          <RampWhy />
+        </>
+      )}
+    </div>
+  );
 }
 
 // ============================================================================
