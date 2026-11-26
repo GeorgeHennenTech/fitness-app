@@ -6,7 +6,7 @@ const read = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
 const src = read('../src/App.jsx');
 const a = src.indexOf('// >>> MEAL TREE ENGINE'), b = src.indexOf('// <<< MEAL TREE ENGINE');
 assert.ok(a >= 0 && b > a);
-const api = new Function(`${src.slice(a, b)}\nreturn { MEAL_SLOTS, MEAL_OPTIONS, parseFoodsCsv, mealFoodIndex, mealMacros, mealRoundGrams, mealTargetsFor, mealRemaining, mealBuildTree, mealInRange, mealSwaps, mealResolveParsed, mealAdd, mealZero };`)();
+const api = new Function(`${src.slice(a, b)}\nreturn { MEAL_SLOTS, MEAL_OPTIONS, parseFoodsCsv, mealFoodIndex, mealMacros, mealRoundGrams, mealTargetsFor, mealRemaining, mealBuildTree, mealInRange, mealSwaps, mealResolveParsed, mealAdd, mealZero, MEAL_EFFORTS, MEAL_EFFORT_SLOTS, mealApplyVariant };`)();
 const foods = api.parseFoodsCsv(read('../src/data/foods.csv'));
 const ix = api.mealFoodIndex(foods);
 const targets = JSON.parse(read('../src/data/targets.json'));
@@ -54,7 +54,7 @@ test('acceptance 5: day type changes the carb target and the suggestions', () =>
   const mk = (dayType) => api.mealBuildTree({ tree, targets, dayType, stall: false, eaten: api.mealZero(), doneSlots: [], ix });
   const lift = mk('lift'), rest = mk('rest');
   assert.equal(lift.target.carbs.aim, 430); assert.equal(rest.target.carbs.aim, 320);
-  const rice = (t) => t.slots.lunch.options[0].items.find((i) => i.food === 'White rice, cooked').grams;
+  const rice = (t) => t.slots.lunch.options.find((o) => o.id === 'burrito-bowl').items.find((i) => i.food === 'White rice, cooked').grams;
   assert.ok(rice(lift) > rice(rest) + 20);
 });
 
@@ -67,19 +67,77 @@ test('stall rule adds 150 kcal, all from carbs, to every day type', () => {
   }
 });
 
-test('every branch keeps the day inside the ranges, whichever options are picked', () => {
+const OK = { kcal: 'ok', protein: 'ok', carbs: 'ok', fat: 'ok' };
+test('every path through the tree lands inside all four ranges, on every day type', () => {
+  let paths = 0;
   for (const d of ['lift', 'cardio', 'rest']) {
-    for (let pick = 0; pick < 3; pick++) {
+    const tgt = api.mealTargetsFor(targets, d, false);
+    const go = (eaten, done, path) => {
+      const s = api.MEAL_SLOTS[done.length];
+      if (!s) { paths++; assert.deepEqual(api.mealInRange(tgt, eaten), OK, `${d}: ${path.join(' > ')}: ${JSON.stringify(eaten)}`); return; }
+      const t = api.mealBuildTree({ tree, targets, dayType: d, stall: false, eaten, doneSlots: done, ix });
+      for (const o of t.slots[s].options) go(api.mealAdd(eaten, o.macros), [...done, s], [...path, o.id]);
+    };
+    go(api.mealZero(), [], []);
+  }
+  assert.ok(paths > 50000, `walked ${paths} paths`);
+});
+
+test('meals 1 to 4 each offer at least three recipes at every effort level, with a method and a time', () => {
+  assert.deepEqual(api.MEAL_EFFORT_SLOTS, ['breakfast', 'lunch', 'dinner', 'snack_1']);
+  for (const s of api.MEAL_EFFORT_SLOTS) for (const [e] of api.MEAL_EFFORTS) {
+    assert.ok(api.MEAL_OPTIONS[s].filter((o) => o.effort === e).length >= 3, `${s} ${e}`);
+  }
+  const ids = new Set();
+  for (const s of api.MEAL_SLOTS) for (const o of api.MEAL_OPTIONS[s]) {
+    assert.ok(!ids.has(`${s}:${o.id}`), `duplicate id ${o.id}`); ids.add(`${s}:${o.id}`);
+    assert.ok(o.mins > 0 && o.how.length >= 1, `${o.id} needs a time and a method`);
+    assert.ok(o.variants.length >= 3, `${o.id} needs variations`);
+  }
+  // Effort is about time: minimal is quicker than average, which is quicker than all out.
+  for (const s of api.MEAL_EFFORT_SLOTS) {
+    const max = (e) => Math.max(...api.MEAL_OPTIONS[s].filter((o) => o.effort === e).map((o) => o.mins));
+    const min = (e) => Math.min(...api.MEAL_OPTIONS[s].filter((o) => o.effort === e).map((o) => o.mins));
+    assert.ok(max('min') <= min('mid') && max('mid') <= min('max'), `${s} effort times overlap`);
+  }
+});
+
+test('every variation uses foods from the table, changes the recipe, and keeps the day in range', () => {
+  let n = 0;
+  for (const d of ['lift', 'cardio', 'rest']) {
+    const tgt = api.mealTargetsFor(targets, d, false);
+    for (const slot of api.MEAL_SLOTS) for (const o of api.MEAL_OPTIONS[slot]) for (const v of o.variants) {
+      for (const [from, to] of Object.entries(v.swap)) {
+        assert.ok(o.parts.some((p) => p[0] === from), `${o.id}/${v.id}: ${from} is not in the recipe`);
+        assert.ok(ix[to], `${o.id}/${v.id}: ${to} missing from foods.csv`);
+        assert.ok(!o.parts.some((p) => p[0] === to), `${o.id}/${v.id}: ${to} is already in the recipe`);
+      }
+      // Eat the average-effort default everywhere else, this variation in its own slot.
       let eaten = api.mealZero(); const done = [];
       for (const s of api.MEAL_SLOTS) {
-        const t = api.mealBuildTree({ tree, targets, dayType: d, stall: false, eaten, doneSlots: done, ix });
-        const opt = t.slots[s].options[(pick + done.length) % 3];
+        const t = api.mealBuildTree({ tree, targets, dayType: d, stall: false, eaten, doneSlots: done, ix, variantOf: { [`${slot}:${o.id}`]: v.id } });
+        const list = t.slots[s].options;
+        const opt = s === slot ? list.find((x) => x.id === o.id) : (list.find((x) => x.effort === 'mid') || list[0]);
+        if (s === slot) {
+          assert.equal(opt.variant, v.id);
+          assert.ok(Object.keys(v.swap).every((from) => !opt.items.some((i) => i.food === from)), `${o.id}/${v.id} still has the swapped-out food`);
+        }
         eaten = api.mealAdd(eaten, opt.macros); done.push(s);
       }
-      const verdict = api.mealInRange(api.mealTargetsFor(targets, d, false), eaten);
-      assert.deepEqual(verdict, { kcal: 'ok', protein: 'ok', carbs: 'ok', fat: 'ok' }, `${d} pick ${pick}: ${JSON.stringify(eaten)}`);
+      assert.deepEqual(api.mealInRange(tgt, eaten), OK, `${d} ${o.id}/${v.id}: ${JSON.stringify(eaten)}`);
+      n++;
     }
   }
+  assert.ok(n > 300);
+});
+
+test('a variation re-portions the swapped food instead of copying the grams', () => {
+  const base = api.MEAL_OPTIONS.lunch.find((o) => o.id === 'burrito-bowl');
+  const v = api.mealApplyVariant(base, 'shrimp', ix);
+  const chicken = base.parts.find((p) => p[0] === 'Chicken breast, cooked')[1];
+  const shrimp = v.parts.find((p) => p[0] === 'Shrimp, cooked')[1];
+  assert.ok(shrimp > chicken, 'shrimp has less protein per gram, so more of it');
+  assert.equal(api.mealApplyVariant(base, 'nope', ix), base);
 });
 
 test('the tree corrects course after an off-plan meal', () => {
