@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Dumbbell, TrendingUp, Camera, Apple, Activity, Calendar, Target, ChevronRight, ChevronLeft, Plus, Check, Trash2, Save, Image as ImageIcon, ArrowUp, ArrowDown, Flame, BookMarked, FileImage, X, Copy, CalendarDays, Edit3, Search, Sparkles, Settings, Loader2, AlertCircle, Info, Play, ChevronDown, Clock, Receipt, Upload, FileText, Download, RefreshCw, Star, Minus, GitBranch } from 'lucide-react';
 import mammoth from 'mammoth';
 import MEAL_FOODS_CSV from './data/foods.csv?raw';
+import MEAL_TIER1_CSV from './data/swaps/tier1_same_dish.csv?raw';
+import MEAL_TIER2_CSV from './data/swaps/tier2_same_macros.csv?raw';
+import MEAL_TIER3_CSV from './data/swaps/tier3_looser.csv?raw';
 import MEAL_TARGETS from './data/targets.json';
 import MEAL_TREE_1 from './data/breakfast_tree_1.json';
 
@@ -19476,7 +19479,7 @@ const MEAL_SLOT_LABELS = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinn
 const MEAL_MACROS = ['kcal', 'protein', 'carbs', 'fat'];
 const MEAL_STALL_KCAL = 150;
 
-function parseFoodsCsv(text) {
+function mealCsvRows(text) {
   const rows = [];
   let row = [], cell = '', quoted = false;
   const src = String(text || '').replace(/\r/g, '');
@@ -19492,6 +19495,10 @@ function parseFoodsCsv(text) {
     else cell += ch;
   }
   if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+function parseFoodsCsv(text) {
+  const rows = mealCsvRows(text);
   const foods = [];
   for (const r of rows.slice(1)) {
     if (!r[0] || !r[0].trim()) continue;
@@ -19530,196 +19537,189 @@ const MEAL_EFFORT_SLOTS = ['breakfast', 'lunch', 'dinner', 'snack_1'];
 // Recipes per meal. effort: min (assemble or microwave), mid (one pan, about
 // 15 minutes), max (proper cooking). kind says what the solver may resize:
 // protein, carb and fat parts flex to hit the meal's share of what is left;
-// veg and fixed parts keep their grams. variants swap named foods for
-// interchangeable ones; the recipe is then sized again from scratch.
+// veg and fixed parts keep their grams. Variations are not written here: they
+// come from the Tier 1 pairs in the swap database (see mealTier1Chips).
 // Seasoning in the steps (spices, herbs, garlic, lemon, soy sauce, mustard,
 // hot sauce) is not in the food table and is not counted.
 const MEAL_OPTIONS = {
   breakfast: [
     { id: 'eggs-toast', effort: 'min', mins: 5, label: 'Eggs, toast and a banana',
       parts: [['Egg, whole boiled', 150, 'protein'], ['Egg whites', 100, 'protein'], ['Brownberry 100% Whole Wheat bread (regular slice)', 129, 'carb'], ['Banana', 120, 'carb']],
-      how: ['Boil a batch of eggs once and keep them in the fridge, or scramble the eggs and whites together in a non-stick pan.', 'Toast the bread. Salt, pepper and hot sauce on the eggs.'],
-      variants: [{ id: 'sourdough', label: 'Sourdough', swap: { 'Brownberry 100% Whole Wheat bread (regular slice)': 'Sourdough bread, bakery loaf (generic)' } }, { id: 'bagel', label: 'Bagel', swap: { 'Brownberry 100% Whole Wheat bread (regular slice)': 'Bagel, plain' } }, { id: 'muffin-berries', label: 'English muffin and berries', swap: { 'Brownberry 100% Whole Wheat bread (regular slice)': 'English muffin', 'Banana': 'Blueberries' } }] },
+      how: ['Boil a batch of eggs once and keep them in the fridge, or scramble the eggs and whites together in a non-stick pan.', 'Toast the bread. Salt, pepper and hot sauce on the eggs.'] },
     { id: 'yogurt-bowl', effort: 'min', mins: 3, label: 'Greek yogurt, granola and banana',
       parts: [['Greek yogurt, nonfat', 300, 'protein'], ['Granola (typical)', 60, 'carb'], ['Banana', 120, 'carb'], ['Almonds', 20, 'fat']],
-      how: ['Yogurt in a bowl, slice the banana over it, granola and almonds on top.'],
-      variants: [{ id: 'skyr-berries', label: 'Skyr and strawberries', swap: { 'Greek yogurt, nonfat': 'Skyr, plain', 'Banana': 'Strawberries' } }, { id: 'mango-cashew', label: 'Mango and cashews', swap: { 'Banana': 'Mango', 'Almonds': 'Cashews' } }, { id: 'honey-walnut', label: 'Honey and walnuts', swap: { 'Granola (typical)': 'Honey', 'Almonds': 'Walnuts' } }] },
+      how: ['Yogurt in a bowl, slice the banana over it, granola and almonds on top.'] },
     { id: 'protein-oats', effort: 'min', mins: 3, label: 'Overnight protein oats',
       parts: [['Whey protein powder', 30, 'protein'], ['Oats, dry', 80, 'carb'], ['Milk, 2%', 250, 'fixed'], ['Blueberries', 100, 'fixed'], ['Peanut butter', 16, 'fat']],
-      how: ['The night before: stir the oats, whey and milk in a jar and put it in the fridge.', 'In the morning top with the blueberries and peanut butter. Eat it cold, or microwave for 90 seconds.'],
-      variants: [{ id: 'pb-banana', label: 'Peanut butter banana', swap: { 'Blueberries': 'Banana' } }, { id: 'almond-raspberry', label: 'Almond and raspberry', swap: { 'Blueberries': 'Raspberries', 'Peanut butter': 'Almond butter' } }, { id: 'apple-walnut', label: 'Apple and walnut', swap: { 'Blueberries': 'Apple', 'Peanut butter': 'Walnuts' } }] },
+      how: ['The night before: stir the oats, whey and milk in a jar and put it in the fridge.', 'In the morning top with the blueberries and peanut butter. Eat it cold, or microwave for 90 seconds.'] },
     { id: 'lox-bagel', effort: 'min', mins: 5, label: 'Lox bagel with skyr and an orange',
       parts: [['Bagel, plain', 105, 'carb'], ['Lox / smoked salmon', 85, 'protein'], ['Cream cheese', 25, 'fat'], ['Cucumber', 50, 'veg'], ['Tomato, raw', 50, 'veg'], ['Skyr, plain', 170, 'protein'], ['Orange', 150, 'carb']],
-      how: ['Toast the bagel, spread the cream cheese, then layer cucumber, tomato and the lox. Black pepper and lemon.', 'Skyr and the orange on the side.'],
-      variants: [{ id: 'avocado', label: 'Avocado instead of cream cheese', swap: { 'Cream cheese': 'Avocado' } }, { id: 'sourdough', label: 'On sourdough', swap: { 'Bagel, plain': 'Sourdough bread, bakery loaf (generic)' } }, { id: 'turkey', label: 'Turkey instead of lox', swap: { 'Lox / smoked salmon': 'Turkey, sliced deli' } }] },
+      how: ['Toast the bagel, spread the cream cheese, then layer cucumber, tomato and the lox. Black pepper and lemon.', 'Skyr and the orange on the side.'] },
     { id: 'breakfast-burrito', effort: 'mid', mins: 12, label: 'Breakfast burritos',
       parts: [['Egg, whole boiled', 100, 'protein'], ['Egg whites', 130, 'protein'], ['Flour tortilla', 110, 'carb'], ['Black beans, cooked', 80, 'fixed'], ['Bell pepper, red', 60, 'veg'], ['Cheddar', 18, 'fat'], ['Orange juice', 250, 'carb']],
-      how: ['Soften the diced pepper in a non-stick pan for 2 minutes.', 'Add the eggs and whites and scramble until just set. Stir in the beans to warm through. Cumin, salt, hot sauce.', 'Warm the tortillas, fill, add the cheddar and roll. Juice on the side.'],
-      variants: [{ id: 'sausage', label: 'Sausage', swap: { 'Egg whites': 'Breakfast sausage, chicken or turkey (cooked)' } }, { id: 'turkey-bacon', label: 'Turkey bacon', swap: { 'Egg whites': 'Turkey bacon, cooked' } }, { id: 'avocado', label: 'Avocado instead of cheddar', swap: { 'Cheddar': 'Avocado' } }] },
+      how: ['Soften the diced pepper in a non-stick pan for 2 minutes.', 'Add the eggs and whites and scramble until just set. Stir in the beans to warm through. Cumin, salt, hot sauce.', 'Warm the tortillas, fill, add the cheddar and roll. Juice on the side.'] },
     { id: 'muffin-sandwich', effort: 'mid', mins: 10, label: 'Egg and Canadian bacon muffins',
       parts: [['English muffin', 114, 'carb'], ['Egg, whole boiled', 100, 'protein'], ['Canadian bacon', 70, 'protein'], ['Cheddar', 18, 'fat'], ['Banana', 130, 'carb']],
-      how: ['Fry the eggs in a non-stick pan, breaking the yolks so they set flat. Warm the Canadian bacon in the same pan.', 'Toast the muffins. Stack bacon, egg and cheddar, and close them for a minute so the cheese melts.'],
-      variants: [{ id: 'sausage', label: 'Sausage patty', swap: { 'Canadian bacon': 'Breakfast sausage, chicken or turkey (cooked)' } }, { id: 'ham-swiss', label: 'Ham and Swiss', swap: { 'Canadian bacon': 'Ham, sliced deli', 'Cheddar': 'Swiss' } }, { id: 'bagel', label: 'On a bagel', swap: { 'English muffin': 'Bagel, plain' } }] },
+      how: ['Fry the eggs in a non-stick pan, breaking the yolks so they set flat. Warm the Canadian bacon in the same pan.', 'Toast the muffins. Stack bacon, egg and cheddar, and close them for a minute so the cheese melts.'] },
     { id: 'protein-pancakes', effort: 'mid', mins: 15, label: 'Protein pancakes with berries',
       parts: [['Protein pancake mix, dry', 85, 'carb'], ['Greek yogurt, nonfat', 200, 'protein'], ['Blueberries', 100, 'fixed'], ['Maple syrup', 25, 'carb'], ['Butter', 7, 'fat']],
-      how: ['Mix the pancake mix with water as the bag says. Rest the batter 2 minutes.', 'Cook in the butter over medium heat, flipping when bubbles hold on top.', 'Stack with the yogurt and berries and pour the syrup over.'],
-      variants: [{ id: 'banana-pb', label: 'Banana and peanut butter', swap: { 'Blueberries': 'Banana', 'Butter': 'Peanut butter' } }, { id: 'strawberry-skyr', label: 'Strawberries and skyr', swap: { 'Blueberries': 'Strawberries', 'Greek yogurt, nonfat': 'Skyr, plain' } }, { id: 'honey', label: 'Honey instead of syrup', swap: { 'Maple syrup': 'Honey' } }] },
+      how: ['Mix the pancake mix with water as the bag says. Rest the batter 2 minutes.', 'Cook in the butter over medium heat, flipping when bubbles hold on top.', 'Stack with the yogurt and berries and pour the syrup over.'] },
     { id: 'shakshuka', effort: 'max', mins: 30, label: 'Shakshuka with feta and sourdough',
       parts: [['Egg, whole boiled', 150, 'protein'], ['Egg whites', 100, 'protein'], ['Marinara sauce', 250, 'fixed'], ['Bell pepper, red', 80, 'veg'], ['Onion, raw', 50, 'veg'], ['Feta', 20, 'fat'], ['Sourdough bread, bakery loaf (generic)', 110, 'carb']],
-      how: ['Soften the sliced onion and pepper in a wide pan for 6 to 8 minutes. Add garlic, cumin, paprika and a pinch of chili.', 'Pour in the marinara and simmer 5 minutes until it thickens. Stir the egg whites into the sauce.', 'Make wells, crack in the eggs, cover and cook 5 to 7 minutes until the whites set.', 'Crumble the feta over and scoop it up with toasted sourdough.'],
-      variants: [{ id: 'goat-pita', label: 'Goat cheese and pita', swap: { 'Feta': 'Goat cheese, soft', 'Sourdough bread, bakery loaf (generic)': 'Pita, white' } }, { id: 'green', label: 'Green pepper and zucchini', swap: { 'Bell pepper, red': 'Bell pepper, green', 'Onion, raw': 'Zucchini, raw' } }, { id: 'parmesan', label: 'Parmesan', swap: { 'Feta': 'Parmesan' } }] },
+      how: ['Soften the sliced onion and pepper in a wide pan for 6 to 8 minutes. Add garlic, cumin, paprika and a pinch of chili.', 'Pour in the marinara and simmer 5 minutes until it thickens. Stir the egg whites into the sauce.', 'Make wells, crack in the eggs, cover and cook 5 to 7 minutes until the whites set.', 'Crumble the feta over and scoop it up with toasted sourdough.'] },
     { id: 'sweet-potato-hash', effort: 'max', mins: 30, label: 'Sweet potato hash with eggs and sausage',
       parts: [['Sweet potato, baked', 300, 'carb'], ['Breakfast sausage, chicken or turkey (cooked)', 80, 'protein'], ['Egg, whole boiled', 100, 'protein'], ['Bell pepper, green', 80, 'veg'], ['Onion, raw', 50, 'veg'], ['Olive oil', 4, 'fat'], ['Brownberry 100% Whole Wheat bread (regular slice)', 43, 'carb']],
-      how: ['Dice the sweet potato small and microwave 4 minutes to give it a head start.', 'Brown the sausage in the oil, then add onion, pepper and the potato. Leave it alone between stirs so it crisps, about 10 minutes. Smoked paprika and salt.', 'Make gaps, crack in the eggs, cover until set. Toast on the side.'],
-      variants: [{ id: 'potato', label: 'Regular potato', swap: { 'Sweet potato, baked': 'Potato, baked w/ skin' } }, { id: 'turkey-bacon', label: 'Turkey bacon', swap: { 'Breakfast sausage, chicken or turkey (cooked)': 'Turkey bacon, cooked' } }, { id: 'ground-turkey', label: 'Ground turkey', swap: { 'Breakfast sausage, chicken or turkey (cooked)': 'Ground turkey 93%, cooked' } }] },
+      how: ['Dice the sweet potato small and microwave 4 minutes to give it a head start.', 'Brown the sausage in the oil, then add onion, pepper and the potato. Leave it alone between stirs so it crisps, about 10 minutes. Smoked paprika and salt.', 'Make gaps, crack in the eggs, cover until set. Toast on the side.'] },
     { id: 'french-toast', effort: 'max', mins: 25, label: 'French toast with berries and yogurt',
       parts: [['Sourdough bread, bakery loaf (generic)', 115, 'carb'], ['Egg, whole boiled', 100, 'protein'], ['Egg whites', 100, 'protein'], ['Milk, 2%', 60, 'fixed'], ['Strawberries', 150, 'fixed'], ['Greek yogurt, nonfat', 150, 'protein'], ['Maple syrup', 25, 'carb'], ['Butter', 5, 'fat']],
-      how: ['Whisk the eggs, whites and milk with cinnamon and vanilla. Soak thick slices of the bread for a minute a side.', 'Cook in the butter over medium heat, 3 minutes a side, until golden.', 'Top with the yogurt, sliced strawberries and syrup.'],
-      variants: [{ id: 'blueberry', label: 'Blueberries', swap: { 'Strawberries': 'Blueberries' } }, { id: 'banana-honey', label: 'Banana and honey', swap: { 'Strawberries': 'Banana', 'Maple syrup': 'Honey' } }, { id: 'white-bread', label: 'Soft white bread', swap: { 'Sourdough bread, bakery loaf (generic)': 'White bread' } }] },
+      how: ['Whisk the eggs, whites and milk with cinnamon and vanilla. Soak thick slices of the bread for a minute a side.', 'Cook in the butter over medium heat, 3 minutes a side, until golden.', 'Top with the yogurt, sliced strawberries and syrup.'] },
   ],
   lunch: [
     { id: 'turkey-sandwich', effort: 'min', mins: 5, label: 'Turkey and Swiss on sourdough, with an apple',
       parts: [['Turkey, sliced deli', 150, 'protein'], ['Sourdough bread, bakery loaf (generic)', 130, 'carb'], ['Swiss', 20, 'fat'], ['Romaine, raw', 30, 'veg'], ['Tomato, raw', 60, 'veg'], ['Apple', 180, 'carb']],
-      how: ['Build the sandwich: mustard, turkey, Swiss, tomato, romaine. Toast the bread first if you have a minute.'],
-      variants: [{ id: 'ham-cheddar', label: 'Ham and cheddar', swap: { 'Turkey, sliced deli': 'Ham, sliced deli', 'Swiss': 'Cheddar' } }, { id: 'wrap', label: 'As a wrap', swap: { 'Sourdough bread, bakery loaf (generic)': 'Flour tortilla' } }, { id: 'avocado', label: 'Avocado instead of Swiss', swap: { 'Swiss': 'Avocado' } }] },
+      how: ['Build the sandwich: mustard, turkey, Swiss, tomato, romaine. Toast the bread first if you have a minute.'] },
     { id: 'tuna-wrap', effort: 'min', mins: 5, label: 'Tuna and avocado wraps',
       parts: [['Tuna, canned in water', 130, 'protein'], ['Flour tortilla', 120, 'carb'], ['Apple', 180, 'carb'], ['Romaine, raw', 80, 'veg'], ['Avocado', 50, 'fat']],
-      how: ['Mash the avocado into the drained tuna with lemon, salt and pepper.', 'Spread on the tortillas, add romaine, roll. Apple on the side.'],
-      variants: [{ id: 'salmon', label: 'Salmon packet', swap: { 'Tuna, canned in water': 'Salmon packet, pink (Chicken of the Sea, 2.5 oz)' } }, { id: 'pita', label: 'In a pita', swap: { 'Flour tortilla': 'Pita, white' } }, { id: 'mayo-grapes', label: 'Classic mayo, with grapes', swap: { 'Avocado': 'Mayonnaise', 'Apple': 'Grapes' } }] },
+      how: ['Mash the avocado into the drained tuna with lemon, salt and pepper.', 'Spread on the tortillas, add romaine, roll. Apple on the side.'] },
     { id: 'chicken-bites-bowl', effort: 'min', mins: 6, label: 'Sweet and sour chicken rice bowl',
       parts: [['Tyson grilled chicken bites cup', 150, 'protein'], ['Jasmine rice, cooked', 340, 'carb'], ['Simply Asia Sichuan sweet & sour sauce', 40, 'fixed'], ['Broccoli, raw', 150, 'veg'], ['Sesame seeds', 6, 'fat']],
-      how: ['Microwave the rice and the broccoli (splash of water, covered, 2 to 3 minutes).', 'Heat the chicken bites, toss everything with the sauce, sesame seeds on top.'],
-      variants: [{ id: 'nuggets', label: 'Chicken nuggets', swap: { 'Tyson grilled chicken bites cup': 'Realgood lightly breaded chicken nuggets (20 oz bag)' } }, { id: 'shrimp', label: 'Shrimp', swap: { 'Tyson grilled chicken bites cup': 'Shrimp, cooked' } }, { id: 'edamame', label: 'Edamame instead of broccoli', swap: { 'Broccoli, raw': 'Edamame, cooked' } }] },
+      how: ['Microwave the rice and the broccoli (splash of water, covered, 2 to 3 minutes).', 'Heat the chicken bites, toss everything with the sauce, sesame seeds on top.'] },
     { id: 'burrito-bowl', effort: 'mid', mins: 15, label: 'Chicken burrito bowl',
       parts: [['Chicken breast, cooked', 130, 'protein'], ['White rice, cooked', 260, 'carb'], ['Black beans, cooked', 100, 'fixed'], ['Corn kernels, cooked', 60, 'fixed'], ['Romaine, raw', 50, 'veg'], ['Tomato, raw', 80, 'veg'], ['Avocado', 40, 'fat']],
-      how: ['Season the chicken with chili powder, cumin, garlic and salt. Sear 5 to 6 minutes a side, rest, then slice.', 'Warm the beans and corn together. Stir lime juice into the rice.', 'Build the bowl: rice, beans and corn, chicken, chopped romaine and tomato, avocado on top.'],
-      variants: [{ id: 'steak', label: 'Steak', swap: { 'Chicken breast, cooked': 'Sirloin steak, lean cooked' } }, { id: 'shrimp', label: 'Shrimp', swap: { 'Chicken breast, cooked': 'Shrimp, cooked' } }, { id: 'turkey-pinto', label: 'Ground turkey and pinto beans', swap: { 'Chicken breast, cooked': 'Ground turkey 93%, cooked', 'Black beans, cooked': 'Pinto beans, cooked' } }, { id: 'quinoa', label: 'Quinoa base', swap: { 'White rice, cooked': 'Quinoa, cooked' } }] },
+      how: ['Season the chicken with chili powder, cumin, garlic and salt. Sear 5 to 6 minutes a side, rest, then slice.', 'Warm the beans and corn together. Stir lime juice into the rice.', 'Build the bowl: rice, beans and corn, chicken, chopped romaine and tomato, avocado on top.'] },
     { id: 'greek-pitas', effort: 'mid', mins: 15, label: 'Greek chicken pitas',
       parts: [['Chicken breast, cooked', 130, 'protein'], ['Pita, white', 120, 'carb'], ['Hummus', 40, 'fixed'], ['Greek yogurt, nonfat', 60, 'fixed'], ['Cucumber', 80, 'veg'], ['Tomato, raw', 80, 'veg'], ['Feta', 18, 'fat'], ['Grapes', 150, 'carb']],
-      how: ['Toss the chicken in oregano, garlic, lemon and salt. Cook in a hot pan 5 to 6 minutes a side, then slice.', 'Grate a little of the cucumber into the yogurt with garlic and lemon for a quick tzatziki. Dice the rest with the tomato.', 'Warm the pitas, spread the hummus, fill with chicken, salad, tzatziki and feta. Grapes on the side.'],
-      variants: [{ id: 'pork', label: 'Pork tenderloin', swap: { 'Chicken breast, cooked': 'Pork tenderloin, cooked' } }, { id: 'thigh', label: 'Chicken thigh', swap: { 'Chicken breast, cooked': 'Chicken thigh, skinless, cooked' } }, { id: 'wrap', label: 'As a wrap', swap: { 'Pita, white': 'Flour tortilla' } }] },
+      how: ['Toss the chicken in oregano, garlic, lemon and salt. Cook in a hot pan 5 to 6 minutes a side, then slice.', 'Grate a little of the cucumber into the yogurt with garlic and lemon for a quick tzatziki. Dice the rest with the tomato.', 'Warm the pitas, spread the hummus, fill with chicken, salad, tzatziki and feta. Grapes on the side.'] },
     { id: 'turkey-tacos', effort: 'mid', mins: 15, label: 'Turkey tacos',
       parts: [['Ground turkey 93%, cooked', 130, 'protein'], ['Corn tortilla', 120, 'carb'], ['Black beans, cooked', 100, 'fixed'], ['Romaine, raw', 40, 'veg'], ['Tomato, raw', 80, 'veg'], ['Cheddar', 15, 'fat'], ['Mango', 150, 'carb']],
-      how: ['Brown the turkey, breaking it up. Add chili powder, cumin, paprika, garlic and a splash of water, and simmer 3 minutes.', 'Warm the beans. Char the tortillas in a dry pan, about 30 seconds a side.', 'Fill with turkey, beans, shredded romaine, tomato and cheddar. Lime over the top, mango on the side.'],
-      variants: [{ id: 'beef', label: 'Ground beef', swap: { 'Ground turkey 93%, cooked': 'Ground beef 93%, cooked' } }, { id: 'shrimp', label: 'Shrimp', swap: { 'Ground turkey 93%, cooked': 'Shrimp, cooked' } }, { id: 'flour', label: 'Flour tortillas', swap: { 'Corn tortilla': 'Flour tortilla' } }, { id: 'avocado', label: 'Avocado instead of cheddar', swap: { 'Cheddar': 'Avocado' } }] },
+      how: ['Brown the turkey, breaking it up. Add chili powder, cumin, paprika, garlic and a splash of water, and simmer 3 minutes.', 'Warm the beans. Char the tortillas in a dry pan, about 30 seconds a side.', 'Fill with turkey, beans, shredded romaine, tomato and cheddar. Lime over the top, mango on the side.'] },
     { id: 'salmon-bowl', effort: 'max', mins: 30, label: 'Glazed salmon rice bowl',
       parts: [['Salmon (farmed), cooked', 115, 'protein'], ['Jasmine rice, cooked', 330, 'carb'], ['Honey', 10, 'carb'], ['Edamame, cooked', 60, 'fixed'], ['Cucumber', 80, 'veg'], ['Carrots, raw', 50, 'veg'], ['Avocado', 25, 'fat']],
-      how: ['Whisk the honey with soy sauce, grated ginger and garlic. Marinate the salmon 10 minutes while the rice cooks.', 'Roast or air-fry the salmon at 400°F for 10 to 12 minutes, brushing with the leftover glaze halfway through.', 'Slice the cucumber, shred the carrot. Bowl up rice, edamame, vegetables, salmon and avocado.'],
-      variants: [{ id: 'shrimp', label: 'Shrimp', swap: { 'Salmon (farmed), cooked': 'Shrimp, cooked' } }, { id: 'trout', label: 'Trout', swap: { 'Salmon (farmed), cooked': 'Rainbow trout, cooked' } }, { id: 'tofu', label: 'Crispy tofu', swap: { 'Salmon (farmed), cooked': 'Tofu, firm' } }] },
+      how: ['Whisk the honey with soy sauce, grated ginger and garlic. Marinate the salmon 10 minutes while the rice cooks.', 'Roast or air-fry the salmon at 400°F for 10 to 12 minutes, brushing with the leftover glaze halfway through.', 'Slice the cucumber, shred the carrot. Bowl up rice, edamame, vegetables, salmon and avocado.'] },
     { id: 'shawarma-plate', effort: 'max', mins: 35, label: 'Chicken shawarma plate',
       parts: [['Chicken thigh, skinless, cooked', 140, 'protein'], ['Couscous, cooked', 240, 'carb'], ['Pita, white', 60, 'carb'], ['Chickpeas, cooked', 70, 'fixed'], ['Hummus', 35, 'fixed'], ['Cucumber', 80, 'veg'], ['Tomato, raw', 80, 'veg'], ['Olive oil', 3, 'fat']],
-      how: ['Coat the chicken in cumin, paprika, coriander, turmeric, garlic and lemon. Rest at least 10 minutes.', 'Roast at 425°F for 20 minutes until the edges char, then slice thin.', 'Crisp the chickpeas in the oil with a little paprika. Fluff the couscous with lemon.', 'Plate couscous, chicken, chickpeas, cucumber and tomato, with hummus and warm pita.'],
-      variants: [{ id: 'breast', label: 'Chicken breast (leaner)', swap: { 'Chicken thigh, skinless, cooked': 'Chicken breast, cooked' } }, { id: 'bulgur', label: 'Bulgur', swap: { 'Couscous, cooked': 'Bulgur, cooked' } }, { id: 'steak', label: 'Steak', swap: { 'Chicken thigh, skinless, cooked': 'Sirloin steak, lean cooked' } }] },
+      how: ['Coat the chicken in cumin, paprika, coriander, turmeric, garlic and lemon. Rest at least 10 minutes.', 'Roast at 425°F for 20 minutes until the edges char, then slice thin.', 'Crisp the chickpeas in the oil with a little paprika. Fluff the couscous with lemon.', 'Plate couscous, chicken, chickpeas, cucumber and tomato, with hummus and warm pita.'] },
     { id: 'shrimp-noodles', effort: 'max', mins: 30, label: 'Shrimp rice noodles with peanuts',
       parts: [['Shrimp, cooked', 150, 'protein'], ['Rice noodles, cooked', 340, 'carb'], ['Simply Asia Sichuan sweet & sour sauce', 40, 'fixed'], ['Egg, whole boiled', 50, 'fixed'], ['Carrots, raw', 60, 'veg'], ['Cabbage, raw', 80, 'veg'], ['Peanuts', 12, 'fat']],
-      how: ['Soak or boil the noodles as the pack says. Shred the cabbage and carrot.', 'Stir-fry the shrimp with garlic in a very hot pan for 2 minutes, then push aside and scramble the egg.', 'Add vegetables, noodles and sauce with a splash of soy and lime. Toss for 2 minutes.', 'Crushed peanuts on top.'],
-      variants: [{ id: 'chicken', label: 'Chicken', swap: { 'Shrimp, cooked': 'Chicken breast, cooked' } }, { id: 'tofu', label: 'Tofu', swap: { 'Shrimp, cooked': 'Tofu, firm' } }, { id: 'cashew', label: 'Cashews', swap: { 'Peanuts': 'Cashews' } }] },
+      how: ['Soak or boil the noodles as the pack says. Shred the cabbage and carrot.', 'Stir-fry the shrimp with garlic in a very hot pan for 2 minutes, then push aside and scramble the egg.', 'Add vegetables, noodles and sauce with a splash of soy and lime. Toss for 2 minutes.', 'Crushed peanuts on top.'] },
   ],
   dinner: [
     { id: 'nuggets-potato', effort: 'min', mins: 10, label: 'Chicken nuggets, baked potato and green beans',
       parts: [['Realgood lightly breaded chicken nuggets (20 oz bag)', 170, 'protein'], ['Potato, baked w/ skin', 420, 'carb'], ['BBQ sauce', 30, 'fixed'], ['Green beans, raw', 150, 'veg'], ['Butter', 6, 'fat']],
-      how: ['Prick the potato and microwave 6 to 8 minutes, turning once.', 'Air-fry or microwave the nuggets. Steam the green beans in the microwave.', 'Butter and salt on the potato, BBQ sauce for dipping.'],
-      variants: [{ id: 'sweet-potato', label: 'Sweet potato', swap: { 'Potato, baked w/ skin': 'Sweet potato, baked' } }, { id: 'grilled', label: 'Grilled chicken bites', swap: { 'Realgood lightly breaded chicken nuggets (20 oz bag)': 'Tyson grilled chicken bites cup' } }, { id: 'ketchup-broccoli', label: 'Ketchup and broccoli', swap: { 'BBQ sauce': 'Ketchup', 'Green beans, raw': 'Broccoli, raw' } }] },
+      how: ['Prick the potato and microwave 6 to 8 minutes, turning once.', 'Air-fry or microwave the nuggets. Steam the green beans in the microwave.', 'Butter and salt on the potato, BBQ sauce for dipping.'] },
     { id: 'protein-pasta', effort: 'min', mins: 12, label: 'Protein pasta marinara with chicken',
       parts: [['Barilla Protein+ pasta, DRY', 120, 'carb'], ['Tyson grilled chicken bites cup', 60, 'protein'], ['Marinara sauce', 200, 'fixed'], ['Spinach, raw', 60, 'veg'], ['Parmesan', 10, 'fat']],
-      how: ['Boil the pasta. Weigh it dry, before cooking.', 'Warm the marinara with the chicken. Stir in the spinach until it wilts.', 'Toss with the drained pasta. Parmesan on top.'],
-      variants: [{ id: 'banza', label: 'Chickpea pasta', swap: { 'Barilla Protein+ pasta, DRY': 'Banza chickpea pasta, DRY' } }, { id: 'tuna', label: 'Tuna', swap: { 'Tyson grilled chicken bites cup': 'Tuna, canned in water' } }, { id: 'mozzarella', label: 'Mozzarella', swap: { 'Parmesan': 'Mozzarella, part-skim' } }] },
+      how: ['Boil the pasta. Weigh it dry, before cooking.', 'Warm the marinara with the chicken. Stir in the spinach until it wilts.', 'Toss with the drained pasta. Parmesan on top.'] },
     { id: 'bbq-wraps', effort: 'min', mins: 8, label: 'BBQ chicken wraps',
       parts: [['Tyson grilled chicken bites cup', 150, 'protein'], ['Flour tortilla', 130, 'carb'], ['BBQ sauce', 30, 'fixed'], ['Corn kernels, cooked', 80, 'fixed'], ['Cabbage, raw', 60, 'veg'], ['Cheddar', 15, 'fat'], ['Pineapple', 180, 'carb']],
-      how: ['Heat the chicken and toss it in the BBQ sauce.', 'Fill the tortillas with chicken, corn, shredded cabbage and cheddar. Roll. Pineapple on the side.'],
-      variants: [{ id: 'nuggets', label: 'Chicken nuggets', swap: { 'Tyson grilled chicken bites cup': 'Realgood lightly breaded chicken nuggets (20 oz bag)' } }, { id: 'pita', label: 'In pitas', swap: { 'Flour tortilla': 'Pita, white' } }, { id: 'avocado-mango', label: 'Avocado and mango', swap: { 'Cheddar': 'Avocado', 'Pineapple': 'Mango' } }] },
+      how: ['Heat the chicken and toss it in the BBQ sauce.', 'Fill the tortillas with chicken, corn, shredded cabbage and cheddar. Roll. Pineapple on the side.'] },
     { id: 'beef-pasta', effort: 'mid', mins: 20, label: 'Spaghetti bolognese',
       parts: [['Ground beef 93%, cooked', 110, 'protein'], ['Pasta, cooked', 350, 'carb'], ['Marinara sauce', 180, 'fixed'], ['Onion, raw', 40, 'veg'], ['Mushrooms, white', 60, 'veg'], ['Parmesan', 8, 'fat'], ['Olive oil', 3, 'fat']],
-      how: ['Soften the chopped onion and mushrooms in the oil. Add the beef and brown it hard.', 'Add garlic, oregano and the marinara. Simmer 10 minutes while the pasta boils.', 'Toss the pasta through the sauce with a splash of pasta water. Parmesan on top.'],
-      variants: [{ id: 'turkey', label: 'Ground turkey', swap: { 'Ground beef 93%, cooked': 'Ground turkey 93%, cooked' } }, { id: 'rich', label: 'Richer 85% beef', swap: { 'Ground beef 93%, cooked': 'Ground beef 85%, cooked' } }, { id: 'whole-wheat', label: 'Whole wheat pasta', swap: { 'Pasta, cooked': 'Whole wheat pasta, cooked' } }] },
+      how: ['Soften the chopped onion and mushrooms in the oil. Add the beef and brown it hard.', 'Add garlic, oregano and the marinara. Simmer 10 minutes while the pasta boils.', 'Toss the pasta through the sauce with a splash of pasta water. Parmesan on top.'] },
     { id: 'steak-sweet-potato', effort: 'mid', mins: 20, label: 'Steak, sweet potato and asparagus',
       parts: [['Sirloin steak, lean cooked', 130, 'protein'], ['Sweet potato, baked', 420, 'carb'], ['Asparagus, raw', 150, 'veg'], ['Butter', 7, 'fat']],
-      how: ['Microwave the sweet potato 6 to 8 minutes, turning once.', 'Salt the steak well. Sear in a very hot pan 3 to 4 minutes a side, then rest 5 minutes.', 'Cook the asparagus in the steak pan for 3 minutes. Butter on the potato, slice the steak across the grain.'],
-      variants: [{ id: 'pork', label: 'Pork tenderloin', swap: { 'Sirloin steak, lean cooked': 'Pork tenderloin, cooked' } }, { id: 'potato-beans', label: 'Baked potato and green beans', swap: { 'Sweet potato, baked': 'Potato, baked w/ skin', 'Asparagus, raw': 'Green beans, raw' } }, { id: 'chicken', label: 'Chicken thigh', swap: { 'Sirloin steak, lean cooked': 'Chicken thigh, skinless, cooked' } }] },
+      how: ['Microwave the sweet potato 6 to 8 minutes, turning once.', 'Salt the steak well. Sear in a very hot pan 3 to 4 minutes a side, then rest 5 minutes.', 'Cook the asparagus in the steak pan for 3 minutes. Butter on the potato, slice the steak across the grain.'] },
     { id: 'chicken-stir-fry', effort: 'mid', mins: 20, label: 'Chicken stir-fry with jasmine rice',
       parts: [['Chicken breast, cooked', 130, 'protein'], ['Jasmine rice, cooked', 380, 'carb'], ['Simply Asia Sichuan sweet & sour sauce', 45, 'fixed'], ['Broccoli, raw', 120, 'veg'], ['Bell pepper, red', 80, 'veg'], ['Carrots, raw', 50, 'veg'], ['Avocado oil', 6, 'fat'], ['Cashews', 10, 'fat']],
-      how: ['Slice the chicken thin. Stir-fry in half the oil over high heat until browned, then take it out.', 'Add the rest of the oil and the vegetables. Cook 3 to 4 minutes so they keep some bite. Garlic and ginger for the last 30 seconds.', 'Return the chicken, add the sauce and a splash of soy, toss. Serve over rice with the cashews.'],
-      variants: [{ id: 'shrimp', label: 'Shrimp', swap: { 'Chicken breast, cooked': 'Shrimp, cooked' } }, { id: 'beef', label: 'Beef', swap: { 'Chicken breast, cooked': 'Sirloin steak, lean cooked' } }, { id: 'noodles', label: 'Rice noodles', swap: { 'Jasmine rice, cooked': 'Rice noodles, cooked' } }, { id: 'tofu', label: 'Tofu', swap: { 'Chicken breast, cooked': 'Tofu, firm' } }] },
+      how: ['Slice the chicken thin. Stir-fry in half the oil over high heat until browned, then take it out.', 'Add the rest of the oil and the vegetables. Cook 3 to 4 minutes so they keep some bite. Garlic and ginger for the last 30 seconds.', 'Return the chicken, add the sauce and a splash of soy, toss. Serve over rice with the cashews.'] },
     { id: 'coconut-curry', effort: 'max', mins: 40, label: 'Coconut chicken curry with rice',
       parts: [['Chicken thigh, skinless, cooked', 130, 'protein'], ['Jasmine rice, cooked', 380, 'carb'], ['Coconut milk, canned (full fat)', 50, 'fat'], ['Chickpeas, cooked', 70, 'fixed'], ['Onion, raw', 50, 'veg'], ['Bell pepper, red', 60, 'veg'], ['Spinach, raw', 60, 'veg']],
-      how: ['Brown the chicken pieces, then take them out. Soften the onion and pepper in the same pot.', 'Add garlic, ginger and curry powder and cook 1 minute. Pour in the coconut milk and a cup of stock.', 'Return the chicken with the chickpeas. Simmer 20 minutes until it thickens.', 'Stir in the spinach to wilt. Lime and salt to taste. Serve over the rice.'],
-      variants: [{ id: 'shrimp', label: 'Shrimp', swap: { 'Chicken thigh, skinless, cooked': 'Shrimp, cooked' } }, { id: 'breast', label: 'Chicken breast (leaner)', swap: { 'Chicken thigh, skinless, cooked': 'Chicken breast, cooked' } }, { id: 'tofu', label: 'Tofu', swap: { 'Chicken thigh, skinless, cooked': 'Tofu, firm' } }, { id: 'lentil', label: 'Lentils instead of chickpeas', swap: { 'Chickpeas, cooked': 'Lentils, cooked' } }] },
+      how: ['Brown the chicken pieces, then take them out. Soften the onion and pepper in the same pot.', 'Add garlic, ginger and curry powder and cook 1 minute. Pour in the coconut milk and a cup of stock.', 'Return the chicken with the chickpeas. Simmer 20 minutes until it thickens.', 'Stir in the spinach to wilt. Lime and salt to taste. Serve over the rice.'] },
     { id: 'salmon-rice', effort: 'max', mins: 35, label: 'Lemon salmon, roast potatoes and asparagus',
       parts: [['Salmon (farmed), cooked', 125, 'protein'], ['Potato, baked w/ skin', 430, 'carb'], ['Sourdough bread, bakery loaf (generic)', 45, 'carb'], ['Asparagus, raw', 150, 'veg'], ['Olive oil', 4, 'fat']],
-      how: ['Cut the potatoes into chunks, toss in the oil with salt and rosemary, and roast at 425°F for 30 minutes, turning once.', 'Season the salmon with lemon zest, garlic, dill and pepper. Add it and the asparagus to the tray for the last 12 minutes.', 'Squeeze lemon over everything. Sourdough on the side.'],
-      variants: [{ id: 'trout', label: 'Trout', swap: { 'Salmon (farmed), cooked': 'Rainbow trout, cooked' } }, { id: 'cod', label: 'Cod (leaner)', swap: { 'Salmon (farmed), cooked': 'Cod, cooked' } }, { id: 'sweet-potato', label: 'Sweet potato', swap: { 'Potato, baked w/ skin': 'Sweet potato, baked' } }] },
+      how: ['Cut the potatoes into chunks, toss in the oil with salt and rosemary, and roast at 425°F for 30 minutes, turning once.', 'Season the salmon with lemon zest, garlic, dill and pepper. Add it and the asparagus to the tray for the last 12 minutes.', 'Squeeze lemon over everything. Sourdough on the side.'] },
     { id: 'chicken-parm', effort: 'max', mins: 40, label: 'Chicken parmesan with spaghetti',
       parts: [['Chicken breast, cooked', 125, 'protein'], ['Pasta, cooked', 330, 'carb'], ['Flour, all-purpose', 15, 'fixed'], ['Marinara sauce', 160, 'fixed'], ['Mozzarella, part-skim', 25, 'fat'], ['Parmesan', 6, 'fixed'], ['Arugula, raw', 30, 'veg'], ['Olive oil', 4, 'fat']],
-      how: ['Butterfly the chicken and pound it thin. Dredge in the flour mixed with half the parmesan, salt and oregano.', 'Pan-fry in the oil 3 minutes a side until golden.', 'Move to a tray, spoon marinara over, top with mozzarella and the rest of the parmesan. Bake at 425°F for 10 minutes until it bubbles.', 'Toss the spaghetti in the remaining marinara. Arugula on the side.'],
-      variants: [{ id: 'turkey', label: 'Turkey cutlet', swap: { 'Chicken breast, cooked': 'Turkey breast, cooked' } }, { id: 'pork', label: 'Pork cutlet', swap: { 'Chicken breast, cooked': 'Pork tenderloin, cooked' } }, { id: 'whole-wheat', label: 'Whole wheat pasta', swap: { 'Pasta, cooked': 'Whole wheat pasta, cooked' } }] },
+      how: ['Butterfly the chicken and pound it thin. Dredge in the flour mixed with half the parmesan, salt and oregano.', 'Pan-fry in the oil 3 minutes a side until golden.', 'Move to a tray, spoon marinara over, top with mozzarella and the rest of the parmesan. Bake at 425°F for 10 minutes until it bubbles.', 'Toss the spaghetti in the remaining marinara. Arugula on the side.'] },
   ],
   snack_1: [
     { id: 'skyr-bowl', effort: 'min', mins: 2, label: 'Skyr, blueberries and oats',
       parts: [['Skyr, plain', 200, 'protein'], ['Blueberries', 100, 'carb'], ['Oats, dry', 30, 'carb']],
-      how: ['Stir the oats into the skyr, berries on top.'],
-      variants: [{ id: 'strawberry', label: 'Strawberries', swap: { 'Blueberries': 'Strawberries' } }, { id: 'greek', label: 'Greek yogurt', swap: { 'Skyr, plain': 'Greek yogurt, nonfat' } }, { id: 'granola', label: 'Granola instead of oats', swap: { 'Oats, dry': 'Granola (typical)' } }] },
+      how: ['Stir the oats into the skyr, berries on top.'] },
     { id: 'cottage-fruit', effort: 'min', mins: 2, label: 'Cottage cheese, pineapple and rice cakes',
       parts: [['Cottage cheese, 2%', 200, 'protein'], ['Pineapple', 150, 'carb'], ['Rice cakes', 20, 'carb']],
-      how: ['Cottage cheese in a bowl with the pineapple. Rice cakes on the side.'],
-      variants: [{ id: 'peach', label: 'Peaches', swap: { 'Pineapple': 'Peach' } }, { id: 'melon', label: 'Cantaloupe', swap: { 'Pineapple': 'Cantaloupe' } }, { id: 'apple-cinnamon', label: 'Apple cinnamon rice cakes', swap: { 'Rice cakes': 'Rice cake, apple cinnamon (Quaker)' } }] },
+      how: ['Cottage cheese in a bowl with the pineapple. Rice cakes on the side.'] },
     { id: 'shake-banana', effort: 'min', mins: 2, label: 'Protein shake and a banana',
       parts: [['Whey protein powder', 30, 'protein'], ['Milk, skim', 300, 'fixed'], ['Banana', 120, 'carb']],
-      how: ['Shake the whey with the milk. Eat the banana.'],
-      variants: [{ id: 'apple', label: 'Apple', swap: { 'Banana': 'Apple' } }, { id: 'dates', label: 'Dates', swap: { 'Banana': 'Medjool dates' } }, { id: 'soy', label: 'Soy milk', swap: { 'Milk, skim': 'Soy milk, unsweetened' } }] },
+      how: ['Shake the whey with the milk. Eat the banana.'] },
     { id: 'berry-smoothie', effort: 'mid', mins: 5, label: 'Strawberry banana protein smoothie',
       parts: [['Whey protein powder', 25, 'protein'], ['Milk, skim', 250, 'fixed'], ['Strawberries', 150, 'fixed'], ['Banana', 90, 'carb'], ['Oats, dry', 15, 'carb']],
-      how: ['Blend everything with a handful of ice until smooth. Frozen fruit makes it thicker.'],
-      variants: [{ id: 'mango', label: 'Mango', swap: { 'Strawberries': 'Mango' } }, { id: 'blueberry', label: 'Blueberry', swap: { 'Strawberries': 'Blueberries' } }, { id: 'pineapple', label: 'Pineapple', swap: { 'Banana': 'Pineapple' } }] },
+      how: ['Blend everything with a handful of ice until smooth. Frozen fruit makes it thicker.'] },
     { id: 'turkey-pita', effort: 'mid', mins: 5, label: 'Turkey and hummus pita with grapes',
       parts: [['Turkey, sliced deli', 100, 'protein'], ['Pita, white', 45, 'carb'], ['Hummus', 12, 'fixed'], ['Cucumber', 60, 'veg'], ['Grapes', 110, 'carb']],
-      how: ['Warm the pita, spread the hummus, stuff with turkey and sliced cucumber. Grapes on the side.'],
-      variants: [{ id: 'chicken', label: 'Chicken', swap: { 'Turkey, sliced deli': 'Tyson grilled chicken bites cup' } }, { id: 'tuna', label: 'Tuna', swap: { 'Turkey, sliced deli': 'Tuna, canned in water' } }, { id: 'apple', label: 'Apple', swap: { 'Grapes': 'Apple' } }] },
+      how: ['Warm the pita, spread the hummus, stuff with turkey and sliced cucumber. Grapes on the side.'] },
     { id: 'apple-oats', effort: 'mid', mins: 6, label: 'Apple cinnamon protein oats',
       parts: [['Whey protein powder', 25, 'protein'], ['Oats, dry', 30, 'carb'], ['Apple', 120, 'carb'], ['Milk, skim', 120, 'fixed']],
-      how: ['Microwave the oats with the milk and a splash of water for 2 minutes.', 'Stir in the whey once it has cooled a little, so it does not clump. Top with diced apple and cinnamon.'],
-      variants: [{ id: 'banana', label: 'Banana', swap: { 'Apple': 'Banana' } }, { id: 'peach', label: 'Peach', swap: { 'Apple': 'Peach' } }, { id: 'cream-of-rice', label: 'Cream of Rice', swap: { 'Oats, dry': 'Cream of Rice, dry' } }] },
+      how: ['Microwave the oats with the milk and a splash of water for 2 minutes.', 'Stir in the whey once it has cooled a little, so it does not clump. Top with diced apple and cinnamon.'] },
     { id: 'pancake-stack', effort: 'max', mins: 15, label: 'Blueberry protein pancake stack',
       parts: [['Protein pancake mix, dry', 45, 'carb'], ['Egg whites', 90, 'protein'], ['Greek yogurt, nonfat', 80, 'protein'], ['Blueberries', 80, 'fixed'], ['Maple syrup', 10, 'carb']],
-      how: ['Whisk the pancake mix with the egg whites and enough water to loosen. Fold in half the blueberries.', 'Cook small pancakes in a non-stick pan over medium heat, 2 minutes a side.', 'Stack with the yogurt, the rest of the berries and the syrup.'],
-      variants: [{ id: 'strawberry', label: 'Strawberries', swap: { 'Blueberries': 'Strawberries' } }, { id: 'honey', label: 'Honey', swap: { 'Maple syrup': 'Honey' } }, { id: 'skyr', label: 'Skyr', swap: { 'Greek yogurt, nonfat': 'Skyr, plain' } }] },
+      how: ['Whisk the pancake mix with the egg whites and enough water to loosen. Fold in half the blueberries.', 'Cook small pancakes in a non-stick pan over medium heat, 2 minutes a side.', 'Stack with the yogurt, the rest of the berries and the syrup.'] },
     { id: 'baked-oats', effort: 'max', mins: 25, label: 'Chocolate banana baked oats',
       parts: [['Oats, dry', 35, 'carb'], ['Whey protein powder', 20, 'protein'], ['Egg whites', 60, 'protein'], ['Banana', 80, 'carb'], ['Cocoa powder, unsweetened', 5, 'fixed'], ['Raspberries', 60, 'fixed']],
-      how: ['Mash the banana and mix with the oats, whey, egg whites, cocoa and a pinch of baking powder. Loosen with a splash of water.', 'Pour into a small oven dish and bake at 350°F for 18 to 20 minutes until just set.', 'Raspberries on top.'],
-      variants: [{ id: 'blueberry', label: 'Blueberries', swap: { 'Raspberries': 'Blueberries' } }, { id: 'cream-of-rice', label: 'Cream of Rice base', swap: { 'Oats, dry': 'Cream of Rice, dry' } }, { id: 'strawberry', label: 'Strawberries', swap: { 'Raspberries': 'Strawberries' } }] },
+      how: ['Mash the banana and mix with the oats, whey, egg whites, cocoa and a pinch of baking powder. Loosen with a splash of water.', 'Pour into a small oven dish and bake at 350°F for 18 to 20 minutes until just set.', 'Raspberries on top.'] },
     { id: 'mini-quesadilla', effort: 'max', mins: 15, label: 'Chicken quesadilla with mango',
       parts: [['Chicken breast, cooked', 65, 'protein'], ['Corn tortilla', 55, 'carb'], ['Mozzarella, part-skim', 12, 'fixed'], ['Tomato, raw', 60, 'veg'], ['Mango', 100, 'carb']],
-      how: ['Shred or dice the chicken and season with cumin, chili and lime.', 'Lay a tortilla in a dry pan, add chicken, mozzarella and diced tomato, and top with a second tortilla.', 'Cook 2 minutes a side until crisp and the cheese melts. Cut into wedges. Mango on the side.'],
-      variants: [{ id: 'shrimp', label: 'Shrimp', swap: { 'Chicken breast, cooked': 'Shrimp, cooked' } }, { id: 'turkey', label: 'Turkey', swap: { 'Chicken breast, cooked': 'Turkey breast, cooked' } }, { id: 'pineapple', label: 'Pineapple', swap: { 'Mango': 'Pineapple' } }] },
+      how: ['Shred or dice the chicken and season with cumin, chili and lime.', 'Lay a tortilla in a dry pan, add chicken, mozzarella and diced tomato, and top with a second tortilla.', 'Cook 2 minutes a side until crisp and the cheese melts. Cut into wedges. Mango on the side.'] },
   ],
   snack_2: [
     { id: 'ricecake-pb', mins: 3, label: 'Rice cakes, peanut butter and banana',
       parts: [['Rice cake, lightly salted (Quaker)', 36, 'carb'], ['Banana', 120, 'carb'], ['Peanut butter', 20, 'fat'], ['Almonds', 15, 'fat']],
-      how: ['Peanut butter on the rice cakes, sliced banana on top, almonds on the side.'],
-      variants: [{ id: 'almond-butter', label: 'Almond butter', swap: { 'Peanut butter': 'Almond butter' } }, { id: 'honey', label: 'Honey instead of banana', swap: { 'Banana': 'Honey' } }, { id: 'apple-cinnamon', label: 'Apple cinnamon rice cakes', swap: { 'Rice cake, lightly salted (Quaker)': 'Rice cake, apple cinnamon (Quaker)' } }] },
+      how: ['Peanut butter on the rice cakes, sliced banana on top, almonds on the side.'] },
     { id: 'yogurt-nuts', mins: 3, label: 'Yogurt, honey, apple and walnuts',
       parts: [['Greek yogurt, 2%', 150, 'protein'], ['Honey', 15, 'carb'], ['Apple', 150, 'carb'], ['Walnuts', 20, 'fat']],
-      how: ['Dice the apple into the yogurt, drizzle the honey, walnuts on top.'],
-      variants: [{ id: 'pecan-maple', label: 'Pecans and maple', swap: { 'Walnuts': 'Pecans', 'Honey': 'Maple syrup' } }, { id: 'pear', label: 'Pear', swap: { 'Apple': 'Pear' } }, { id: 'pistachio', label: 'Pistachios', swap: { 'Walnuts': 'Pistachios' } }] },
+      how: ['Dice the apple into the yogurt, drizzle the honey, walnuts on top.'] },
     { id: 'toast-almond', mins: 4, label: 'Almond butter toast with grapes',
       parts: [['Whole wheat bread', 60, 'carb'], ['Grapes', 150, 'carb'], ['Almond butter', 20, 'fat']],
-      how: ['Toast the bread, spread the almond butter. Grapes on the side.'],
-      variants: [{ id: 'pb-banana', label: 'Peanut butter and banana', swap: { 'Almond butter': 'Peanut butter', 'Grapes': 'Banana' } }, { id: 'sourdough', label: 'Sourdough', swap: { 'Whole wheat bread': 'Sourdough bread, bakery loaf (generic)' } }, { id: 'avocado', label: 'Avocado toast', swap: { 'Almond butter': 'Avocado' } }] },
+      how: ['Toast the bread, spread the almond butter. Grapes on the side.'] },
   ],
 };
-// Swap a recipe's foods for a named variation. Flexible parts start from the
-// grams that carry the same main macro; fixed and veg parts keep their grams.
-function mealApplyVariant(option, variantId, ix) {
-  const v = (option.variants || []).find((x) => x.id === variantId);
-  if (!v) return option;
+// The Interchangeable Foods Database: tier CSVs with Food A, Food B and how
+// much B replaces A. Indexed both ways; a pair in two tiers keeps the tighter.
+// Tier 1 = same dish, 2 = same macros in a different role, 3 = looser.
+function mealSwapIndex(tiers) {
+  const out = {};
+  const add = (a, b, ratio, tier) => {
+    out[a] = out[a] || {};
+    if (!out[a][b] || out[a][b].tier > tier) out[a][b] = { food: b, ratio, tier };
+  };
+  for (const [tier, text] of tiers) {
+    for (const r of mealCsvRows(text).slice(1)) {
+      const a = (r[0] || '').trim(), b = (r[1] || '').trim(); let ratio = parseFloat(r[2]);
+      if (!a || !b || !(ratio > 0)) continue;
+      if (ratio > 10) ratio /= 100; // the header says per 100 g; the sheet stores grams of B per gram of A
+      add(a, b, ratio, tier); add(b, a, 1 / ratio, tier);
+    }
+  }
+  return out;
+}
+const mealShortName = (name) => String(name).replace(/\s*\(.*\)$/, '').replace(/,[^,]*\bcooked$/i, '').replace(/,\s*(raw|plain|skinless|soft)$/i, '');
+// Variation chips for a recipe: the Tier 1 partners of its foods (vegetables
+// are left to tap-to-swap so the row stays short), a few per food.
+function mealTier1Chips(option, swapIx, ix, perFood = 4) {
+  const have = new Set(option.parts.map((p) => p[0])); const chips = [];
+  for (const [food, , kind] of option.parts) {
+    if (kind === 'veg') continue;
+    const partners = Object.values(swapIx?.[food] || {}).filter((p) => p.tier === 1 && ix[p.food] && !have.has(p.food));
+    for (const p of partners.slice(0, perFood)) { have.add(p.food); chips.push({ from: food, to: p.food, label: mealShortName(p.food) }); } // have.add: offer each food once
+  }
+  return chips;
+}
+// Apply chosen swaps ({ from: to }) to a recipe. The new food starts at the
+// database's portion ratio (or, with no pair, the grams that carry the same
+// main macro); the recipe is then sized again from scratch.
+function mealApplyVariant(option, swaps, ix, swapIx) {
+  const picked = Object.entries(swaps || {}).filter(([from, to]) => to && ix[to] && option.parts.some((p) => p[0] === from) && !option.parts.some((p) => p[0] === to));
+  if (!picked.length) return option;
+  const map = Object.fromEntries(picked);
   const macroOf = { protein: 'protein', carb: 'carbs', fat: 'fat' };
   const parts = option.parts.map(([food, grams, kind]) => {
-    const to = v.swap[food];
-    if (!to || !ix[to] || !ix[food]) return [food, grams, kind];
-    const m = macroOf[kind];
-    const g = m && ix[to][m] > 0 && ix[food][m] > 0 ? grams * Math.min(4, Math.max(0.2, ix[food][m] / ix[to][m])) : grams;
-    return [to, g, kind];
+    const to = map[food];
+    if (!to) return [food, grams, kind];
+    const pair = swapIx?.[food]?.[to]; const m = macroOf[kind];
+    const ratio = pair ? pair.ratio : (m && ix[to][m] > 0 && ix[food][m] > 0 ? Math.min(4, Math.max(0.2, ix[food][m] / ix[to][m])) : 1);
+    return [to, grams * ratio, kind];
   });
-  return { ...option, parts, variant: v.id, variantLabel: v.label };
+  return { ...option, parts, swaps: map, variantLabel: picked.map(([, to]) => mealShortName(to)).join(', ') };
 }
 const MEAL_SCALE = { protein: [0.5, 2.2], carb: [0.15, 2.4], fat: [0, 3] };
 
@@ -19792,11 +19792,11 @@ function mealSizeOption(option, want, ix) {
     const lim = (v, n) => Math.max(-n, Math.min(n, v));
     kept = mealSolveOption(option, { ...want, carbs: want.carbs + lim(gap * MEAL_KCAL_FIX.carbShare / 4, MEAL_KCAL_FIX.carbs), fat: want.fat + lim(gap * (1 - MEAL_KCAL_FIX.carbShare) / 9, MEAL_KCAL_FIX.fat) }, ix);
   }
-  return { id: option.id, label: option.label, effort: option.effort, mins: option.mins, variant: option.variant || null, variantLabel: option.variantLabel || null, items: kept, macros: mealMacros(kept, ix) };
+  return { id: option.id, label: option.label, effort: option.effort, mins: option.mins, swaps: option.swaps || null, variantLabel: option.variantLabel || null, items: kept, macros: mealMacros(kept, ix) };
 }
 // The tree for the rest of the day: for every meal not yet eaten, each option
 // sized to that meal's share of what is left.
-function mealBuildTree({ tree, targets, dayType, stall, eaten, doneSlots, ix, variantOf }) {
+function mealBuildTree({ tree, targets, dayType, stall, eaten, doneSlots, ix, variantOf, swapIx }) {
   const target = mealTargetsFor(targets, dayType, stall);
   const remaining = mealRemaining(target, eaten);
   const open = MEAL_SLOTS.filter((s) => !doneSlots.includes(s));
@@ -19805,7 +19805,7 @@ function mealBuildTree({ tree, targets, dayType, stall, eaten, doneSlots, ix, va
   for (const s of open) {
     const want = {};
     for (const m of MEAL_MACROS) want[m] = remaining[m] * shares[s][m];
-    slots[s] = { want, options: MEAL_OPTIONS[s].map((o) => mealSizeOption(mealApplyVariant(o, variantOf?.[`${s}:${o.id}`], ix), want, ix)) };
+    slots[s] = { want, options: MEAL_OPTIONS[s].map((o) => mealSizeOption(mealApplyVariant(o, variantOf?.[`${s}:${o.id}`], ix, swapIx), want, ix)) };
   }
   return { target, remaining, open, slots };
 }
@@ -19814,29 +19814,39 @@ function mealInRange(target, total) {
   for (const m of MEAL_MACROS) o[m] = total[m] < target[m].min ? 'under' : total[m] > target[m].max ? 'over' : 'ok';
   return o;
 }
-// Swaps: same Role, re-portioned to match the food's main macro (0.6x to
-// 1.67x the grams), then checked against the database tolerances.
+// Swaps for one food. The swap database comes first: its pairs, at its
+// portions, Tier 1 before 2 before 3. A food with no pairs at all (the ones
+// added after the database was built) falls back to the rule: same Role,
+// re-portioned on the main macro (0.6x to 1.67x), checked against tolerance.
 const MEAL_SWAP_TOL = { kcal: [10, 0.06], protein: [1.5, 0.08], fat: [1.5, 0.08], carbs: [2.5, 0.08] };
 function mealWithin(m, a, b) { const [abs, pct] = MEAL_SWAP_TOL[m]; return Math.abs(a - b) <= Math.max(abs, pct * Math.max(Math.abs(a), Math.abs(b))); }
 function mealMainMacro(f) {
   const cals = { protein: f.protein * 4, carbs: f.carbs * 4, fat: f.fat * 9 };
   return Object.keys(cals).sort((a, b) => cals[b] - cals[a])[0];
 }
-function mealSwaps(foodName, grams, foods) {
+function mealSwaps(foodName, grams, foods, swapIx) {
   const ix = mealFoodIndex(foods); const from = ix[foodName];
   if (!from) return [];
-  const main = mealMainMacro(from);
   const a = mealMacros([{ food: foodName, grams }], ix);
+  const row = (cand, g, ratio, tier) => {
+    const b = mealMacros([{ food: cand.name, grams: g }], ix);
+    const off = MEAL_MACROS.filter((m) => !mealWithin(m, a[m], b[m]));
+    const delta = {}; for (const m of MEAL_MACROS) delta[m] = b[m] - a[m];
+    return { food: cand.name, grams: g, ratio, tier, exact: off.length === 0, off, delta, flagged: cand.flagged };
+  };
+  const pairs = Object.values(swapIx?.[foodName] || {}).filter((p) => ix[p.food]);
+  if (pairs.length) {
+    return pairs.map((p) => row(ix[p.food], grams * p.ratio, p.ratio, p.tier))
+      .sort((x, y) => (x.tier - y.tier) || Math.abs(x.delta.kcal) - Math.abs(y.delta.kcal));
+  }
+  const main = mealMainMacro(from);
   const out = [];
   for (const cand of foods) {
     if (cand.name === foodName || cand.role !== from.role || !(cand[main] > 0)) continue;
     const ratio = Math.min(1.67, Math.max(0.6, from[main] / cand[main]));
-    const g = grams * ratio;
-    const b = mealMacros([{ food: cand.name, grams: g }], ix);
-    if (!mealWithin(main, a[main], b[main])) continue; // can't match the main macro inside the portion limits
-    const off = MEAL_MACROS.filter((m) => !mealWithin(m, a[m], b[m]));
-    const delta = {}; for (const m of MEAL_MACROS) delta[m] = b[m] - a[m];
-    out.push({ food: cand.name, grams: g, ratio, exact: off.length === 0, off, delta, flagged: cand.flagged });
+    const r = row(cand, grams * ratio, ratio, 0); // tier 0 = matched by the rule, not the database
+    if (r.off.includes(main)) continue; // can't match the main macro inside the portion limits
+    out.push(r);
   }
   return out.sort((x, y) => (y.exact - x.exact) || Math.abs(x.delta.kcal) - Math.abs(y.delta.kcal));
 }
@@ -19862,6 +19872,8 @@ function mealResolveParsed(list, foods) {
 // are done and any day-type override.
 const MEAL_FOODS = parseFoodsCsv(MEAL_FOODS_CSV);
 const MEAL_IX = mealFoodIndex(MEAL_FOODS);
+const MEAL_SWAP_IX = mealSwapIndex([[1, MEAL_TIER1_CSV], [2, MEAL_TIER2_CSV], [3, MEAL_TIER3_CSV]]);
+const MEAL_TIER_LABEL = { 1: 'Tier 1 · same dish', 2: 'Tier 2 · same macros, different food', 3: 'Tier 3 · looser', 0: 'Not in your swap database yet · matched by role' };
 const MEAL_PARSE_PROMPT = `You turn a description of what someone ate into foods and grams.
 Use ONLY food names from the list below, copied exactly, character for character.
 Rules:
@@ -19918,7 +19930,8 @@ function MealTreeView({ day, activeDate }) {
   const [openSlot, setOpenSlot] = useState(null);
   const [pick, setPick] = useState({});      // slot -> recipe id
   const [effort, setEffort] = useState({});  // slot -> min | mid | max
-  const [variantOf, setVariantOf] = useState({}); // `${slot}:${recipeId}` -> variation id
+  const [variantOf, setVariantOf] = useState({}); // `${slot}:${recipeId}` -> { from: to } Tier 1 swaps
+  const [looser, setLooser] = useState(false);
   const [howOpen, setHowOpen] = useState(false);
   const [edits, setEdits] = useState({});    // `${slot}:${optionId}` -> items after swaps
   const [swapFor, setSwapFor] = useState(null);
@@ -19948,7 +19961,7 @@ function MealTreeView({ day, activeDate }) {
   }, [entries]);
   const doneSlots = MEAL_SLOTS.filter((s) => mt.done?.[s]);
   const tree = useMemo(
-    () => mealBuildTree({ tree: MEAL_TREE_1, targets: MEAL_TARGETS, dayType, stall, eaten, doneSlots, ix: MEAL_IX, variantOf }),
+    () => mealBuildTree({ tree: MEAL_TREE_1, targets: MEAL_TARGETS, dayType, stall, eaten, doneSlots, ix: MEAL_IX, variantOf, swapIx: MEAL_SWAP_IX }),
     [dayType, stall, eaten, doneSlots.join(','), variantOf],
   );
   const current = openSlot && tree.open.includes(openSlot) ? openSlot : tree.open[0] || null;
@@ -19980,9 +19993,12 @@ function MealTreeView({ day, activeDate }) {
     setEffort(next); setPick({ ...pick, [slot]: undefined }); setSwapFor(null); setFree(null); setHowOpen(false);
     saveSettings({ effort: next });
   };
-  const chooseVariant = (slot, optId, id) => {
+  // Tier 1 chips toggle: one swap per original food; from = null clears them all.
+  const chooseVariant = (slot, optId, from, to) => {
     const key = `${slot}:${optId}`;
-    setVariantOf({ ...variantOf, [key]: id || undefined });
+    const cur = { ...(variantOf[key] || {}) };
+    if (!from) { setVariantOf({ ...variantOf, [key]: undefined }); }
+    else { if (cur[from] === to) delete cur[from]; else cur[from] = to; setVariantOf({ ...variantOf, [key]: Object.keys(cur).length ? cur : undefined }); }
     const e = { ...edits }; delete e[key]; setEdits(e); setSwapFor(null);
   };
   const logItems = async (slot, label, items) => {
@@ -20163,46 +20179,69 @@ function MealTreeView({ day, activeDate }) {
                       )}
                     </div>
                   ) : (
-                    <div className="mt-3 bg-stone-900 border border-stone-800 rounded-xl p-3 mt-node" key={`${opt.id}:${opt.variant || ''}`} data-meal-detail={opt.id}>
+                    <div className="mt-3 bg-stone-900 border border-stone-800 rounded-xl p-3 mt-node" key={`${opt.id}:${opt.variantLabel || ''}`} data-meal-detail={opt.id}>
                       <div className="flex items-baseline justify-between mb-1.5">
                         <div className="text-sm font-semibold text-stone-100">{opt.label}</div>
                         {opt.mins ? <div className="mono text-[11px] text-stone-500 shrink-0 ml-2">{opt.mins} min</div> : null}
                       </div>
-                      {recipe?.variants?.length > 0 && (
-                        <div className="flex gap-1.5 overflow-x-auto pb-2 -mr-3 pr-3" data-meal-variants>
-                          {[{ id: null, label: 'Original' }, ...recipe.variants].map((v) => (
-                            <button key={v.id || 'base'} data-meal-variant={v.id || 'base'} onClick={() => chooseVariant(slot, opt.id, v.id)}
-                              className={`shrink-0 text-[12px] rounded-full border px-2.5 py-1 ${(opt.variant || null) === v.id ? 'border-amber-400 bg-amber-400/10 text-amber-300' : 'border-stone-700 text-stone-300'}`}>{v.label}</button>
-                          ))}
-                        </div>
-                      )}
+                      {(() => {
+                        const chips = mealTier1Chips(recipe, MEAL_SWAP_IX, MEAL_IX);
+                        if (!chips.length) return <div className="text-[11px] text-stone-500 pb-2" data-meal-variants="none">No Tier 1 swaps in your database for these foods. Tap a food for looser ones.</div>;
+                        return (
+                          <div className="flex gap-1.5 overflow-x-auto pb-2 -mr-3 pr-3" data-meal-variants>
+                            <button data-meal-variant="base" onClick={() => chooseVariant(slot, opt.id, null)}
+                              className={`shrink-0 text-[12px] rounded-full border px-2.5 py-1 ${!opt.swaps ? 'border-amber-400 bg-amber-400/10 text-amber-300' : 'border-stone-700 text-stone-300'}`}>Original</button>
+                            {chips.map((c) => (
+                              <button key={`${c.from}>${c.to}`} data-meal-variant={c.to} onClick={() => chooseVariant(slot, opt.id, c.from, c.to)} title={`Instead of ${c.from}`}
+                                className={`shrink-0 text-[12px] rounded-full border px-2.5 py-1 ${opt.swaps?.[c.from] === c.to ? 'border-amber-400 bg-amber-400/10 text-amber-300' : 'border-stone-700 text-stone-300'}`}>{c.label}</button>
+                            ))}
+                          </div>
+                        );
+                      })()}
                       {items.map((it, k) => {
                         const key = `${slot}:${k}`;
-                        const swaps = swapFor === key ? mealSwaps(it.food, it.grams, MEAL_FOODS) : null;
+                        const swaps = swapFor === key ? mealSwaps(it.food, it.grams, MEAL_FOODS, MEAL_SWAP_IX) : null;
                         return (
                           <div key={k} className="py-1.5 border-b border-stone-800/70 last:border-0">
-                            <button onClick={() => setSwapFor(swapFor === key ? null : key)} className="w-full flex items-center justify-between text-left" data-meal-item={it.food}>
+                            <button onClick={() => { setSwapFor(swapFor === key ? null : key); setLooser(false); }} className="w-full flex items-center justify-between text-left" data-meal-item={it.food}>
                               <span className="text-[13px] text-stone-200">{it.food}{flagged(it.food) && <span className="ml-1 mono text-[10px] text-amber-400 border border-amber-400/40 rounded px-1">check</span>}</span>
                               <span className="flex items-center gap-2"><span className="mono text-sm text-stone-100 tabular">{mealRoundGrams(it.grams)} g</span><RefreshCw size={12} className="text-stone-500" /></span>
                             </button>
                             {swaps && (
                               <div className="mt-1 mb-1 pl-2 border-l border-stone-700 mt-node" data-meal-swaps>
-                                {swaps.length === 0 && <div className="text-[11px] text-stone-500 py-1">No food with the same role matches closely enough.</div>}
-                                {swaps.slice(0, 8).map((sw) => (
-                                  <button key={sw.food} onClick={() => applySwap(slot, opt.id, k, sw)} data-meal-swap={sw.food} className="w-full flex items-center justify-between text-left py-1">
-                                    <span className="text-[12px] text-stone-300">{sw.food}{sw.flagged && <span className="ml-1 mono text-[10px] text-amber-400 border border-amber-400/40 rounded px-1">check</span>}
-                                      {!sw.exact && <span className="block text-[10px] text-stone-500">{sw.off.map((m) => `${sw.delta[m] > 0 ? '+' : ''}${Math.round(sw.delta[m])} ${m === 'kcal' ? 'kcal' : `g ${m}`}`).join(', ')}</span>}
-                                    </span>
-                                    <span className="mono text-[12px] text-stone-200 tabular">{mealRoundGrams(sw.grams)} g</span>
-                                  </button>
-                                ))}
+                                {swaps.length === 0 && <div className="text-[11px] text-stone-500 py-1">Nothing in your swap database or with the same role matches closely enough.</div>}
+                                {(() => {
+                                  const tight = swaps.filter((sw) => sw.tier !== 3);
+                                  const loose = swaps.filter((sw) => sw.tier === 3);
+                                  const shown = looser || tight.length === 0 ? [...tight, ...loose] : tight;
+                                  let last = null;
+                                  return (
+                                    <>
+                                      {shown.slice(0, looser ? 40 : 14).map((sw) => {
+                                        const head = sw.tier !== last ? MEAL_TIER_LABEL[sw.tier] : null; last = sw.tier;
+                                        return (
+                                          <React.Fragment key={sw.food}>
+                                            {head && <div className="mono text-[10px] uppercase tracking-wider text-stone-500 pt-1.5" data-meal-tier={sw.tier}>{head}</div>}
+                                            <button onClick={() => applySwap(slot, opt.id, k, sw)} data-meal-swap={sw.food} className="w-full flex items-center justify-between text-left py-1">
+                                              <span className="text-[12px] text-stone-300">{sw.food}{sw.flagged && <span className="ml-1 mono text-[10px] text-amber-400 border border-amber-400/40 rounded px-1">check</span>}
+                                                {!sw.exact && <span className="block text-[10px] text-stone-500">{sw.off.map((m) => `${sw.delta[m] > 0 ? '+' : ''}${Math.round(sw.delta[m])} ${m === 'kcal' ? 'kcal' : `g ${m}`}`).join(', ')}</span>}
+                                              </span>
+                                              <span className="mono text-[12px] text-stone-200 tabular">{mealRoundGrams(sw.grams)} g</span>
+                                            </button>
+                                          </React.Fragment>
+                                        );
+                                      })}
+                                      {!looser && tight.length > 0 && loose.length > 0 && <button onClick={() => setLooser(true)} data-meal-looser className="text-[11px] text-stone-400 underline underline-offset-2 py-1">Show {loose.length} looser (Tier 3)</button>}
+                                    </>
+                                  );
+                                })()}
                               </div>
                             )}
                           </div>
                         );
                       })}
                       <div className="mono text-[11px] text-stone-400 mt-2">{mealFmt(im.kcal)} kcal · {mealFmt(im.protein)} P · {mealFmt(im.carbs)} C · {mealFmt(im.fat)} F</div>
-                      <div className="text-[11px] text-stone-600 mt-0.5">Pick a variation above, or tap any food to swap just that one. Grams are rounded to 5; totals use the exact numbers.</div>
+                      <div className="text-[11px] text-stone-600 mt-0.5">The chips are Tier 1 swaps from your database, and you can combine them. Tap a food for every tier. Grams are rounded to 5; totals use the exact numbers.</div>
                       {recipe?.how?.length > 0 && (
                         <div className="mt-2">
                           <button onClick={() => setHowOpen(!howOpen)} data-meal-how-toggle className="text-[12px] text-stone-300 underline underline-offset-2">{howOpen ? 'Hide method' : 'How to make it'}</button>
@@ -20211,7 +20250,7 @@ function MealTreeView({ day, activeDate }) {
                               <ol className="mt-1.5 space-y-1.5 list-decimal pl-4 text-[12px] text-stone-300 leading-relaxed">
                                 {recipe.how.map((h, k) => <li key={k}>{h}</li>)}
                               </ol>
-                              {opt.variantLabel && <div className="text-[11px] text-stone-500 mt-1.5">Written for the original. This variation ({opt.variantLabel.toLowerCase()}) cooks the same way.</div>}
+                              {opt.variantLabel && <div className="text-[11px] text-stone-500 mt-1.5">Written for the original. With {opt.variantLabel.toLowerCase()} it cooks the same way.</div>}
                               <div className="text-[11px] text-stone-600 mt-1">Spices, herbs, garlic, lemon, soy sauce and hot sauce are not counted.</div>
                             </div>
                           )}

@@ -1,0 +1,227 @@
+Food A,Food B,g of B per 100 g of A,Role A,Role B,A kcal,A protein g,A carbs g,A fat g,B kcal (scaled),B protein g (scaled),B carbs g (scaled),B fat g (scaled),Match
+Avocado oil,Olive oil,1,Cooking oil,Cooking oil,884,0,0,100,884,0,0,100,Tight
+Celery,"Tomato, raw",0.77,Raw crunchy veg,Raw crunchy veg,14,0.7,3,0.2,14,0.7,3,0.2,Tight
+Cherries,Orange,1.33,Fruit,Fruit,63,1.1,16,0.2,63,1.2,16,0.1,Tight
+"Beets, raw","Eggplant, raw",1.67,Cooking veg,Cooking veg,43,1.6,10,0.2,42,1.7,10,0.3,Tight
+Grapefruit,Orange,0.91,Fruit,Fruit,42,0.8,11,0.1,43,0.8,10.9,0.1,Tight
+"Bell pepper, green","Eggplant, raw",0.8,Cooking veg,Cooking veg,20,0.9,4.6,0.2,20,0.8,4.8,0.2,Tight
+"Broccoli, raw","Cauliflower, raw",1.4,Cooking veg,Cooking veg,34,2.8,7,0.4,35,2.7,7,0.4,Tight
+"Broccoli, raw","Brussels sprouts, raw",0.8,Cooking veg,Cooking veg,34,2.8,7,0.4,34,2.7,7.2,0.2,Tight
+Celery,Cucumber,0.87,Raw crunchy veg,Raw crunchy veg,14,0.7,3,0.2,13,0.6,3.1,0.1,Tight
+Cucumber,"Tomato, raw",0.87,Raw crunchy veg,Raw crunchy veg,15,0.7,3.6,0.1,16,0.8,3.4,0.2,Tight
+"Jasmine rice, cooked","White rice, cooked",1,Grain/starch side,Grain/starch side,129,2.7,28,0.2,130,2.7,28,0.3,Tight
+Cantaloupe,Peach,0.87,Fruit,Fruit,34,0.8,8,0.2,34,0.8,8.3,0.3,Tight
+Iceberg lettuce,"Romaine, raw",0.83,Leafy green,Leafy green,14,0.9,3,0.1,14,1,2.7,0.2,Tight
+Kiwi,Plum,1.35,Fruit,Fruit,61,1.1,15,0.5,62,0.9,14.9,0.4,Tight
+Pear,Pineapple,1.15,Fruit,Fruit,57,0.4,15,0.1,57,0.6,14.9,0.1,Tight
+"Cauliflower, raw","Zucchini, raw",1.55,Cooking veg,Cooking veg,25,1.9,5,0.3,26,1.9,4.8,0.5,Tight
+"Cod, cooked","Turkey breast, cooked",0.77,Lean meat/fish,Lean meat/fish,105,23,0,0.9,104,23.1,0,0.8,Tight
+"Cod, cooked","Haddock, cooked",0.95,Lean meat/fish,Lean meat/fish,105,23,0,0.9,106,22.8,0,0.9,Tight
+Grapefruit,Watermelon,1.4,Fruit,Fruit,42,0.8,11,0.1,42,0.8,10.6,0.3,Tight
+Orange,Watermelon,1.55,Fruit,Fruit,47,0.9,12,0.1,46,0.9,11.8,0.3,Tight
+Peach,Watermelon,1.25,Fruit,Fruit,39,0.9,9.5,0.3,38,0.8,9.5,0.2,Tight
+"Potato, boiled","Sweet potato, baked",0.95,Potato/tuber,Potato/tuber,87,1.9,20,0.1,86,1.9,19.9,0.2,Tight
+Apple,Pineapple,1.05,Fruit,Fruit,52,0.3,14,0.2,52,0.5,13.7,0.1,Tight
+Banana,Grapes,1.3,Fruit,Fruit,89,1.1,23,0.3,90,0.9,23.4,0.3,Tight
+"Bell pepper, green","Bell pepper, red",0.7,Cooking veg,Cooking veg,20,0.9,4.6,0.2,22,0.7,4.2,0.2,Tight
+"Black beans, cooked","Kidney beans, cooked",1.05,Beans/lentils,Beans/lentils,132,8.9,23.7,0.5,133,9.1,23.9,0.5,Tight
+Cantaloupe,Watermelon,1.11,Fruit,Fruit,34,0.8,8,0.2,33,0.7,8.4,0.2,Tight
+"Carrots, raw","Onion, raw",1.05,Cooking veg,Cooking veg,41,0.9,10,0.2,42,1.2,9.8,0.1,Tight
+Cherries,Mango,1.05,Fruit,Fruit,63,1.1,16,0.2,63,0.8,15.8,0.4,Tight
+Grapes,Pear,1.18,Fruit,Fruit,69,0.7,18,0.2,67,0.5,17.7,0.1,Tight
+Grapes,Mango,1.18,Fruit,Fruit,69,0.7,18,0.2,71,0.9,17.7,0.5,Tight
+Grapes,Papaya,1.67,Fruit,Fruit,69,0.7,18,0.2,72,0.8,18.4,0.5,Tight
+Mango,Pineapple,1.18,Fruit,Fruit,60,0.8,15,0.4,59,0.6,15.3,0.1,Tight
+Mango,Papaya,1.4,Fruit,Fruit,60,0.8,15,0.4,60,0.7,15.4,0.4,Tight
+Papaya,Pineapple,0.87,Fruit,Fruit,43,0.5,11,0.3,44,0.4,11.3,0.1,Tight
+Plum,Watermelon,1.5,Fruit,Fruit,46,0.7,11,0.3,45,0.9,11.4,0.3,Tight
+"Tuna, canned in water","Turkey breast, cooked",0.87,Lean meat/fish,Lean meat/fish,116,26,0,0.8,117,26.1,0,0.9,Tight
+Cherries,Papaya,1.43,Fruit,Fruit,63,1.1,16,0.2,61,0.7,15.7,0.4,Tight
+"Eggplant, raw","Onion, raw",0.65,Cooking veg,Cooking veg,25,1,6,0.2,26,0.7,6,0.1,Tight
+Grapes,Pineapple,1.43,Fruit,Fruit,69,0.7,18,0.2,72,0.7,18.6,0.1,Tight
+Mango,Orange,1.25,Fruit,Fruit,60,0.8,15,0.4,59,1.1,15,0.1,Tight
+Orange,Peach,1.25,Fruit,Fruit,47,0.9,12,0.1,49,1.1,11.9,0.4,Tight
+Orange,Plum,1.05,Fruit,Fruit,47,0.9,12,0.1,48,0.7,11.6,0.3,Tight
+Raspberries,Strawberries,1.54,Berries,Berries,52,1.2,12,0.7,49,1.1,11.9,0.5,Tight
+Apple,Pear,0.9,Fruit,Fruit,52,0.3,14,0.2,51,0.4,13.5,0.1,Tight
+Apple,Grapes,0.75,Fruit,Fruit,52,0.3,14,0.2,52,0.5,13.5,0.2,Tight
+"Arugula, raw","Spinach, raw",1,Leafy green,Leafy green,25,2.6,3.7,0.7,23,2.9,3.6,0.4,Tight
+Banana,Mango,1.5,Fruit,Fruit,89,1.1,23,0.3,90,1.2,22.5,0.6,Tight
+Cherries,Grapefruit,1.43,Fruit,Fruit,63,1.1,16,0.2,60,1.1,15.7,0.1,Tight
+Grapefruit,Mango,0.7,Fruit,Fruit,42,0.8,11,0.1,42,0.6,10.5,0.3,Tight
+Grapefruit,Papaya,1,Fruit,Fruit,42,0.8,11,0.1,43,0.5,11,0.3,Tight
+Grapefruit,Kiwi,0.7,Fruit,Fruit,42,0.8,11,0.1,43,0.8,10.5,0.3,Tight
+Kiwi,Orange,1.25,Fruit,Fruit,61,1.1,15,0.5,59,1.1,15,0.1,Tight
+Kiwi,Mango,1,Fruit,Fruit,61,1.1,15,0.5,60,0.8,15,0.4,Tight
+Kiwi,Papaya,1.43,Fruit,Fruit,61,1.1,15,0.5,61,0.7,15.7,0.4,Tight
+Kiwi,Peach,1.55,Fruit,Fruit,61,1.1,15,0.5,60,1.4,14.7,0.5,Tight
+Papaya,Pear,0.74,Fruit,Fruit,43,0.5,11,0.3,42,0.3,11.1,0.1,Tight
+Peach,Plum,0.85,Fruit,Fruit,39,0.9,9.5,0.3,39,0.6,9.3,0.3,Tight
+Pomegranate seeds,Raspberries,1.54,Berries,Berries,83,1.7,19,1.2,80,1.8,18.5,1.1,Tight
+Apple,Papaya,1.25,Fruit,Fruit,52,0.3,14,0.2,54,0.6,13.8,0.4,Tight
+Banana,Pear,1.54,Fruit,Fruit,89,1.1,23,0.3,88,0.6,23.1,0.2,Tight
+"Beets, raw","Onion, raw",1.11,Cooking veg,Cooking veg,43,1.6,10,0.2,44,1.2,10.3,0.1,Tight
+Cantaloupe,Orange,0.69,Fruit,Fruit,34,0.8,8,0.2,32,0.6,8.3,0.1,Tight
+Cherries,Kiwi,1.05,Fruit,Fruit,63,1.1,16,0.2,64,1.2,15.8,0.5,Tight
+"Cod, cooked","Tuna, canned in water",0.9,Lean meat/fish,Lean meat/fish,105,23,0,0.9,104,23.4,0,0.7,Tight
+Grapefruit,Peach,1.1,Fruit,Fruit,42,0.8,11,0.1,43,1,10.5,0.3,Tight
+Grapefruit,Plum,0.95,Fruit,Fruit,42,0.8,11,0.1,44,0.7,10.4,0.3,Tight
+"Greek yogurt, nonfat","Skyr, plain",0.9,Yogurt/cup dairy,Yogurt/cup dairy,59,10,3.6,0.4,57,9.9,3.6,0.2,Tight
+Mango,Plum,1.35,Fruit,Fruit,60,0.8,15,0.4,62,0.9,14.9,0.4,Tight
+Papaya,Plum,0.95,Fruit,Fruit,43,0.5,11,0.3,44,0.7,10.4,0.3,Tight
+Papaya,Watermelon,1.4,Fruit,Fruit,43,0.5,11,0.3,42,0.8,10.6,0.3,Tight
+Apple,Banana,0.6,Fruit,Fruit,52,0.3,14,0.2,53,0.7,13.8,0.2,Tight
+"Bell pepper, green","Green beans, raw",0.61,Cooking veg,Cooking veg,20,0.9,4.6,0.2,19,1.1,4.3,0.1,Tight
+"Black beans, cooked","Peas, green cooked",1.65,Beans/lentils,Beans/lentils,132,8.9,23.7,0.5,134,8.9,23.1,0.7,Tight
+Blackberries,Strawberries,1.33,Berries,Berries,43,1.4,10,0.5,43,0.9,10.2,0.4,Tight
+"Cabbage, raw","Romaine, raw",1.54,Leafy green,Leafy green,25,1.3,5.8,0.1,26,1.8,5.1,0.5,Tight
+Cantaloupe,Grapefruit,0.77,Fruit,Fruit,34,0.8,8,0.2,32,0.6,8.5,0.1,Tight
+Cantaloupe,Plum,0.77,Fruit,Fruit,34,0.8,8,0.2,35,0.5,8.5,0.2,Tight
+Cherries,Plum,1.4,Fruit,Fruit,63,1.1,16,0.2,64,1,15.4,0.4,Tight
+Orange,Papaya,1.1,Fruit,Fruit,47,0.9,12,0.1,47,0.6,12.1,0.3,Tight
+Cherries,Pineapple,1.25,Fruit,Fruit,63,1.1,16,0.2,62,0.6,16.2,0.1,Tight
+Cherries,Peach,1.65,Fruit,Fruit,63,1.1,16,0.2,64,1.5,15.7,0.5,Tight
+Grapefruit,Pineapple,0.85,Fruit,Fruit,42,0.8,11,0.1,42,0.4,11,0.1,Tight
+Grapefruit,Grapes,0.6,Fruit,Fruit,42,0.8,11,0.1,41,0.4,10.8,0.1,Tight
+"Kidney beans, cooked","Peas, green cooked",1.6,Beans/lentils,Beans/lentils,127,8.7,22.8,0.5,130,8.6,22.4,0.6,Tight
+Apple,Mango,0.9,Fruit,Fruit,52,0.3,14,0.2,54,0.7,13.5,0.4,Tight
+Blackberries,Raspberries,0.87,Berries,Berries,43,1.4,10,0.5,45,1,10.4,0.6,Tight
+"Carrots, raw","Eggplant, raw",1.54,Cooking veg,Cooking veg,41,0.9,10,0.2,38,1.5,9.2,0.3,Tight
+Grapes,Orange,1.43,Fruit,Fruit,69,0.7,18,0.2,67,1.3,17.2,0.1,Tight
+Jam,Maple syrup,0.95,Sweetener,Sweetener,250,0.4,64,0.1,247,0,63.6,0,Tight
+Orange,Pineapple,0.95,Fruit,Fruit,47,0.9,12,0.1,48,0.5,12.3,0.1,Tight
+Pineapple,Plum,1.15,Fruit,Fruit,50,0.5,13,0.1,53,0.8,12.6,0.3,Tight
+"Asparagus, raw","Zucchini, raw",1.33,Cooking veg,Cooking veg,20,2.2,3.9,0.1,23,1.6,4.1,0.4,Tight
+Banana,Cherries,1.4,Fruit,Fruit,89,1.1,23,0.3,88,1.5,22.4,0.3,Tight
+"Beets, raw","Bell pepper, red",1.54,Cooking veg,Cooking veg,43,1.6,10,0.2,48,1.5,9.2,0.5,Tight
+"Bell pepper, red","Eggplant, raw",1.11,Cooking veg,Cooking veg,31,1,6,0.3,28,1.1,6.7,0.2,Tight
+"Bell pepper, red","Onion, raw",0.7,Cooking veg,Cooking veg,31,1,6,0.3,28,0.8,6.5,0.1,Tight
+"Cauliflower, raw","Green beans, raw",0.8,Cooking veg,Cooking veg,25,1.9,5,0.3,25,1.4,5.6,0.2,Tight
+"Eggplant, raw","Green beans, raw",0.8,Cooking veg,Cooking veg,25,1,6,0.2,25,1.4,5.6,0.2,Tight
+Honey,Table sugar,0.8,Sweetener,Sweetener,304,0.3,82,0,310,0,80,0,Tight
+Kiwi,Pineapple,1.18,Fruit,Fruit,61,1.1,15,0.5,59,0.6,15.3,0.1,Tight
+Mango,Pear,1,Fruit,Fruit,60,0.8,15,0.4,57,0.4,15,0.1,Tight
+"Bell pepper, green","Zucchini, raw",1.25,Cooking veg,Cooking veg,20,0.9,4.6,0.2,21,1.5,3.9,0.4,Tight
+Papaya,Peach,1.1,Fruit,Fruit,43,0.5,11,0.3,43,1,10.5,0.3,Tight
+Pineapple,Watermelon,1.65,Fruit,Fruit,50,0.5,13,0.1,50,1,12.5,0.3,Tight
+"Asparagus, raw","Cauliflower, raw",0.91,Cooking veg,Cooking veg,20,2.2,3.9,0.1,23,1.7,4.5,0.3,Tight
+Cherries,Grapes,0.91,Fruit,Fruit,63,1.1,16,0.2,63,0.6,16.4,0.2,Tight
+Pear,Plum,1.3,Fruit,Fruit,57,0.4,15,0.1,60,0.9,14.3,0.4,Tight
+"Potato, baked w/ skin","Potato, boiled",1.05,Potato/tuber,Potato/tuber,93,2.5,21,0.1,91,2,21,0.1,Tight
+"Potato, baked w/ skin","Sweet potato, baked",1,Potato/tuber,Potato/tuber,93,2.5,21,0.1,90,2,21,0.2,Tight
+Apple,Plum,1.2,Fruit,Fruit,52,0.3,14,0.2,55,0.8,13.2,0.4,Tight
+"Arugula, raw","Romaine, raw",1.54,Leafy green,Leafy green,25,2.6,3.7,0.7,26,1.8,5.1,0.5,Tight
+Banana,Kiwi,1.5,Fruit,Fruit,89,1.1,23,0.3,92,1.7,22.5,0.8,Tight
+"Bell pepper, red","Zucchini, raw",1.54,Cooking veg,Cooking veg,31,1,6,0.3,26,1.8,4.8,0.5,Tight
+Blueberries,Pomegranate seeds,0.7,Berries,Berries,57,0.7,14,0.3,58,1.2,13.3,0.8,Tight
+Cantaloupe,Papaya,0.77,Fruit,Fruit,34,0.8,8,0.2,33,0.4,8.5,0.2,Tight
+"Eggplant, raw","Zucchini, raw",1.54,Cooking veg,Cooking veg,25,1,6,0.2,26,1.8,4.8,0.5,Tight
+"Haddock, cooked","Tuna, canned in water",0.95,Lean meat/fish,Lean meat/fish,112,24,0,0.9,110,24.7,0,0.8,Tight
+Mango,Peach,1.5,Fruit,Fruit,60,0.8,15,0.4,58,1.4,14.2,0.4,Tight
+"Brussels sprouts, raw","Green beans, raw",1.43,Cooking veg,Cooking veg,43,3.4,9,0.3,44,2.6,10,0.3,Tight
+Grapes,Kiwi,1.15,Fruit,Fruit,69,0.7,18,0.2,70,1.3,17.2,0.6,Tight
+Grapes,Plum,1.55,Fruit,Fruit,69,0.7,18,0.2,71,1.1,17.1,0.5,Tight
+Apple juice,Orange juice,1,Juice,Juice,46,0.1,11,0.1,45,0.7,10,0.2,Tight
+"Asparagus, raw","Broccoli, raw",0.65,Cooking veg,Cooking veg,20,2.2,3.9,0.1,22,1.8,4.5,0.3,Tight
+"Asparagus, raw","Mushrooms, white",0.9,Cooking veg,Cooking veg,20,2.2,3.9,0.1,20,2.8,3,0.3,Tight
+"Beets, raw","Green beans, raw",1.25,Cooking veg,Cooking veg,43,1.6,10,0.2,39,2.2,8.8,0.2,Tight
+"Beets, raw","Carrots, raw",1.11,Cooking veg,Cooking veg,43,1.6,10,0.2,46,1,11.1,0.2,Tight
+"Bell pepper, red","Carrots, raw",0.7,Cooking veg,Cooking veg,31,1,6,0.3,29,0.6,7,0.1,Tight
+"Black beans, cooked","Pinto beans, cooked",0.95,Beans/lentils,Beans/lentils,132,8.9,23.7,0.5,136,8.5,24.7,0.7,Tight
+Cherries,Pear,1.11,Fruit,Fruit,63,1.1,16,0.2,63,0.4,16.7,0.1,Tight
+"Cottage cheese, 2%","Greek yogurt, 2%",1.05,Yogurt/cup dairy,Yogurt/cup dairy,81,10.4,4.8,2.3,77,10.5,4.2,2.1,Tight
+"Kidney beans, cooked","Pinto beans, cooked",0.9,Beans/lentils,Beans/lentils,127,8.7,22.8,0.5,129,8.1,23.4,0.6,Tight
+Apple,Cherries,0.85,Fruit,Fruit,52,0.3,14,0.2,54,0.9,13.6,0.2,Tight
+Avocado oil,Coconut oil,1,Cooking oil,Cooking oil,884,0,0,100,862,0,0,100,Tight
+Blueberries,Raspberries,1.1,Berries,Berries,57,0.7,14,0.3,57,1.3,13.2,0.8,Tight
+Coconut oil,Olive oil,1,Cooking oil,Cooking oil,862,0,0,100,884,0,0,100,Tight
+Grapefruit,Pear,0.77,Fruit,Fruit,42,0.8,11,0.1,44,0.3,11.6,0.1,Tight
+Honey,Maple syrup,1.2,Sweetener,Sweetener,304,0.3,82,0,312,0,80.4,0,Tight
+Jam,Table sugar,0.65,Sweetener,Sweetener,250,0.4,64,0.1,252,0,65,0,Tight
+Kiwi,Pear,1.05,Fruit,Fruit,61,1.1,15,0.5,60,0.4,15.8,0.1,Tight
+Agave syrup,Maple syrup,1.18,Sweetener,Sweetener,310,0.1,76,0,307,0,79.1,0,Tight
+Apple,Grapefruit,1.2,Fruit,Fruit,52,0.3,14,0.2,50,1,13.2,0.1,Tight
+Butter,Ghee,0.8,Cooking fat,Cooking fat,717,0.9,0.1,81,701,0.2,0,79.6,Tight
+"Chicken breast, cooked","Pork tenderloin, cooked",1.15,Lean meat/fish,Lean meat/fish,165,31,0,3.6,164,29.9,0,4,Tight
+"Mushrooms, white","Zucchini, raw",1.67,Cooking veg,Cooking veg,22,3.1,3.3,0.3,28,2,5.2,0.5,Tight
+Peach,Pineapple,0.77,Fruit,Fruit,39,0.9,9.5,0.3,38,0.4,10,0.1,Tight
+Apple,Orange,1.1,Fruit,Fruit,52,0.3,14,0.2,52,1,13.2,0.1,Tight
+Apple,Kiwi,0.9,Fruit,Fruit,52,0.3,14,0.2,55,1,13.5,0.5,Tight
+"Bell pepper, red","Green beans, raw",0.87,Cooking veg,Cooking veg,31,1,6,0.3,27,1.6,6.1,0.2,Tight
+Cantaloupe,Pineapple,0.67,Fruit,Fruit,34,0.8,8,0.2,34,0.3,8.7,0.1,Tight
+"Ground beef 93%, cooked","Ground turkey 93%, cooked",1,Ground meat,Ground meat,196,26,0,10,200,27,0,10,Tight
+Honey,Jam,1.25,Sweetener,Sweetener,304,0.3,82,0,312,0.5,80,0.1,Tight
+Orange,Pear,0.83,Fruit,Fruit,47,0.9,12,0.1,47,0.3,12.4,0.1,Tight
+"Bell pepper, green","Cauliflower, raw",0.74,Cooking veg,Cooking veg,20,0.9,4.6,0.2,18,1.4,3.7,0.2,Tight
+"Broccoli, raw","Green beans, raw",1.15,Cooking veg,Cooking veg,34,2.8,7,0.4,36,2.1,8,0.2,Tight
+"Brown rice, cooked","White rice, cooked",0.95,Grain/starch side,Grain/starch side,123,2.7,26,1,124,2.6,26.6,0.3,Tight
+"Haddock, cooked","Turkey breast, cooked",0.83,Lean meat/fish,Lean meat/fish,112,24,0,0.9,112,24.9,0,0.8,Tight
+"Milk, 2%","Milk, whole",0.8,Milk,Milk,50,3.3,4.8,2,49,2.6,3.8,2.6,Tight
+"Corn kernels, cooked","Polenta, cooked",1.43,Grain/starch side,Grain/starch side,96,3.4,21,1.5,100,2.3,21.4,0.4,Tight
+Agave syrup,Jam,1.2,Sweetener,Sweetener,310,0.1,76,0,300,0.5,76.8,0.1,Tight
+"Green beans, raw","Onion, raw",0.9,Cooking veg,Cooking veg,31,1.8,7,0.2,36,1,8.4,0.1,Tight
+Maple syrup,Table sugar,0.65,Sweetener,Sweetener,260,0,67,0,252,0,65,0,Tight
+"Shrimp, cooked","Tuna, canned in water",0.9,Lean meat/fish,Lean meat/fish,99,24,0.2,0.3,104,23.4,0,0.7,Tight
+"Barley, pearled cooked","White rice, cooked",0.95,Grain/starch side,Grain/starch side,123,2.3,28,0.4,124,2.6,26.6,0.3,Tight
+"Barley, pearled cooked","Jasmine rice, cooked",0.95,Grain/starch side,Grain/starch side,123,2.3,28,0.4,123,2.6,26.6,0.2,Tight
+"Brown rice, cooked","Jasmine rice, cooked",0.95,Grain/starch side,Grain/starch side,123,2.7,26,1,123,2.6,26.6,0.2,Tight
+"Cauliflower, raw","Eggplant, raw",1.05,Cooking veg,Cooking veg,25,1.9,5,0.3,26,1.1,6.3,0.2,Tight
+"Chicken breast, cooked","Tilapia, cooked",1.25,Lean meat/fish,Lean meat/fish,165,31,0,3.6,160,32.5,0,3.4,Tight
+"Pasta, cooked","Whole wheat pasta, cooked",1.25,Pasta/noodle,Pasta/noodle,158,5.8,31,0.9,155,6.6,32.5,0.6,Tight
+Apple,Peach,1.35,Fruit,Fruit,52,0.3,14,0.2,53,1.2,12.8,0.4,Tight
+"Beets, raw","Cauliflower, raw",1.54,Cooking veg,Cooking veg,43,1.6,10,0.2,38,2.9,7.7,0.5,Tight
+"Bell pepper, red","Cauliflower, raw",1,Cooking veg,Cooking veg,31,1,6,0.3,25,1.9,5,0.3,Tight
+"Cod, cooked","Shrimp, cooked",1,Lean meat/fish,Lean meat/fish,105,23,0,0.9,99,24,0.2,0.3,Tight
+"Lentils, cooked","Peas, green cooked",1.5,Beans/lentils,Beans/lentils,116,9,20,0.4,122,8.1,21,0.6,Tight
+Peach,Pear,0.69,Fruit,Fruit,39,0.9,9.5,0.3,39,0.3,10.3,0.1,Tight
+Agave syrup,Table sugar,0.8,Sweetener,Sweetener,310,0.1,76,0,310,0,80,0,Tight
+"Barley, pearled cooked","Brown rice, cooked",1.05,Grain/starch side,Grain/starch side,123,2.3,28,0.4,129,2.8,27.3,1.1,Tight
+"Shrimp, cooked","Turkey breast, cooked",0.77,Lean meat/fish,Lean meat/fish,99,24,0.2,0.3,104,23.1,0,0.8,Tight
+Apple,Cantaloupe,1.55,Fruit,Fruit,52,0.3,14,0.2,53,1.2,12.4,0.3,Tight
+"Bulgur, cooked","Polenta, cooked",1.25,Grain/starch side,Grain/starch side,83,3,19,0.2,88,2,18.8,0.4,Tight
+Macadamias,Pecans,1,Nuts,Nuts,718,8,14,76,691,9,14,72,Tight
+"Black beans, cooked","Lentils, cooked",1.1,Beans/lentils,Beans/lentils,132,8.9,23.7,0.5,128,9.9,22,0.4,Tight
+"Bulgur, cooked","Couscous, cooked",0.77,Grain/starch side,Grain/starch side,83,3,19,0.2,86,2.9,17.7,0.2,Tight
+English muffin,White bread,0.87,Bread/wrap,Bread/wrap,235,8,45,1.9,231,7.8,42.6,2.8,Tight
+English muffin,"Pita, white",0.85,Bread/wrap,Bread/wrap,235,8,45,1.9,234,7.6,47.6,1,Tight
+"Romaine, raw","Spinach, raw",0.62,Leafy green,Leafy green,17,1.2,3.3,0.3,14,1.8,2.2,0.2,Tight
+Blackberries,Blueberries,0.8,Berries,Berries,43,1.4,10,0.5,46,0.6,11.2,0.2,Tight
+"Carrots, raw","Green beans, raw",1.18,Cooking veg,Cooking veg,41,0.9,10,0.2,37,2.1,8.3,0.2,Tight
+"Bulgur, cooked","Corn kernels, cooked",0.85,Grain/starch side,Grain/starch side,83,3,19,0.2,82,2.9,17.8,1.3,Tight
+"Kidney beans, cooked","Lentils, cooked",1.05,Beans/lentils,Beans/lentils,127,8.7,22.8,0.5,122,9.5,21,0.4,Tight
+"Asparagus, raw","Bell pepper, green",1.25,Cooking veg,Cooking veg,20,2.2,3.9,0.1,25,1.1,5.8,0.2,Tight
+"Cauliflower, raw","Mushrooms, white",0.95,Cooking veg,Cooking veg,25,1.9,5,0.3,21,2.9,3.1,0.3,Tight
+Medjool dates,Raisins,0.91,Dried fruit,Dried fruit,277,1.8,75,0.2,272,2.8,71.9,0.5,Tight
+"Cauliflower, raw","Onion, raw",0.7,Cooking veg,Cooking veg,25,1.9,5,0.3,28,0.8,6.5,0.1,Tight
+"Asparagus, raw","Green beans, raw",0.77,Cooking veg,Cooking veg,20,2.2,3.9,0.1,24,1.4,5.4,0.2,Tight
+"Couscous, cooked","Polenta, cooked",1.65,Grain/starch side,Grain/starch side,112,3.8,23,0.2,116,2.6,24.8,0.5,Tight
+Sunflower seed butter,Tahini,1.05,Nut butter,Nut butter,617,17,24,55,625,17.9,22.1,56.7,Tight
+"Bagel, plain",English muffin,1.1,Bread/wrap,Bread/wrap,257,10,50,1.6,258,8.8,49.5,2.1,Tight
+"Haddock, cooked","Shrimp, cooked",1.05,Lean meat/fish,Lean meat/fish,112,24,0,0.9,104,25.2,0.2,0.3,Tight
+"Asparagus, raw","Eggplant, raw",1,Cooking veg,Cooking veg,20,2.2,3.9,0.1,25,1,6,0.2,Tight
+"Asparagus, raw","Beets, raw",0.6,Cooking veg,Cooking veg,20,2.2,3.9,0.1,26,1,6,0.1,Tight
+"Carrots, raw","Cauliflower, raw",1.43,Cooking veg,Cooking veg,41,0.9,10,0.2,36,2.7,7.1,0.4,Tight
+"Milk, 2%","Milk, skim",1.54,Milk,Milk,50,3.3,4.8,2,52,5.2,7.7,0.2,Tight
+"Milk, 2%","Soy milk, unsweetened",1.6,Milk,Milk,50,3.3,4.8,2,53,4.5,2.7,2.6,Tight
+"Arugula, raw","Cabbage, raw",1,Leafy green,Leafy green,25,2.6,3.7,0.7,25,1.3,5.8,0.1,Tight
+"Asparagus, raw","Bell pepper, red",0.9,Cooking veg,Cooking veg,20,2.2,3.9,0.1,28,0.9,5.4,0.3,Tight
+"Broccoli, raw","Eggplant, raw",1.5,Cooking veg,Cooking veg,34,2.8,7,0.4,38,1.5,9,0.3,Tight
+"Brown rice, cooked","Couscous, cooked",1.05,Grain/starch side,Grain/starch side,123,2.7,26,1,118,4,24.2,0.2,Tight
+"Milk, whole","Soy milk, unsweetened",1.6,Milk,Milk,61,3.2,4.8,3.3,53,4.5,2.7,2.6,Tight
+"Mozzarella, whole milk",Swiss,0.77,Cheese,Cheese,300,22,2.2,22,293,20.8,3.9,21.6,Tight
+"Pork tenderloin, cooked","Tilapia, cooked",1.05,Lean meat/fish,Lean meat/fish,143,26,0,3.5,134,27.3,0,2.8,Tight
+"Beets, raw","Broccoli, raw",1.11,Cooking veg,Cooking veg,43,1.6,10,0.2,38,3.1,7.8,0.4,Tight
+Agave syrup,Honey,1,Sweetener,Sweetener,310,0.1,76,0,304,0.3,82,0,Tight
+"Brown rice, cooked","Corn kernels, cooked",1.2,Grain/starch side,Grain/starch side,123,2.7,26,1,115,4.1,25.2,1.8,Tight
+Cheddar,"Goat cheese, soft",1.5,Cheese,Cheese,403,25,1.3,33,402,27,1.5,31.5,Tight
+Hemp hearts,Pumpkin seeds,1,Seeds,Seeds,553,32,8.7,49,559,30,11,49,Tight
+"Bell pepper, red","Broccoli, raw",0.71,Cooking veg,Cooking veg,31,1,6,0.3,24,2,5,0.3,Tight
+"Cod, cooked","Tilapia, cooked",0.85,Lean meat/fish,Lean meat/fish,105,23,0,0.9,109,22.1,0,2.3,Tight
+"Greek yogurt, 2%","Greek yogurt, nonfat",1.11,Yogurt/cup dairy,Yogurt/cup dairy,73,10,4,2,65,11.1,4,0.4,Tight
+BBQ sauce,Ketchup,1.67,Sauce/condiment,Sauce/condiment,172,0.8,41,0.6,169,1.7,45.1,0.2,Tight
+"Bagel, plain","Pita, white",0.95,Bread/wrap,Bread/wrap,257,10,50,1.6,261,8.5,53.2,1.1,Tight
+"Corn kernels, cooked","Couscous, cooked",0.91,Grain/starch side,Grain/starch side,96,3.4,21,1.5,102,3.5,20.9,0.2,Tight
+"Pork tenderloin, cooked","Sirloin steak, lean cooked",0.8,Lean meat/fish,Lean meat/fish,143,26,0,3.5,144,24,0,4.8,Tight
+"Haddock, cooked","Tilapia, cooked",0.85,Lean meat/fish,Lean meat/fish,112,24,0,0.9,109,22.1,0,2.3,Tight
+"Asparagus, raw","Onion, raw",0.65,Cooking veg,Cooking veg,20,2.2,3.9,0.1,26,0.7,6,0.1,Tight
+"Brown rice, cooked","Bulgur, cooked",1.4,Grain/starch side,Grain/starch side,123,2.7,26,1,116,4.2,26.6,0.3,Tight

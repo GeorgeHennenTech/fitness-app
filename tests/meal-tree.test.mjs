@@ -6,11 +6,13 @@ const read = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
 const src = read('../src/App.jsx');
 const a = src.indexOf('// >>> MEAL TREE ENGINE'), b = src.indexOf('// <<< MEAL TREE ENGINE');
 assert.ok(a >= 0 && b > a);
-const api = new Function(`${src.slice(a, b)}\nreturn { MEAL_SLOTS, MEAL_OPTIONS, parseFoodsCsv, mealFoodIndex, mealMacros, mealRoundGrams, mealTargetsFor, mealRemaining, mealBuildTree, mealInRange, mealSwaps, mealResolveParsed, mealAdd, mealZero, MEAL_EFFORTS, MEAL_EFFORT_SLOTS, mealApplyVariant };`)();
+const api = new Function(`${src.slice(a, b)}\nreturn { MEAL_SLOTS, MEAL_OPTIONS, parseFoodsCsv, mealFoodIndex, mealMacros, mealRoundGrams, mealTargetsFor, mealRemaining, mealBuildTree, mealInRange, mealSwaps, mealResolveParsed, mealAdd, mealZero, MEAL_EFFORTS, MEAL_EFFORT_SLOTS, mealApplyVariant, mealSwapIndex, mealTier1Chips };`)();
 const foods = api.parseFoodsCsv(read('../src/data/foods.csv'));
 const ix = api.mealFoodIndex(foods);
 const targets = JSON.parse(read('../src/data/targets.json'));
 const tree = JSON.parse(read('../src/data/breakfast_tree_1.json'));
+const tierText = (f) => read(`../src/data/swaps/${f}.csv`);
+const swapIx = api.mealSwapIndex([[1, tierText('tier1_same_dish')], [2, tierText('tier2_same_macros')], [3, tierText('tier3_looser')]]);
 let passed = 0;
 const test = (name, fn) => { fn(); passed++; console.log(`ok - ${name}`); };
 const near = (x, y, tol, msg) => assert.ok(Math.abs(x - y) <= tol, `${msg || ''} got ${x}, want ${y} ±${tol}`);
@@ -92,7 +94,6 @@ test('meals 1 to 4 each offer at least three recipes at every effort level, with
   for (const s of api.MEAL_SLOTS) for (const o of api.MEAL_OPTIONS[s]) {
     assert.ok(!ids.has(`${s}:${o.id}`), `duplicate id ${o.id}`); ids.add(`${s}:${o.id}`);
     assert.ok(o.mins > 0 && o.how.length >= 1, `${o.id} needs a time and a method`);
-    assert.ok(o.variants.length >= 3, `${o.id} needs variations`);
   }
   // Effort is about time: minimal is quicker than average, which is quicker than all out.
   for (const s of api.MEAL_EFFORT_SLOTS) {
@@ -102,42 +103,72 @@ test('meals 1 to 4 each offer at least three recipes at every effort level, with
   }
 });
 
-test('every variation uses foods from the table, changes the recipe, and keeps the day in range', () => {
-  let n = 0;
-  for (const d of ['lift', 'cardio', 'rest']) {
-    const tgt = api.mealTargetsFor(targets, d, false);
-    for (const slot of api.MEAL_SLOTS) for (const o of api.MEAL_OPTIONS[slot]) for (const v of o.variants) {
-      for (const [from, to] of Object.entries(v.swap)) {
-        assert.ok(o.parts.some((p) => p[0] === from), `${o.id}/${v.id}: ${from} is not in the recipe`);
-        assert.ok(ix[to], `${o.id}/${v.id}: ${to} missing from foods.csv`);
-        assert.ok(!o.parts.some((p) => p[0] === to), `${o.id}/${v.id}: ${to} is already in the recipe`);
-      }
-      // Eat the average-effort default everywhere else, this variation in its own slot.
-      let eaten = api.mealZero(); const done = [];
-      for (const s of api.MEAL_SLOTS) {
-        const t = api.mealBuildTree({ tree, targets, dayType: d, stall: false, eaten, doneSlots: done, ix, variantOf: { [`${slot}:${o.id}`]: v.id } });
-        const list = t.slots[s].options;
-        const opt = s === slot ? list.find((x) => x.id === o.id) : (list.find((x) => x.effort === 'mid') || list[0]);
-        if (s === slot) {
-          assert.equal(opt.variant, v.id);
-          assert.ok(Object.keys(v.swap).every((from) => !opt.items.some((i) => i.food === from)), `${o.id}/${v.id} still has the swapped-out food`);
+test('swap database loads: 226 / 495 / 1149 pairs, every name is in the food table, indexed both ways', () => {
+  const count = (tier) => Object.values(swapIx).reduce((n, row) => n + Object.values(row).filter((p) => p.tier === tier).length, 0) / 2;
+  assert.equal(count(1), 226); assert.equal(count(2), 495); assert.equal(count(3), 1149);
+  for (const [a, row] of Object.entries(swapIx)) { assert.ok(ix[a], a); for (const p of Object.values(row)) assert.ok(ix[p.food], p.food); }
+  const ab = swapIx['Chicken breast, cooked']['Tilapia, cooked'], ba = swapIx['Tilapia, cooked']['Chicken breast, cooked'];
+  assert.equal(ab.tier, 1); near(ab.ratio * ba.ratio, 1, 1e-9);
+  assert.ok(ab.ratio >= 0.6 && ab.ratio <= 1.67);
+});
+
+test('tap-to-swap uses the database first, Tier 1 before 2 before 3, at its portions', () => {
+  const swaps = api.mealSwaps('Chicken breast, cooked', 130, foods, swapIx);
+  assert.deepEqual(swaps.filter((x) => x.tier === 1).map((x) => x.food).sort(), ['Pork tenderloin, cooked', 'Tilapia, cooked']);
+  const tiers = swaps.map((x) => x.tier);
+  assert.deepEqual(tiers, [...tiers].sort((x, y) => x - y));
+  const t = swaps.find((x) => x.food === 'Tilapia, cooked');
+  near(t.grams, 130 * swapIx['Chicken breast, cooked']['Tilapia, cooked'].ratio, 1e-9);
+  assert.ok(t.exact, 'a Tier 1 pair is inside tolerance at the database portion');
+  for (const x of swaps.filter((y) => y.tier === 1)) assert.ok(x.exact, x.food);
+});
+
+test('a food with no pairs falls back to the role rule and says so', () => {
+  assert.equal(swapIx['Tyson grilled chicken bites cup'], undefined);
+  const swaps = api.mealSwaps('Tyson grilled chicken bites cup', 150, foods, swapIx);
+  assert.ok(swaps.length > 0);
+  for (const x of swaps) { assert.equal(x.tier, 0); assert.equal(ix[x.food].role, ix['Tyson grilled chicken bites cup'].role); }
+});
+
+test('variation chips are Tier 1 pairs only, and every one keeps the day in range', () => {
+  let n = 0, withChips = 0, total = 0;
+  for (const slot of api.MEAL_SLOTS) for (const o of api.MEAL_OPTIONS[slot]) {
+    const chips = api.mealTier1Chips(o, swapIx, ix);
+    total++; if (chips.length) withChips++;
+    for (const c of chips) {
+      assert.equal(swapIx[c.from][c.to].tier, 1, `${o.id}: ${c.from} -> ${c.to}`);
+      assert.ok(o.parts.some((p) => p[0] === c.from) && !o.parts.some((p) => p[0] === c.to));
+      for (const d of ['lift', 'cardio', 'rest']) {
+        // Eat the average-effort default everywhere else, this variation in its own slot.
+        let eaten = api.mealZero(); const done = [];
+        for (const s of api.MEAL_SLOTS) {
+          const t = api.mealBuildTree({ tree, targets, dayType: d, stall: false, eaten, doneSlots: done, ix, swapIx, variantOf: { [`${slot}:${o.id}`]: { [c.from]: c.to } } });
+          const list = t.slots[s].options;
+          const opt = s === slot ? list.find((x) => x.id === o.id) : (list.find((x) => x.effort === 'mid') || list[0]);
+          if (s === slot) {
+            assert.ok(opt.items.every((i) => i.food !== c.from), `${o.id} still has ${c.from}`);
+            assert.equal(opt.swaps[c.from], c.to);
+          }
+          eaten = api.mealAdd(eaten, opt.macros); done.push(s);
         }
-        eaten = api.mealAdd(eaten, opt.macros); done.push(s);
+        assert.deepEqual(api.mealInRange(api.mealTargetsFor(targets, d, false), eaten), OK, `${d} ${o.id}: ${c.from} -> ${c.to}: ${JSON.stringify(eaten)}`);
+        n++;
       }
-      assert.deepEqual(api.mealInRange(tgt, eaten), OK, `${d} ${o.id}/${v.id}: ${JSON.stringify(eaten)}`);
-      n++;
     }
   }
+  console.log(`   (${withChips} of ${total} recipes have Tier 1 variations; ${n / 3} chips checked on 3 day types)`);
   assert.ok(n > 300);
 });
 
-test('a variation re-portions the swapped food instead of copying the grams', () => {
+test('chips combine, start from the database portion, and unknown swaps are ignored', () => {
   const base = api.MEAL_OPTIONS.lunch.find((o) => o.id === 'burrito-bowl');
-  const v = api.mealApplyVariant(base, 'shrimp', ix);
-  const chicken = base.parts.find((p) => p[0] === 'Chicken breast, cooked')[1];
-  const shrimp = v.parts.find((p) => p[0] === 'Shrimp, cooked')[1];
-  assert.ok(shrimp > chicken, 'shrimp has less protein per gram, so more of it');
-  assert.equal(api.mealApplyVariant(base, 'nope', ix), base);
+  const v = api.mealApplyVariant(base, { 'Chicken breast, cooked': 'Tilapia, cooked', 'White rice, cooked': 'Brown rice, cooked' }, ix, swapIx);
+  const g = (o, f) => o.parts.find((p) => p[0] === f)[1];
+  near(g(v, 'Tilapia, cooked'), g(base, 'Chicken breast, cooked') * swapIx['Chicken breast, cooked']['Tilapia, cooked'].ratio, 1e-9);
+  assert.ok(v.parts.some((p) => p[0] === 'Brown rice, cooked') && !v.parts.some((p) => p[0] === 'White rice, cooked'));
+  assert.equal(v.variantLabel, 'Tilapia, Brown rice');
+  assert.equal(api.mealApplyVariant(base, { 'Chicken breast, cooked': 'Unicorn' }, ix, swapIx), base);
+  assert.equal(api.mealApplyVariant(base, null, ix, swapIx), base);
 });
 
 test('the tree corrects course after an off-plan meal', () => {
