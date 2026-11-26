@@ -11,7 +11,7 @@ const cut = (from, to) => {
   return src.slice(a, b);
 };
 const code = [
-  cut('const MUSCLE_MAP = {', '// >>> VOLUME RAMP PLANNER'),
+  cut('const MUSCLE_MAP = {', '// >>> MEAL TREE ENGINE'),
   cut('const PHASE_PROFILES = {', '// Decide what to recommend'),
   cut('function computeProgression(', 'function ExerciseCard('),
   cut('// >>> VOLUME RAMP PLANNER', '// <<< VOLUME RAMP PLANNER'),

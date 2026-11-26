@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Dumbbell, TrendingUp, Camera, Apple, Activity, Calendar, Target, ChevronRight, ChevronLeft, Plus, Check, Trash2, Save, Image as ImageIcon, ArrowUp, ArrowDown, Flame, BookMarked, FileImage, X, Copy, CalendarDays, Edit3, Search, Sparkles, Settings, Loader2, AlertCircle, Info, Play, ChevronDown, Clock, Receipt, Upload, FileText, Download, RefreshCw, Star, Minus } from 'lucide-react';
+import { Dumbbell, TrendingUp, Camera, Apple, Activity, Calendar, Target, ChevronRight, ChevronLeft, Plus, Check, Trash2, Save, Image as ImageIcon, ArrowUp, ArrowDown, Flame, BookMarked, FileImage, X, Copy, CalendarDays, Edit3, Search, Sparkles, Settings, Loader2, AlertCircle, Info, Play, ChevronDown, Clock, Receipt, Upload, FileText, Download, RefreshCw, Star, Minus, GitBranch } from 'lucide-react';
 import mammoth from 'mammoth';
+import MEAL_FOODS_CSV from './data/foods.csv?raw';
+import MEAL_TARGETS from './data/targets.json';
+import MEAL_TREE_1 from './data/breakfast_tree_1.json';
 
 // ============================================================================
 // SCHEDULE DATA — default schedule, sourced from Seth_Weekly_Schedule_v6.docx
@@ -14723,6 +14726,7 @@ export default function FitnessTracker() {
     { id: 'today', label: 'Today', icon: Dumbbell },
     { id: 'progress', label: 'Body', icon: TrendingUp },
     { id: 'nutrition', label: 'Fuel', icon: Apple },
+    { id: 'meals', label: 'Meals', icon: GitBranch },
     { id: 'receipts', label: 'Spend', icon: Receipt },
     { id: 'library', label: 'Library', icon: BookMarked },
     { id: 'calendar', label: 'Calendar', icon: CalendarDays },
@@ -14748,6 +14752,7 @@ export default function FitnessTracker() {
         )}
         {tab === 'progress' && <BodyView />}
         {tab === 'nutrition' && <NutritionView day={currentDay} activeDate={activeDate} setActiveDate={setActiveDate} />}
+        {tab === 'meals' && <MealTreeView day={currentDay} activeDate={activeDate} />}
         {tab === 'receipts' && <ReceiptsView />}
         {tab === 'library' && <LibraryView />}
         {tab === 'calendar' && (
@@ -14762,7 +14767,7 @@ export default function FitnessTracker() {
         className="fixed left-0 right-0 z-30 px-3 pointer-events-none"
         style={{ bottom: 'max(10px, env(safe-area-inset-bottom, 0px))' }}
       >
-        <div className="glass pointer-events-auto max-w-md mx-auto rounded-[30px] p-1.5 grid grid-cols-6">
+        <div className="glass pointer-events-auto max-w-md mx-auto rounded-[30px] p-1.5 grid grid-cols-7">
           {tabs.map((t) => {
             const Icon = t.icon;
             const active = tab === t.id;
@@ -19459,6 +19464,541 @@ function sessionMuscleBreakdown(session, completed = {}) {
     .sort((a, b) => b.planned - a.planned || a.muscle.localeCompare(b.muscle));
 
   return { rows, untracked: Array.from(untracked) };
+}
+
+// >>> MEAL TREE ENGINE
+// Deterministic maths for the Meals tab: no AI anywhere in here. Pure
+// functions so tests/meal-tree.test.mjs can lift this block out and run it.
+// Foods come from src/data/foods.csv (macros per 100 g), targets from
+// src/data/targets.json, and the worked example day from breakfast_tree_1.json.
+const MEAL_SLOTS = ['breakfast', 'lunch', 'dinner', 'snack_1', 'snack_2'];
+const MEAL_SLOT_LABELS = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snack_1: 'Snack 1', snack_2: 'Snack 2' };
+const MEAL_MACROS = ['kcal', 'protein', 'carbs', 'fat'];
+const MEAL_STALL_KCAL = 150;
+
+function parseFoodsCsv(text) {
+  const rows = [];
+  let row = [], cell = '', quoted = false;
+  const src = String(text || '').replace(/\r/g, '');
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    if (quoted) {
+      if (ch === '"' && src[i + 1] === '"') { cell += '"'; i++; }
+      else if (ch === '"') quoted = false;
+      else cell += ch;
+    } else if (ch === '"') quoted = true;
+    else if (ch === ',') { row.push(cell); cell = ''; }
+    else if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += ch;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  const foods = [];
+  for (const r of rows.slice(1)) {
+    if (!r[0] || !r[0].trim()) continue;
+    const confidence = (r[7] || '').trim();
+    foods.push({
+      name: r[0].trim(), category: (r[1] || '').trim(), role: (r[2] || '').trim(),
+      kcal: parseFloat(r[3]) || 0, protein: parseFloat(r[4]) || 0, carbs: parseFloat(r[5]) || 0, fat: parseFloat(r[6]) || 0,
+      confidence,
+      flagged: /^low/i.test(confidence) || /^USDA-style, from memory/i.test(confidence), // numbers worth verifying
+    });
+  }
+  return foods;
+}
+function mealFoodIndex(foods) { const ix = {}; for (const f of foods) ix[f.name] = f; return ix; }
+function mealZero() { return { kcal: 0, protein: 0, carbs: 0, fat: 0 }; }
+function mealAdd(a, b, k = 1) { const o = {}; for (const m of MEAL_MACROS) o[m] = (a[m] || 0) + (b[m] || 0) * k; return o; }
+// Unrounded totals for [{food, grams}].
+function mealMacros(items, ix) {
+  let t = mealZero();
+  for (const it of items || []) { const f = ix[it.food]; if (f) t = mealAdd(t, f, (parseFloat(it.grams) || 0) / 100); }
+  return t;
+}
+// Display only: nearest 5 g. Totals always use the unrounded grams.
+function mealRoundGrams(g) { return g <= 0 ? 0 : Math.max(5, Math.round(g / 5) * 5); }
+// Ranges and aims for a day type. The stall rule adds 150 kcal, all from carbs.
+function mealTargetsFor(targets, dayType, stall) {
+  const d = targets[dayType] || targets.rest;
+  const bump = (r, n) => ({ min: r.min + n, max: r.max + n, aim: r.aim + n });
+  const add = stall ? MEAL_STALL_KCAL : 0;
+  return { kcal: bump(d.kcal, add), protein: { ...targets.protein_g }, carbs: bump(d.carbs_g, add / 4), fat: { ...targets.fat_g } };
+}
+function mealRemaining(target, eaten) { const o = {}; for (const m of MEAL_MACROS) o[m] = target[m].aim - (eaten[m] || 0); return o; }
+
+// Options per meal. kind says what the solver may resize: protein, carb and
+// fat parts flex to hit the meal's share of what is left; veg and fixed parts
+// keep their grams. The first option of each meal is the worked example tree;
+// the others use the same roles with different foods.
+const MEAL_OPTIONS = {
+  breakfast: [
+    { id: 'eggs-toast', label: 'Eggs and toast', parts: [['Egg, whole boiled', 150, 'protein'], ['Egg whites', 100, 'protein'], ['Brownberry 100% Whole Wheat bread (regular slice)', 129, 'carb'], ['Banana', 120, 'carb']] },
+    { id: 'protein-oats', label: 'Protein oats', parts: [['Whey protein powder', 30, 'protein'], ['Oats, dry', 80, 'carb'], ['Milk, 2%', 250, 'fixed'], ['Blueberries', 100, 'fixed'], ['Peanut butter', 16, 'fat']] },
+    { id: 'yogurt-bowl', label: 'Yogurt and granola', parts: [['Greek yogurt, nonfat', 300, 'protein'], ['Granola (typical)', 60, 'carb'], ['Banana', 120, 'carb'], ['Almonds', 20, 'fat']] },
+  ],
+  lunch: [
+    { id: 'chicken-rice', label: 'Chicken and rice', parts: [['Chicken breast, cooked', 130, 'protein'], ['White rice, cooked', 350, 'carb'], ['Broccoli, raw', 150, 'veg'], ['Olive oil', 8, 'fat']] },
+    { id: 'turkey-potato', label: 'Turkey and potato', parts: [['Ground turkey 93%, cooked', 130, 'protein'], ['Potato, baked w/ skin', 400, 'carb'], ['Green beans, raw', 150, 'veg'], ['Olive oil', 8, 'fat']] },
+    { id: 'tuna-wrap', label: 'Tuna wraps', parts: [['Tuna, canned in water', 130, 'protein'], ['Flour tortilla', 120, 'carb'], ['Apple', 180, 'carb'], ['Romaine, raw', 80, 'veg'], ['Avocado', 50, 'fat']] },
+  ],
+  dinner: [
+    { id: 'beef-pasta', label: 'Beef pasta', parts: [['Ground beef 93%, cooked', 100, 'protein'], ['Pasta, cooked', 380, 'carb'], ['Bell pepper, red', 100, 'veg'], ['Olive oil', 8, 'fat']] },
+    { id: 'salmon-rice', label: 'Salmon and rice', parts: [['Salmon (farmed), cooked', 120, 'protein'], ['Jasmine rice, cooked', 350, 'carb'], ['Asparagus, raw', 150, 'veg'], ['Olive oil', 4, 'fat']] },
+    { id: 'steak-sweet-potato', label: 'Steak and sweet potato', parts: [['Sirloin steak, lean cooked', 130, 'protein'], ['Sweet potato, baked', 400, 'carb'], ['Spinach, raw', 80, 'veg'], ['Olive oil', 8, 'fat']] },
+  ],
+  snack_1: [
+    { id: 'skyr-bowl', label: 'Skyr bowl', parts: [['Skyr, plain', 200, 'protein'], ['Blueberries', 100, 'carb'], ['Oats, dry', 30, 'carb']] },
+    { id: 'cottage-fruit', label: 'Cottage cheese and fruit', parts: [['Cottage cheese, 2%', 200, 'protein'], ['Pineapple', 150, 'carb'], ['Rice cakes', 20, 'carb']] },
+    { id: 'shake-banana', label: 'Shake and banana', parts: [['Whey protein powder', 30, 'protein'], ['Milk, skim', 300, 'fixed'], ['Banana', 120, 'carb']] },
+  ],
+  snack_2: [
+    { id: 'ricecake-pb', label: 'Rice cakes and peanut butter', parts: [['Rice cake, lightly salted (Quaker)', 36, 'carb'], ['Banana', 120, 'carb'], ['Peanut butter', 20, 'fat'], ['Almonds', 15, 'fat']] },
+    { id: 'yogurt-nuts', label: 'Yogurt, honey and walnuts', parts: [['Greek yogurt, 2%', 150, 'fixed'], ['Honey', 15, 'carb'], ['Apple', 150, 'carb'], ['Walnuts', 20, 'fat']] },
+    { id: 'toast-almond', label: 'Toast and almond butter', parts: [['Whole wheat bread', 60, 'carb'], ['Grapes', 150, 'carb'], ['Almond butter', 20, 'fat']] },
+  ],
+};
+const MEAL_SCALE = { protein: [0.5, 2.2], carb: [0.3, 2.4], fat: [0, 3] };
+
+// How much of the rest of the day each remaining meal should carry, taken
+// from the worked example for that day type.
+function mealSlotShares(tree, dayType, ix, remainingSlots) {
+  const day = (tree.days[dayType] || tree.days.rest).meals;
+  const per = {}; let sum = mealZero();
+  for (const s of remainingSlots) { per[s] = mealMacros(day[s] || [], ix); sum = mealAdd(sum, per[s]); }
+  const shares = {};
+  for (const s of remainingSlots) {
+    shares[s] = {};
+    for (const m of MEAL_MACROS) shares[s][m] = sum[m] > 0 ? per[s][m] / sum[m] : 1 / remainingSlots.length;
+  }
+  return shares;
+}
+function mealSolveLinear(A, b) {
+  const n = b.length; const M = A.map((r, i) => [...r, b[i]]);
+  for (let c = 0; c < n; c++) {
+    let p = c;
+    for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    if (Math.abs(M[p][c]) < 1e-9) return null;
+    [M[c], M[p]] = [M[p], M[c]];
+    for (let r = 0; r < n; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k]; }
+  }
+  return M.map((r, i) => r[n] / M[i][i]);
+}
+// Resize one option so its protein, carbs and fat land on `want`. Each kind
+// (protein / carb / fat) scales as a group; a scale that hits its limit is
+// pinned there and the rest are solved again.
+function mealSizeOption(option, want, ix) {
+  const kinds = ['protein', 'carb', 'fat'];
+  const macroOf = { protein: 'protein', carb: 'carbs', fat: 'fat' };
+  let fixed = mealZero(); const vec = {};
+  for (const [food, grams, kind] of option.parts) {
+    const f = ix[food]; if (!f) continue;
+    if (kinds.includes(kind)) vec[kind] = mealAdd(vec[kind] || mealZero(), f, grams / 100);
+    else fixed = mealAdd(fixed, f, grams / 100);
+  }
+  const scale = {}; let free = kinds.filter((k) => vec[k]);
+  for (let pass = 0; pass < 4 && free.length; pass++) {
+    let base = fixed;
+    for (const k of kinds) if (vec[k] && !free.includes(k)) base = mealAdd(base, vec[k], scale[k]);
+    const A = free.map((row) => free.map((col) => vec[col][macroOf[row]]));
+    const b = free.map((row) => Math.max(0, want[macroOf[row]]) - base[macroOf[row]]);
+    const sol = mealSolveLinear(A, b);
+    let pinned = false;
+    free.forEach((k, i) => {
+      const [lo, hi] = MEAL_SCALE[k];
+      const v = sol ? sol[i] : 1;
+      if (v < lo || v > hi || !isFinite(v)) { scale[k] = Math.min(hi, Math.max(lo, isFinite(v) ? v : 1)); pinned = true; }
+      else scale[k] = v;
+    });
+    if (!pinned) break;
+    // Pin only the worst offender, then solve the others again.
+    const worst = free.map((k, i) => ({ k, off: sol ? Math.max(MEAL_SCALE[k][0] - sol[i], sol[i] - MEAL_SCALE[k][1]) : 1 })).sort((a, b2) => b2.off - a.off)[0].k;
+    free = free.filter((k) => k !== worst);
+  }
+  const items = option.parts.filter(([food]) => ix[food]).map(([food, grams, kind]) => ({ food, kind, grams: kinds.includes(kind) ? grams * (scale[kind] ?? 1) : grams }));
+  return { id: option.id, label: option.label, items: items.filter((it) => it.grams > 0.5), macros: mealMacros(items, ix) };
+}
+// The tree for the rest of the day: for every meal not yet eaten, each option
+// sized to that meal's share of what is left.
+function mealBuildTree({ tree, targets, dayType, stall, eaten, doneSlots, ix }) {
+  const target = mealTargetsFor(targets, dayType, stall);
+  const remaining = mealRemaining(target, eaten);
+  const open = MEAL_SLOTS.filter((s) => !doneSlots.includes(s));
+  const shares = mealSlotShares(tree, dayType, ix, open);
+  const slots = {};
+  for (const s of open) {
+    const want = {};
+    for (const m of MEAL_MACROS) want[m] = remaining[m] * shares[s][m];
+    slots[s] = { want, options: MEAL_OPTIONS[s].map((o) => mealSizeOption(o, want, ix)) };
+  }
+  return { target, remaining, open, slots };
+}
+function mealInRange(target, total) {
+  const o = {};
+  for (const m of MEAL_MACROS) o[m] = total[m] < target[m].min ? 'under' : total[m] > target[m].max ? 'over' : 'ok';
+  return o;
+}
+// Swaps: same Role, re-portioned to match the food's main macro (0.6x to
+// 1.67x the grams), then checked against the database tolerances.
+const MEAL_SWAP_TOL = { kcal: [10, 0.06], protein: [1.5, 0.08], fat: [1.5, 0.08], carbs: [2.5, 0.08] };
+function mealWithin(m, a, b) { const [abs, pct] = MEAL_SWAP_TOL[m]; return Math.abs(a - b) <= Math.max(abs, pct * Math.max(Math.abs(a), Math.abs(b))); }
+function mealMainMacro(f) {
+  const cals = { protein: f.protein * 4, carbs: f.carbs * 4, fat: f.fat * 9 };
+  return Object.keys(cals).sort((a, b) => cals[b] - cals[a])[0];
+}
+function mealSwaps(foodName, grams, foods) {
+  const ix = mealFoodIndex(foods); const from = ix[foodName];
+  if (!from) return [];
+  const main = mealMainMacro(from);
+  const a = mealMacros([{ food: foodName, grams }], ix);
+  const out = [];
+  for (const cand of foods) {
+    if (cand.name === foodName || cand.role !== from.role || !(cand[main] > 0)) continue;
+    const ratio = Math.min(1.67, Math.max(0.6, from[main] / cand[main]));
+    const g = grams * ratio;
+    const b = mealMacros([{ food: cand.name, grams: g }], ix);
+    if (!mealWithin(main, a[main], b[main])) continue; // can't match the main macro inside the portion limits
+    const off = MEAL_MACROS.filter((m) => !mealWithin(m, a[m], b[m]));
+    const delta = {}; for (const m of MEAL_MACROS) delta[m] = b[m] - a[m];
+    out.push({ food: cand.name, grams: g, ratio, exact: off.length === 0, off, delta, flagged: cand.flagged });
+  }
+  return out.sort((x, y) => (y.exact - x.exact) || Math.abs(x.delta.kcal) - Math.abs(y.delta.kcal));
+}
+// Checks the AI's free-text reading against the food table. Anything not in
+// the table is returned as unknown, never guessed.
+function mealResolveParsed(list, foods) {
+  const ix = mealFoodIndex(foods); const lower = {};
+  for (const f of foods) lower[f.name.toLowerCase()] = f.name;
+  const items = [], unknown = [];
+  for (const it of Array.isArray(list) ? list : []) {
+    const name = ix[it?.food] ? it.food : lower[String(it?.food || '').toLowerCase().trim()];
+    const grams = parseFloat(it?.grams);
+    if (name && grams > 0 && grams < 3000) items.push({ food: name, grams });
+    else unknown.push(String(it?.food || '?'));
+  }
+  return { items, unknown };
+}
+// <<< MEAL TREE ENGINE
+
+// ── Meals tab: the tree ──────────────────────────────────────────────────────
+// Every pick is logged to the same nutrition:{date} list Fuel reads, so the
+// two screens can never disagree. mealtree:{date} only remembers which meals
+// are done and any day-type override.
+const MEAL_FOODS = parseFoodsCsv(MEAL_FOODS_CSV);
+const MEAL_IX = mealFoodIndex(MEAL_FOODS);
+const MEAL_PARSE_PROMPT = `You turn a description of what someone ate into foods and grams.
+Use ONLY food names from the list below, copied exactly, character for character.
+Rules:
+- Pick the closest food on the list. Whole eggs cooked any way are "Egg, whole boiled" (one large egg = 50 g). Toast or bread with no brand is "Brownberry 100% Whole Wheat bread (regular slice)" (one slice = 43 g).
+- Estimate grams for the amount described, using normal portion sizes when none is given.
+- If a food has no reasonable match on the list, still return it, with "food" set to the words the person used.
+Reply with ONLY a JSON array, no other text: [{"food": "exact name", "grams": 123}]
+
+FOOD LIST:
+<<<FOODS>>>
+
+WHAT THEY ATE:
+<<<TEXT>>>`;
+async function mealParseFreeText(text) {
+  const reply = await aiPrompt(MEAL_PARSE_PROMPT.replace('<<<FOODS>>>', () => MEAL_FOODS.map((f) => f.name).join('\n')).replace('<<<TEXT>>>', () => text));
+  const a = reply.indexOf('['), b = reply.lastIndexOf(']');
+  if (a < 0 || b <= a) throw new Error('Could not read that. Try describing it more simply.');
+  return mealResolveParsed(JSON.parse(reply.slice(a, b + 1)), MEAL_FOODS);
+}
+const mealFmt = (n) => Math.round(n).toLocaleString();
+
+function MealBar({ label, unit, eaten, projected, range }) {
+  const max = range.max * 1.18;
+  const pct = (v) => `${Math.max(0, Math.min(100, (v / max) * 100))}%`;
+  const state = eaten > range.max ? 'over' : eaten >= range.min ? 'ok' : 'under';
+  return (
+    <div data-meal-bar={label}>
+      <div className="flex items-baseline justify-between text-[12px] mb-1">
+        <span className="mono uppercase tracking-wider text-stone-400">{label}</span>
+        <span className="mono tabular">
+          <span className={state === 'over' ? 'text-rose-400' : state === 'ok' ? 'text-emerald-400' : 'text-stone-100'}>{mealFmt(eaten)}</span>
+          <span className="text-stone-500"> / {mealFmt(range.aim)}{unit}</span>
+          <span className="text-stone-600"> · {mealFmt(Math.max(0, range.aim - eaten))} left</span>
+        </span>
+      </div>
+      <div className="h-2 bg-stone-800 rounded-full relative overflow-hidden">
+        <div className="absolute h-full bg-emerald-400/20" style={{ left: pct(range.min), width: `calc(${pct(range.max)} - ${pct(range.min)})` }} />
+        <div className="absolute h-full bg-stone-500/50 mt-fill" style={{ width: pct(projected) }} />
+        <div className={`absolute h-full mt-fill ${state === 'over' ? 'bg-rose-400' : 'bg-amber-400'}`} style={{ width: pct(eaten) }} />
+        <div className="absolute top-0 h-full w-0.5 bg-stone-100" style={{ left: pct(range.aim) }} />
+      </div>
+    </div>
+  );
+}
+
+function MealTreeView({ day, activeDate }) {
+  useSchedule();
+  const date = activeDate || today();
+  const scheduleType = SCHEDULE[day]?.type || 'rest';
+  const [entries, setEntries] = useState([]);
+  const [mt, setMt] = useState({ done: {} });
+  const [stall, setStall] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [openSlot, setOpenSlot] = useState(null);
+  const [pick, setPick] = useState({});      // slot -> option index
+  const [edits, setEdits] = useState({});    // `${slot}:${optionId}` -> items after swaps
+  const [swapFor, setSwapFor] = useState(null);
+  const [free, setFree] = useState(null);    // { slot, text, busy, items, unknown, error }
+  const [flow, setFlow] = useState(0);       // bumps on every log so the tree re-animates
+  const nodeRefs = useRef({});
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [e, m, st] = await Promise.all([storage.get(`nutrition:${date}`), storage.get(`mealtree:${date}`), storage.get('mealtree:settings')]);
+      if (cancelled) return;
+      setEntries(Array.isArray(e) ? e : []);
+      setMt(m && typeof m === 'object' ? { done: {}, ...m } : { done: {} });
+      setStall(!!st?.stall);
+      setLoaded(true);
+    })();
+    return () => { cancelled = true; };
+  }, [date]);
+
+  const dayType = mt.dayType || scheduleType;
+  const eaten = useMemo(() => {
+    const t = mealZero();
+    for (const e of entries) { t.kcal += parseFloat(e.cal) || 0; t.protein += parseFloat(e.protein) || 0; t.carbs += parseFloat(e.carbs) || 0; t.fat += parseFloat(e.fat) || 0; }
+    return t;
+  }, [entries]);
+  const doneSlots = MEAL_SLOTS.filter((s) => mt.done?.[s]);
+  const tree = useMemo(
+    () => mealBuildTree({ tree: MEAL_TREE_1, targets: MEAL_TARGETS, dayType, stall, eaten, doneSlots, ix: MEAL_IX }),
+    [dayType, stall, eaten, doneSlots.join(',')],
+  );
+  const current = openSlot && tree.open.includes(openSlot) ? openSlot : tree.open[0] || null;
+  const itemsFor = (slot) => {
+    const opt = tree.slots[slot].options[pick[slot] || 0];
+    return edits[`${slot}:${opt.id}`] || opt.items;
+  };
+  // Where the day lands if the rest of the tree is followed as shown.
+  const projected = useMemo(() => {
+    let t = { ...eaten };
+    for (const s of tree.open) t = mealAdd(t, mealMacros(itemsFor(s), MEAL_IX));
+    return t;
+  }, [tree, eaten, pick, edits]);
+  const verdict = mealInRange(tree.target, projected);
+  const onTrack = MEAL_MACROS.every((m) => verdict[m] === 'ok');
+
+  const saveMt = async (next) => { setMt(next); await storage.set(`mealtree:${date}`, next); };
+  const logItems = async (slot, label, items) => {
+    const base = Date.now();
+    const added = items.map((it, i) => {
+      const m = mealMacros([it], MEAL_IX);
+      const r1 = (v) => Math.round(v * 10) / 10;
+      return { id: base + i, name: `${it.food} (${mealRoundGrams(it.grams)} g)`, cal: r1(m.kcal), protein: r1(m.protein), carbs: r1(m.carbs), fat: r1(m.fat), mealSlot: slot, source: 'mealtree' };
+    });
+    const next = [...entries, ...added];
+    await storage.set(`nutrition:${date}`, next);
+    setEntries(next);
+    await saveMt({ ...mt, done: { ...mt.done, [slot]: { label, at: Date.now() } } });
+    setEdits({}); setSwapFor(null); setFree(null); setOpenSlot(null); setFlow((f) => f + 1);
+    const nextSlot = MEAL_SLOTS.find((s) => s !== slot && !mt.done?.[s]);
+    setTimeout(() => nodeRefs.current[nextSlot || slot]?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 250);
+  };
+  const undoSlot = async (slot) => {
+    const next = entries.filter((e) => !(e.source === 'mealtree' && e.mealSlot === slot));
+    await storage.set(`nutrition:${date}`, next);
+    setEntries(next);
+    const done = { ...mt.done }; delete done[slot];
+    await saveMt({ ...mt, done });
+    setFlow((f) => f + 1);
+  };
+  const applySwap = (slot, optId, index, swap) => {
+    const key = `${slot}:${optId}`;
+    const items = (edits[key] || tree.slots[slot].options[pick[slot] || 0].items).map((it, i) => (i === index ? { ...it, food: swap.food, grams: swap.grams } : it));
+    setEdits({ ...edits, [key]: items });
+    setSwapFor(null);
+  };
+  const readFree = async () => {
+    setFree((f) => ({ ...f, busy: true, error: '' }));
+    try {
+      const r = await mealParseFreeText(free.text);
+      setFree((f) => ({ ...f, busy: false, items: r.items, unknown: r.unknown }));
+    } catch (e) {
+      setFree((f) => ({ ...f, busy: false, error: e.message || String(e) }));
+    }
+  };
+
+  if (!loaded) return null;
+  const flagged = (name) => MEAL_IX[name]?.flagged;
+
+  return (
+    <div data-meal-tree>
+      {/* Day type */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="ios-seg flex-1" role="tablist" aria-label="Day type">
+          {['lift', 'cardio', 'rest'].map((t) => (
+            <button key={t} role="tab" aria-selected={dayType === t} data-meal-daytype={t}
+              onClick={() => { saveMt({ ...mt, dayType: t === scheduleType ? undefined : t }); setEdits({}); setFlow((f) => f + 1); }}
+              className={`ios-seg-item capitalize ${dayType === t ? 'ios-seg-on shadow font-semibold text-amber-400' : 'text-stone-400'}`}>
+              {t}{t === scheduleType ? ' ·' : ''}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="text-[11px] text-stone-500 -mt-1 mb-3">Your schedule says {scheduleType} day (marked ·). Tap another to override for today.</div>
+
+      {/* Budget */}
+      <div className="bg-stone-900 border border-stone-800 rounded-xl p-4 mb-4 space-y-3" data-meal-budget>
+        <MealBar label="Kcal" unit="" eaten={eaten.kcal} projected={projected.kcal} range={tree.target.kcal} />
+        <MealBar label="Protein" unit=" g" eaten={eaten.protein} projected={projected.protein} range={tree.target.protein} />
+        <MealBar label="Carbs" unit=" g" eaten={eaten.carbs} projected={projected.carbs} range={tree.target.carbs} />
+        <MealBar label="Fat" unit=" g" eaten={eaten.fat} projected={projected.fat} range={tree.target.fat} />
+        <div className={`text-[12px] leading-relaxed ${onTrack ? 'text-emerald-400' : 'text-amber-300'}`} data-meal-verdict={onTrack ? 'ok' : 'off'}>
+          {tree.open.length === 0
+            ? (onTrack ? 'Day done, inside every range.' : `Day done. ${MEAL_MACROS.filter((m) => verdict[m] !== 'ok').map((m) => `${m} ${verdict[m]}`).join(', ')}.`)
+            : onTrack
+              ? `Follow the tree and you land at ${mealFmt(projected.kcal)} kcal · ${mealFmt(projected.protein)} P · ${mealFmt(projected.carbs)} C · ${mealFmt(projected.fat)} F, inside every range.`
+              : `As picked you land ${MEAL_MACROS.filter((m) => verdict[m] !== 'ok').map((m) => `${verdict[m]} on ${m}`).join(', ')}. The portions are already at their limits.`}
+        </div>
+        <div className="text-[11px] text-stone-600">Green band = allowed range. White tick = aim. Grey = where the tree takes you.</div>
+      </div>
+
+      {/* The tree */}
+      <div className="relative pl-7" key={flow}>
+        <div className="absolute left-[9px] top-2 bottom-2 w-0.5 bg-stone-800 mt-spine" />
+        {MEAL_SLOTS.map((slot, i) => {
+          const done = mt.done?.[slot];
+          const isCurrent = slot === current;
+          if (done) {
+            const m = mealZero();
+            for (const e of entries) if (e.source === 'mealtree' && e.mealSlot === slot) { m.kcal += e.cal; m.protein += e.protein; m.carbs += e.carbs; m.fat += e.fat; }
+            return (
+              <div key={slot} ref={(el) => { nodeRefs.current[slot] = el; }} className="relative mb-4 mt-node" style={{ '--i': i }} data-meal-node={slot} data-meal-state="done">
+                <div className="absolute -left-7 top-0 bottom-[-16px] w-5 flex justify-center"><div className="w-0.5 h-full bg-amber-400" /></div>
+                <div className="absolute -left-[26px] top-1 w-[18px] h-[18px] rounded-full bg-amber-400 flex items-center justify-center mt-dot-done"><Check size={12} className="text-stone-950" strokeWidth={3} /></div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm text-stone-300">{MEAL_SLOT_LABELS[slot]} · <span className="text-stone-100">{done.label}</span></div>
+                    <div className="mono text-[11px] text-stone-500">{mealFmt(m.kcal)} kcal · {mealFmt(m.protein)} P · {mealFmt(m.carbs)} C · {mealFmt(m.fat)} F</div>
+                  </div>
+                  <button onClick={() => undoSlot(slot)} data-meal-undo={slot} className="text-[11px] mono text-stone-500 underline underline-offset-2">Undo</button>
+                </div>
+              </div>
+            );
+          }
+          const node = tree.slots[slot];
+          const optIndex = pick[slot] || 0;
+          const opt = node.options[optIndex];
+          const items = itemsFor(slot);
+          const im = mealMacros(items, MEAL_IX);
+          return (
+            <div key={slot} ref={(el) => { nodeRefs.current[slot] = el; }} className="relative mb-5 mt-node" style={{ '--i': i }} data-meal-node={slot} data-meal-state={isCurrent ? 'current' : 'later'}>
+              {isCurrent && doneSlots.length > 0 && <div className="absolute -left-[18px] -top-10 h-10"><div className="mt-flow bg-amber-400" /></div>}
+              <div className={`absolute -left-[26px] top-1 w-[18px] h-[18px] rounded-full border-2 ${isCurrent ? 'border-amber-400 bg-stone-950' : 'border-stone-700 bg-stone-950'}`} />
+              <button onClick={() => setOpenSlot(slot)} className="w-full text-left flex items-baseline justify-between">
+                <span className={`text-base font-semibold ${isCurrent ? 'text-stone-100' : 'text-stone-400'}`}>{isCurrent ? `Next: ${MEAL_SLOT_LABELS[slot]}` : MEAL_SLOT_LABELS[slot]}</span>
+                <span className="mono text-[11px] text-stone-500">about {mealFmt(node.want.kcal)} kcal · {mealFmt(node.want.protein)} P · {mealFmt(node.want.carbs)} C · {mealFmt(node.want.fat)} F</span>
+              </button>
+              {!isCurrent ? (
+                <button onClick={() => setOpenSlot(slot)} className="mt-1 block w-full text-left text-[12px] text-stone-500">{node.options.map((o) => o.label).join(' · ')}</button>
+              ) : (
+                <>
+                  {/* Branches */}
+                  <div className="flex gap-2 overflow-x-auto snap-x mt-2 pb-1 -mr-4 pr-4">
+                    {node.options.map((o, oi) => (
+                      <button key={o.id} onClick={() => { setPick({ ...pick, [slot]: oi }); setSwapFor(null); setFree(null); }} data-meal-option={o.id}
+                        className={`mt-opt snap-start shrink-0 w-[62%] text-left rounded-xl border p-3 ${oi === optIndex && !free ? 'border-amber-400 bg-amber-400/10' : 'border-stone-800 bg-stone-900'}`} style={{ '--i': oi }}>
+                        <div className="text-sm font-semibold text-stone-100">{o.label}</div>
+                        <div className="mono text-[11px] text-stone-400 mt-0.5">{mealFmt(o.macros.kcal)} kcal</div>
+                        <div className="mono text-[11px] text-stone-500">{mealFmt(o.macros.protein)} P · {mealFmt(o.macros.carbs)} C · {mealFmt(o.macros.fat)} F</div>
+                      </button>
+                    ))}
+                    <button onClick={() => setFree({ slot, text: '' })} data-meal-free-open
+                      className={`mt-opt snap-start shrink-0 w-[44%] text-left rounded-xl border border-dashed p-3 ${free ? 'border-amber-400 bg-amber-400/10' : 'border-stone-700 bg-stone-900/50'}`} style={{ '--i': node.options.length }}>
+                      <div className="text-sm font-semibold text-stone-200">I ate something else</div>
+                      <div className="text-[11px] text-stone-500 mt-0.5">Type it; the rest of the tree adjusts.</div>
+                    </button>
+                  </div>
+
+                  {free ? (
+                    <div className="mt-3 bg-stone-900 border border-stone-800 rounded-xl p-3 mt-node" data-meal-free>
+                      <textarea rows={2} value={free.text} onChange={(e) => setFree({ ...free, text: e.target.value })} placeholder="2 eggs and 3 slices of toast" data-meal-free-text
+                        className="w-full bg-stone-950 border border-stone-800 rounded-md p-2 text-sm text-stone-100 placeholder-stone-600" />
+                      <button onClick={readFree} disabled={free.busy || !free.text.trim()} data-meal-free-read className="mt-2 w-full bg-stone-800 text-stone-100 text-sm font-semibold rounded-md py-2 disabled:opacity-40 flex items-center justify-center gap-2">
+                        {free.busy ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} Read it
+                      </button>
+                      {free.error && <div className="text-xs text-amber-300 mt-2">{free.error}</div>}
+                      {free.items && (
+                        <div className="mt-3" data-meal-free-confirm>
+                          <div className="text-[11px] uppercase tracking-wider text-stone-500 mono mb-1">Check before it is logged</div>
+                          {free.items.length === 0 && <div className="text-xs text-amber-300">Nothing matched the food table.</div>}
+                          {free.items.map((it, k) => (
+                            <div key={k} className="flex items-center gap-2 py-1">
+                              <span className="flex-1 text-[13px] text-stone-200">{it.food}{flagged(it.food) && <span className="ml-1 mono text-[10px] text-amber-400 border border-amber-400/40 rounded px-1">check</span>}</span>
+                              <input type="number" inputMode="decimal" value={it.grams} onChange={(e) => setFree({ ...free, items: free.items.map((x, j) => (j === k ? { ...x, grams: e.target.value } : x)) })}
+                                className="w-20 bg-stone-950 border border-stone-800 rounded px-2 py-1 text-sm mono text-right" />
+                              <span className="text-[11px] text-stone-500">g</span>
+                              <button onClick={() => setFree({ ...free, items: free.items.filter((_, j) => j !== k) })} className="text-stone-500" aria-label="Remove"><X size={14} /></button>
+                            </div>
+                          ))}
+                          {free.unknown?.length > 0 && <div className="text-xs text-amber-300 mt-1">Not in the food table, so not counted: {free.unknown.join(', ')}.</div>}
+                          {free.items.length > 0 && (() => {
+                            const clean = free.items.map((x) => ({ food: x.food, grams: parseFloat(x.grams) || 0 })).filter((x) => x.grams > 0);
+                            const fm = mealMacros(clean, MEAL_IX);
+                            return (
+                              <>
+                                <div className="mono text-[11px] text-stone-400 mt-2">{mealFmt(fm.kcal)} kcal · {mealFmt(fm.protein)} P · {mealFmt(fm.carbs)} C · {mealFmt(fm.fat)} F</div>
+                                <button onClick={() => logItems(slot, free.text.trim().slice(0, 40) || 'Something else', clean)} disabled={clean.length === 0} data-meal-free-log className="mt-2 w-full bg-amber-500 text-stone-950 text-sm font-semibold rounded-md py-2.5 disabled:opacity-40">That's right, log it</button>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="mt-3 bg-stone-900 border border-stone-800 rounded-xl p-3 mt-node" key={opt.id} data-meal-detail={opt.id}>
+                      {items.map((it, k) => {
+                        const key = `${slot}:${k}`;
+                        const swaps = swapFor === key ? mealSwaps(it.food, it.grams, MEAL_FOODS) : null;
+                        return (
+                          <div key={k} className="py-1.5 border-b border-stone-800/70 last:border-0">
+                            <button onClick={() => setSwapFor(swapFor === key ? null : key)} className="w-full flex items-center justify-between text-left" data-meal-item={it.food}>
+                              <span className="text-[13px] text-stone-200">{it.food}{flagged(it.food) && <span className="ml-1 mono text-[10px] text-amber-400 border border-amber-400/40 rounded px-1">check</span>}</span>
+                              <span className="flex items-center gap-2"><span className="mono text-sm text-stone-100 tabular">{mealRoundGrams(it.grams)} g</span><RefreshCw size={12} className="text-stone-500" /></span>
+                            </button>
+                            {swaps && (
+                              <div className="mt-1 mb-1 pl-2 border-l border-stone-700 mt-node" data-meal-swaps>
+                                {swaps.length === 0 && <div className="text-[11px] text-stone-500 py-1">No food with the same role matches closely enough.</div>}
+                                {swaps.slice(0, 8).map((sw) => (
+                                  <button key={sw.food} onClick={() => applySwap(slot, opt.id, k, sw)} data-meal-swap={sw.food} className="w-full flex items-center justify-between text-left py-1">
+                                    <span className="text-[12px] text-stone-300">{sw.food}{sw.flagged && <span className="ml-1 mono text-[10px] text-amber-400 border border-amber-400/40 rounded px-1">check</span>}
+                                      {!sw.exact && <span className="block text-[10px] text-stone-500">{sw.off.map((m) => `${sw.delta[m] > 0 ? '+' : ''}${Math.round(sw.delta[m])} ${m === 'kcal' ? 'kcal' : `g ${m}`}`).join(', ')}</span>}
+                                    </span>
+                                    <span className="mono text-[12px] text-stone-200 tabular">{mealRoundGrams(sw.grams)} g</span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                      <div className="mono text-[11px] text-stone-400 mt-2">{mealFmt(im.kcal)} kcal · {mealFmt(im.protein)} P · {mealFmt(im.carbs)} C · {mealFmt(im.fat)} F</div>
+                      <div className="text-[11px] text-stone-600 mt-0.5">Tap a food to swap it. Grams are rounded to 5; totals use the exact numbers.</div>
+                      <button onClick={() => logItems(slot, opt.label, items)} data-meal-log className="mt-3 w-full bg-amber-500 text-stone-950 text-sm font-semibold rounded-md py-2.5 flex items-center justify-center gap-2"><Check size={15} /> I ate this</button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <label className="flex items-start gap-2 mt-2 mb-2 bg-stone-900 border border-stone-800 rounded-xl p-3">
+        <input type="checkbox" className="mt-1" checked={stall} data-meal-stall onChange={async (e) => { setStall(e.target.checked); await storage.set('mealtree:settings', { stall: e.target.checked }); setEdits({}); }} />
+        <span>
+          <span className="block text-sm text-stone-200">Stall rule: +150 kcal from carbs</span>
+          <span className="block text-[11px] text-stone-500">Turn on if the scale trend has not moved for 2 weeks. Applies to every day type.</span>
+        </span>
+      </label>
+      <div className="text-[11px] text-stone-600 leading-relaxed mb-2">Meals you log here also appear in Fuel. A "check" badge marks foods whose numbers were typed from memory.</div>
+    </div>
+  );
 }
 
 // >>> VOLUME RAMP PLANNER

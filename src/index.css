@@ -393,3 +393,22 @@ button.bg-amber-400.text-stone-950:disabled {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
+
+/* Meal tree: nodes flow in, the spine grows, a dot runs down to the next meal */
+@keyframes mt-in { from { opacity: 0; transform: translateY(16px) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes mt-branch { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes mt-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes mt-flow { 0% { top: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+@keyframes mt-pop { 0% { transform: scale(0.4); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+.mt-node { animation: mt-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 90ms); }
+.mt-opt { animation: mt-branch 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 80ms + 120ms); transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease; }
+.mt-opt:active { transform: scale(0.97); }
+.mt-spine { transform-origin: top; animation: mt-grow 0.6s ease-out both; }
+.mt-flow { position: absolute; left: -3px; width: 8px; height: 8px; border-radius: 9999px; animation: mt-flow 1.8s ease-in-out infinite; }
+.mt-dot-done { animation: mt-pop 0.4s ease-out both; }
+.mt-fill { transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .mt-node, .mt-opt, .mt-spine, .mt-dot-done { animation: none; }
+  .mt-flow { display: none; }
+  .mt-fill { transition: none; }
+}

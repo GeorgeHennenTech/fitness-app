@@ -1,0 +1,283 @@
+{
+  "id": "breakfast-1-eggs-and-toast",
+  "label": "Eggs and toast",
+  "note": "Protein and fat stay fixed across day types; carbs flex.",
+  "days": {
+    "lift": {
+      "meals": {
+        "breakfast": [
+          {
+            "food": "Egg, whole boiled",
+            "grams": 150
+          },
+          {
+            "food": "Egg whites",
+            "grams": 100
+          },
+          {
+            "food": "Brownberry 100% Whole Wheat bread (regular slice)",
+            "grams": 129
+          },
+          {
+            "food": "Banana",
+            "grams": 120
+          }
+        ],
+        "lunch": [
+          {
+            "food": "Chicken breast, cooked",
+            "grams": 130
+          },
+          {
+            "food": "White rice, cooked",
+            "grams": 350
+          },
+          {
+            "food": "Broccoli, raw",
+            "grams": 150
+          },
+          {
+            "food": "Olive oil",
+            "grams": 8
+          }
+        ],
+        "dinner": [
+          {
+            "food": "Ground beef 93%, cooked",
+            "grams": 100
+          },
+          {
+            "food": "Pasta, cooked",
+            "grams": 380
+          },
+          {
+            "food": "Bell pepper, red",
+            "grams": 100
+          },
+          {
+            "food": "Olive oil",
+            "grams": 8
+          }
+        ],
+        "snack_1": [
+          {
+            "food": "Skyr, plain",
+            "grams": 200
+          },
+          {
+            "food": "Blueberries",
+            "grams": 100
+          },
+          {
+            "food": "Oats, dry",
+            "grams": 30
+          }
+        ],
+        "snack_2": [
+          {
+            "food": "Rice cake, lightly salted (Quaker)",
+            "grams": 36
+          },
+          {
+            "food": "Peanut butter",
+            "grams": 20
+          },
+          {
+            "food": "Banana",
+            "grams": 120
+          },
+          {
+            "food": "Almonds",
+            "grams": 15
+          }
+        ]
+      },
+      "expected_totals": {
+        "kcal": 3162,
+        "protein": 186,
+        "carbs": 430,
+        "fat": 80
+      }
+    },
+    "cardio": {
+      "meals": {
+        "breakfast": [
+          {
+            "food": "Egg, whole boiled",
+            "grams": 150
+          },
+          {
+            "food": "Egg whites",
+            "grams": 100
+          },
+          {
+            "food": "Brownberry 100% Whole Wheat bread (regular slice)",
+            "grams": 129
+          },
+          {
+            "food": "Banana",
+            "grams": 120
+          }
+        ],
+        "lunch": [
+          {
+            "food": "Chicken breast, cooked",
+            "grams": 130
+          },
+          {
+            "food": "White rice, cooked",
+            "grams": 250
+          },
+          {
+            "food": "Broccoli, raw",
+            "grams": 150
+          },
+          {
+            "food": "Olive oil",
+            "grams": 8
+          }
+        ],
+        "dinner": [
+          {
+            "food": "Ground beef 93%, cooked",
+            "grams": 100
+          },
+          {
+            "food": "Pasta, cooked",
+            "grams": 380
+          },
+          {
+            "food": "Bell pepper, red",
+            "grams": 100
+          },
+          {
+            "food": "Olive oil",
+            "grams": 8
+          }
+        ],
+        "snack_1": [
+          {
+            "food": "Skyr, plain",
+            "grams": 200
+          },
+          {
+            "food": "Blueberries",
+            "grams": 100
+          },
+          {
+            "food": "Oats, dry",
+            "grams": 30
+          }
+        ],
+        "snack_2": [
+          {
+            "food": "Rice cake, lightly salted (Quaker)",
+            "grams": 36
+          },
+          {
+            "food": "Peanut butter",
+            "grams": 20
+          },
+          {
+            "food": "Almonds",
+            "grams": 15
+          }
+        ]
+      },
+      "expected_totals": {
+        "kcal": 2925,
+        "protein": 182,
+        "carbs": 374,
+        "fat": 79
+      }
+    },
+    "rest": {
+      "meals": {
+        "breakfast": [
+          {
+            "food": "Egg, whole boiled",
+            "grams": 150
+          },
+          {
+            "food": "Egg whites",
+            "grams": 100
+          },
+          {
+            "food": "Brownberry 100% Whole Wheat bread (regular slice)",
+            "grams": 86
+          },
+          {
+            "food": "Banana",
+            "grams": 120
+          }
+        ],
+        "lunch": [
+          {
+            "food": "Chicken breast, cooked",
+            "grams": 130
+          },
+          {
+            "food": "White rice, cooked",
+            "grams": 250
+          },
+          {
+            "food": "Broccoli, raw",
+            "grams": 150
+          },
+          {
+            "food": "Olive oil",
+            "grams": 8
+          }
+        ],
+        "dinner": [
+          {
+            "food": "Ground beef 93%, cooked",
+            "grams": 100
+          },
+          {
+            "food": "Pasta, cooked",
+            "grams": 380
+          },
+          {
+            "food": "Bell pepper, red",
+            "grams": 100
+          },
+          {
+            "food": "Olive oil",
+            "grams": 8
+          }
+        ],
+        "snack_1": [
+          {
+            "food": "Skyr, plain",
+            "grams": 200
+          },
+          {
+            "food": "Blueberries",
+            "grams": 100
+          },
+          {
+            "food": "Oats, dry",
+            "grams": 30
+          }
+        ],
+        "snack_2": [
+          {
+            "food": "Peanut butter",
+            "grams": 20
+          },
+          {
+            "food": "Almonds",
+            "grams": 15
+          }
+        ]
+      },
+      "expected_totals": {
+        "kcal": 2675,
+        "protein": 176,
+        "carbs": 325,
+        "fat": 77
+      }
+    }
+  }
+}

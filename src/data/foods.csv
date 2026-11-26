@@ -1,0 +1,197 @@
+Food,Category,Role,kcal /100 g,Protein g,Carbs g,Fat g,Source / confidence
+"Bagel, plain",Bread & Wraps,Bread/wrap,257,10,50,1.6,
+Corn tortilla,Bread & Wraps,Bread/wrap,218,5.7,44,2.9,
+English muffin,Bread & Wraps,Bread/wrap,235,8,45,1.9,
+Flour tortilla,Bread & Wraps,Bread/wrap,304,8,50,8,
+"Pita, white",Bread & Wraps,Bread/wrap,275,9,56,1.2,
+"Popcorn, air-popped",Bread & Wraps,Crunchy snack,387,13,78,4.5,
+Rice cakes,Bread & Wraps,Crunchy snack,387,8,82,2.8,
+White bread,Bread & Wraps,Bread/wrap,265,9,49,3.2,
+Whole wheat bread,Bread & Wraps,Bread/wrap,252,12.5,43,3.5,
+"Almond milk, unsweetened",Dairy,Milk,15,0.6,0.3,1.2,
+Cheddar,Dairy,Cheese,403,25,1.3,33,
+"Cottage cheese, 2%",Dairy,Yogurt/cup dairy,81,10.4,4.8,2.3,
+Cream cheese,Dairy,Cheese,342,6,4,34,
+Feta,Dairy,Cheese,264,14,4,21,
+"Goat cheese, soft",Dairy,Cheese,268,18,1,21,
+"Greek yogurt, 2%",Dairy,Yogurt/cup dairy,73,10,4,2,
+"Greek yogurt, nonfat",Dairy,Yogurt/cup dairy,59,10,3.6,0.4,
+"Milk, 2%",Dairy,Milk,50,3.3,4.8,2,
+"Milk, skim",Dairy,Milk,34,3.4,5,0.1,
+"Milk, whole",Dairy,Milk,61,3.2,4.8,3.3,
+"Mozzarella, part-skim",Dairy,Cheese,254,24,2.8,16,
+"Mozzarella, whole milk",Dairy,Cheese,300,22,2.2,22,
+Oat milk,Dairy,Milk,47,1,7.5,1.5,
+Parmesan,Dairy,Cheese,431,38,4,29,
+"Ricotta, part-skim",Dairy,Yogurt/cup dairy,138,11,5,8,
+"Skyr, plain",Dairy,Yogurt/cup dairy,63,11,4,0.2,
+"Soy milk, unsweetened",Dairy,Milk,33,2.8,1.7,1.6,
+Swiss,Dairy,Cheese,380,27,5,28,
+"Edamame, cooked",Eggs & Plant Protein,Plant protein,121,12,9,5,
+Egg whites,Eggs & Plant Protein,Egg,52,11,0.7,0.2,
+"Egg, whole boiled",Eggs & Plant Protein,Egg,155,13,1.1,11,
+Tempeh,Eggs & Plant Protein,Plant protein,192,20,8,11,
+"Tofu, firm",Eggs & Plant Protein,Plant protein,144,17,3,9,
+Avocado oil,Fats & Oils,Cooking oil,884,0,0,100,
+Butter,Fats & Oils,Cooking fat,717,0.9,0.1,81,
+Coconut oil,Fats & Oils,Cooking oil,862,0,0,100,
+Ghee,Fats & Oils,Cooking fat,876,0.3,0,99.5,
+Mayonnaise,Fats & Oils,Sauce/condiment,680,1,0.6,75,
+Olive oil,Fats & Oils,Cooking oil,884,0,0,100,
+Apple,Fruit,Fruit,52,0.3,14,0.2,
+Apple juice,Fruit,Juice,46,0.1,11,0.1,
+Banana,Fruit,Fruit,89,1.1,23,0.3,
+Blackberries,Fruit,Berries,43,1.4,10,0.5,
+Blueberries,Fruit,Berries,57,0.7,14,0.3,
+Cantaloupe,Fruit,Fruit,34,0.8,8,0.2,
+Cherries,Fruit,Fruit,63,1.1,16,0.2,
+Grapefruit,Fruit,Fruit,42,0.8,11,0.1,
+Grapes,Fruit,Fruit,69,0.7,18,0.2,
+Kiwi,Fruit,Fruit,61,1.1,15,0.5,
+Mango,Fruit,Fruit,60,0.8,15,0.4,
+Medjool dates,Fruit,Dried fruit,277,1.8,75,0.2,
+Orange,Fruit,Fruit,47,0.9,12,0.1,
+Orange juice,Fruit,Juice,45,0.7,10,0.2,
+Papaya,Fruit,Fruit,43,0.5,11,0.3,
+Peach,Fruit,Fruit,39,0.9,9.5,0.3,
+Pear,Fruit,Fruit,57,0.4,15,0.1,
+Pineapple,Fruit,Fruit,50,0.5,13,0.1,
+Plum,Fruit,Fruit,46,0.7,11,0.3,
+Pomegranate seeds,Fruit,Berries,83,1.7,19,1.2,
+Raisins,Fruit,Dried fruit,299,3.1,79,0.5,
+Raspberries,Fruit,Berries,52,1.2,12,0.7,
+Strawberries,Fruit,Berries,32,0.7,7.7,0.3,
+Watermelon,Fruit,Fruit,30,0.6,7.6,0.2,
+"Barley, pearled cooked",Grains & Starches,Grain/starch side,123,2.3,28,0.4,
+"Brown rice, cooked",Grains & Starches,Grain/starch side,123,2.7,26,1,
+"Bulgur, cooked",Grains & Starches,Grain/starch side,83,3,19,0.2,
+"Corn kernels, cooked",Grains & Starches,Grain/starch side,96,3.4,21,1.5,
+"Couscous, cooked",Grains & Starches,Grain/starch side,112,3.8,23,0.2,
+"Jasmine rice, cooked",Grains & Starches,Grain/starch side,129,2.7,28,0.2,
+"Oats, cooked",Grains & Starches,Breakfast grain,71,2.5,12,1.5,
+"Oats, dry",Grains & Starches,Breakfast grain,389,17,66,7,
+"Pasta, cooked",Grains & Starches,Pasta/noodle,158,5.8,31,0.9,
+"Polenta, cooked",Grains & Starches,Grain/starch side,70,1.6,15,0.3,
+"Potato, baked w/ skin",Grains & Starches,Potato/tuber,93,2.5,21,0.1,
+"Potato, boiled",Grains & Starches,Potato/tuber,87,1.9,20,0.1,
+"Quinoa, cooked",Grains & Starches,Grain/starch side,120,4.4,21,1.9,
+"Rice noodles, cooked",Grains & Starches,Pasta/noodle,108,0.9,25,0.2,
+"Sweet potato, baked",Grains & Starches,Potato/tuber,90,2,21,0.2,
+"White rice, cooked",Grains & Starches,Grain/starch side,130,2.7,28,0.3,
+"Whole wheat pasta, cooked",Grains & Starches,Pasta/noodle,124,5.3,26,0.5,
+"Black beans, cooked",Legumes,Beans/lentils,132,8.9,23.7,0.5,
+"Chickpeas, cooked",Legumes,Beans/lentils,164,8.9,27.4,2.6,
+"Kidney beans, cooked",Legumes,Beans/lentils,127,8.7,22.8,0.5,
+"Lentils, cooked",Legumes,Beans/lentils,116,9,20,0.4,
+"Peas, green cooked",Legumes,Beans/lentils,81,5.4,14,0.4,
+"Pinto beans, cooked",Legumes,Beans/lentils,143,9,26,0.7,
+"Bacon, cooked",Meat & Fish,Processed meat,541,37,1.4,42,
+Beef jerky,Meat & Fish,Processed meat,410,33,11,26,
+"Chicken breast, cooked",Meat & Fish,Lean meat/fish,165,31,0,3.6,
+"Cod, cooked",Meat & Fish,Lean meat/fish,105,23,0,0.9,
+"Ground beef 85%, cooked",Meat & Fish,Ground meat,250,26,0,15,
+"Ground beef 93%, cooked",Meat & Fish,Ground meat,196,26,0,10,
+"Ground turkey 93%, cooked",Meat & Fish,Ground meat,200,27,0,10,
+"Haddock, cooked",Meat & Fish,Lean meat/fish,112,24,0,0.9,
+"Ham, sliced deli",Meat & Fish,Processed meat,145,21,1.5,5.5,
+"Pork tenderloin, cooked",Meat & Fish,Lean meat/fish,143,26,0,3.5,
+"Rainbow trout, cooked",Meat & Fish,Fattier meat/fish,168,23,0,7,
+"Salmon (farmed), cooked",Meat & Fish,Fattier meat/fish,206,22,0,12,
+"Shrimp, cooked",Meat & Fish,Lean meat/fish,99,24,0.2,0.3,
+"Sirloin steak, lean cooked",Meat & Fish,Lean meat/fish,180,30,0,6,
+"Tilapia, cooked",Meat & Fish,Lean meat/fish,128,26,0,2.7,
+"Tuna, canned in water",Meat & Fish,Lean meat/fish,116,26,0,0.8,
+"Turkey bacon, cooked",Meat & Fish,Processed meat,382,29,4,28,
+"Turkey breast, cooked",Meat & Fish,Lean meat/fish,135,30,0,1,
+"Turkey, sliced deli",Meat & Fish,Processed meat,104,17,4,1.7,
+Almond butter,Nuts & Seeds,Nut butter,614,21,19,56,
+Almonds,Nuts & Seeds,Nuts,579,21,22,50,
+Cashews,Nuts & Seeds,Nuts,553,18,30,44,
+Chia seeds,Nuts & Seeds,Seeds,486,17,42,31,
+Flax seeds,Nuts & Seeds,Seeds,534,18,29,42,
+Hazelnuts,Nuts & Seeds,Nuts,628,15,17,61,
+Hemp hearts,Nuts & Seeds,Seeds,553,32,8.7,49,
+Macadamias,Nuts & Seeds,Nuts,718,8,14,76,
+Peanut butter,Nuts & Seeds,Nut butter,588,25,20,50,
+Peanuts,Nuts & Seeds,Nuts,567,26,16,49,
+Pecans,Nuts & Seeds,Nuts,691,9,14,72,
+Pistachios,Nuts & Seeds,Nuts,560,20,28,45,
+Pumpkin seeds,Nuts & Seeds,Seeds,559,30,11,49,
+Sesame seeds,Nuts & Seeds,Seeds,573,18,23,50,
+Sunflower seed butter,Nuts & Seeds,Nut butter,617,17,24,55,
+Sunflower seeds,Nuts & Seeds,Seeds,584,21,20,51,
+Tahini,Nuts & Seeds,Nut butter,595,17,21,54,
+Walnuts,Nuts & Seeds,Nuts,654,15,14,65,
+Agave syrup,Sweets & Condiments,Sweetener,310,0.1,76,0,
+BBQ sauce,Sweets & Condiments,Sauce/condiment,172,0.8,41,0.6,
+Dark chocolate 70-85%,Sweets & Condiments,Chocolate,598,7.8,46,43,
+Honey,Sweets & Condiments,Sweetener,304,0.3,82,0,
+Hummus,Sweets & Condiments,Sauce/condiment,166,8,14,10,
+Jam,Sweets & Condiments,Sweetener,250,0.4,64,0.1,
+Ketchup,Sweets & Condiments,Sauce/condiment,101,1,27,0.1,
+Maple syrup,Sweets & Condiments,Sweetener,260,0,67,0,
+Marinara sauce,Sweets & Condiments,Sauce/condiment,50,1.5,9,1,
+Milk chocolate,Sweets & Condiments,Chocolate,535,7.7,59,30,
+Table sugar,Sweets & Condiments,Sweetener,387,0,100,0,
+"Arugula, raw",Vegetables,Leafy green,25,2.6,3.7,0.7,
+"Asparagus, raw",Vegetables,Cooking veg,20,2.2,3.9,0.1,
+Avocado,Vegetables,Fatty fruit/spread,160,2,8.5,14.7,
+"Beets, raw",Vegetables,Cooking veg,43,1.6,10,0.2,
+"Bell pepper, green",Vegetables,Cooking veg,20,0.9,4.6,0.2,
+"Bell pepper, red",Vegetables,Cooking veg,31,1,6,0.3,
+"Broccoli, raw",Vegetables,Cooking veg,34,2.8,7,0.4,
+"Brussels sprouts, raw",Vegetables,Cooking veg,43,3.4,9,0.3,
+"Cabbage, raw",Vegetables,Leafy green,25,1.3,5.8,0.1,
+"Carrots, raw",Vegetables,Cooking veg,41,0.9,10,0.2,
+"Cauliflower, raw",Vegetables,Cooking veg,25,1.9,5,0.3,
+Celery,Vegetables,Raw crunchy veg,14,0.7,3,0.2,
+Cucumber,Vegetables,Raw crunchy veg,15,0.7,3.6,0.1,
+"Eggplant, raw",Vegetables,Cooking veg,25,1,6,0.2,
+"Green beans, raw",Vegetables,Cooking veg,31,1.8,7,0.2,
+Iceberg lettuce,Vegetables,Leafy green,14,0.9,3,0.1,
+"Kale, raw",Vegetables,Leafy green,49,4.3,9,0.9,
+"Mushrooms, white",Vegetables,Cooking veg,22,3.1,3.3,0.3,
+"Onion, raw",Vegetables,Cooking veg,40,1.1,9.3,0.1,
+"Romaine, raw",Vegetables,Leafy green,17,1.2,3.3,0.3,
+"Spinach, raw",Vegetables,Leafy green,23,2.9,3.6,0.4,
+"Tomato, raw",Vegetables,Raw crunchy veg,18,0.9,3.9,0.2,
+"Zucchini, raw",Vegetables,Cooking veg,17,1.2,3.1,0.3,
+Premier Protein cereal (Chocolate Almond / Mixed Berry),Grains & Starches,Cereal,429,47.6,33.3,11.9,High (Post label + 5 retailers)
+Rice Krispies (Kellogg's),Grains & Starches,Cereal,375,7.5,90.0,0.0,High (Kellogg's SmartLabel)
+"Rice cake, lightly salted (Quaker)",Bread & Wraps,Crunchy snack,389,5.6,77.8,0.0,High
+"Rice cake, apple cinnamon (Quaker)",Bread & Wraps,Crunchy snack,385,7.7,84.6,0.0,High
+Brownberry 100% Whole Wheat bread (regular slice),Bread & Wraps,Bread/wrap,256,9.3,48.8,4.7,Medium-high
+"Salmon packet, pink (Chicken of the Sea, 2.5 oz)",Meat & Fish,Lean meat/fish,99,21.2,0.0,1.4,High (low-salt 2.5 oz label)
+Tyson grilled chicken bites cup,Meat & Fish,Lean meat/fish,150,23.8,2.0,4.8,High (tyson.com + 3 retailers)
+Realgood lightly breaded chicken nuggets (20 oz bag),Meat & Fish,Lean meat/fish,152,20.5,3.6,6.2,Medium (listings conflict)
+Realgood lightly breaded chicken nuggets (36 oz bag),Meat & Fish,Lean meat/fish,116,20.5,4.5,1.8,Medium (listings conflict)
+Realgood pancake & sausage on a stick,Meat & Fish,Handheld breakfast,213,20.0,10.7,10.0,Medium (weight inferred)
+Farm Girl cereal (Rainbow Hoops),Grains & Starches,Cereal,421,32.1,57.1,7.1,Low (aggregator only)
+"Barilla Protein+ pasta, DRY",Grains & Starches,Pasta (weigh DRY),339,17.9,67.9,1.8,High (retailer panels agree)
+"Banza chickpea pasta, DRY",Grains & Starches,Pasta (weigh DRY),339,19.6,57.1,6.2,Medium (carbs 31-35 g across listings)
+"Sourdough bread, bakery loaf (generic)",Bread & Wraps,Bread/wrap,289,11.7,56.3,3.2,Low (generic; real loaves range ~217-300 kcal/100 g)
+Simply Asia Sichuan sweet & sour sauce,Sweets & Condiments,Sauce,100,0.0,20.0,0.0,Low-medium (aggregator)
+Lox / smoked salmon,Meat & Fish,Lean meat/fish,117,18.3,0.0,4.3,"USDA-style, from memory (verify)"
+"Sardines, canned in oil, drained",Meat & Fish,Fatty fish,208,24.6,0.0,11.5,"USDA-style, from memory (verify)"
+"Coconut milk, canned (full fat)",Fats & Oils,Cooking fat/cream,197,2.0,2.8,21.3,"USDA-style, from memory (verify)"
+Sweetened condensed milk,Dairy,Sweetener,321,7.9,54.4,8.7,"USDA-style, from memory (verify)"
+"Pumpkin, canned",Vegetables,Cooking veg,34,1.1,8.1,0.3,"USDA-style, from memory (verify)"
+"Applesauce, unsweetened",Fruit,Fruit,42,0.2,11.3,0.1,"USDA-style, from memory (verify)"
+"Peaches, canned in juice",Fruit,Fruit,44,0.5,11.4,0.0,"USDA-style, from memory (verify)"
+Dried apricots,Fruit,Dried fruit,241,3.4,62.6,0.5,"USDA-style, from memory (verify)"
+"Split peas, cooked",Legumes,Beans/lentils,118,8.3,21.1,0.4,"USDA-style, from memory (verify)"
+"Coconut, shredded unsweetened",Nuts & Seeds,Fat-dense topping,660,6.9,23.7,64.5,"USDA-style, from memory (verify)"
+"Cocoa powder, unsweetened",Sweets & Condiments,Baking,228,19.6,57.9,13.7,"USDA-style, from memory (verify)"
+"Flour, all-purpose",Grains & Starches,Baking,364,10.3,76.3,1.0,"USDA-style, from memory (verify)"
+"Olives, black (canned)",Fats & Oils,Fat-dense veg,115,0.8,6.3,10.7,"USDA-style, from memory (verify)"
+"Chicken thigh, skinless, cooked",Meat & Fish,Lean meat/fish,179,24.8,0.0,8.2,"USDA-style, from memory (verify)"
+Whey protein powder,Eggs & Plant Protein,Protein powder,400,80.0,10.0,5.0,"USDA-style, from memory (verify)"
+"Cream of Rice, dry",Grains & Starches,Hot cereal,360,6.0,80.0,0.5,"USDA-style, from memory (verify)"
+"Greek yogurt, whole milk 5% (Fage-style)",Dairy,Yogurt/cup dairy,112,10.6,4.1,5.9,"USDA-style, from memory (verify)"
+Canadian bacon,Meat & Fish,Lean meat/fish,110,17.9,1,4.2,"Typical generic value, from memory (verify)"
+"Breakfast sausage, chicken or turkey (cooked)",Meat & Fish,Breakfast meat,175,18,2,10,Low (generic)
+"Protein pancake mix, dry",Grains & Starches,Pancake/waffle mix,358,26.4,66,5.7,Low-medium (typical dry mix). Weigh DRY
+"Waffles, frozen (plain)",Bread & Wraps,Breakfast carb,270,6.5,44,8,Low (generic)
+"Pancakes, frozen",Bread & Wraps,Breakfast carb,230,6,36,6.5,Low (generic)
+Granola (typical),Grains & Starches,Cereal/topping,450,10,64,17,Low (varies by brand)
+"Hash browns, frozen (cooked)",Vegetables,Breakfast starch,155,2,18,8.5,Low (generic)

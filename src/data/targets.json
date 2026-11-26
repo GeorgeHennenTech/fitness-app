@@ -1,0 +1,59 @@
+{
+  "protein_g": {
+    "min": 160,
+    "max": 190,
+    "aim": 175
+  },
+  "fat_g": {
+    "min": 65,
+    "max": 95,
+    "aim": 80
+  },
+  "lift": {
+    "kcal": {
+      "min": 3000,
+      "max": 3300,
+      "aim": 3150
+    },
+    "carbs_g": {
+      "min": 390,
+      "max": 465,
+      "aim": 430
+    }
+  },
+  "cardio": {
+    "kcal": {
+      "min": 2800,
+      "max": 3000,
+      "aim": 2900
+    },
+    "carbs_g": {
+      "min": 340,
+      "max": 390,
+      "aim": 370
+    }
+  },
+  "rest": {
+    "kcal": {
+      "min": 2600,
+      "max": 2800,
+      "aim": 2700
+    },
+    "carbs_g": {
+      "min": 290,
+      "max": 340,
+      "aim": 320
+    }
+  },
+  "schedule": {
+    "Mon": "lift",
+    "Tue": "lift",
+    "Wed": "cardio",
+    "Thu": "lift",
+    "Fri": "lift",
+    "Sat": "cardio",
+    "Sun": "rest"
+  },
+  "schedule_note": "GUESS from a screenshot: Wed steady cardio, Sat HIIT, Sun rest, 4-day upper/lower. Confirm with the app's training data; do not hardcode.",
+  "stall_rule": "If the scale trend stalls for 2 weeks, add 150 kcal, mostly from carbs. Target trend 0.25-0.5 lb/week."
+}
